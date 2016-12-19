@@ -1,0 +1,30 @@
+<?php
+
+/**
+ * @file
+ * Contains the geofield_map.module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Url;
+
+/**
+ * Implements hook_help().
+ */
+function geofield_map_help($route_name, RouteMatchInterface $route_match) {
+  $output = '';
+  switch ($route_name) {
+    case 'help.page.geofield_map':
+      $output .= '<h3>' . t('Geofield Map About') . '</h3>';
+      $output .= '<p>' . t('(Google and Leaflet) Map widget and formatter for Geofield.') . '</p>';
+      $output .= '<p>' . t('Allow to use a google map v3 map to input a location.') . '</p>';
+      $output .= '<p>' . t('A quick text input + geocode allow you to specify an address.') . '</p>';
+      $output .= '<p>' . t('You can drag and drop the marker to narrow the position.') . '</p>';
+      $output .= '<p>' . t('For more info: @readme', [
+        '@readme' => Link::fromTextAndUrl(t('Readme.md'), Url::fromUri('base:/' . drupal_get_path('module', 'geofield_map') . '/README.md', ['attributes' => ['target' => '_blank']]))->toString(),
+      ]) . '</p>';
+
+  }
+  return $output;
+}

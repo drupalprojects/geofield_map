@@ -1,0 +1,14 @@
+.geofield-map-cnt {
+	width: 600px;
+	height: 460px;
+	display: block;
+  margin: 10px 0;
+  border: solid thin darkgray;
+}
+.geofield-map-buttons {
+  margin: 10px 0;
+}
+
+.geofield_map_geoaddress_field_hidden {
+  display: none;
+}

@@ -1,0 +1,8 @@
+name: 'Geofield Map'
+description: '(Google and Leaflet) Map widget and formatter for Geofield.'
+package: Field types
+dependencies:
+  - geofield
+
+type: module
+core: 8.x
