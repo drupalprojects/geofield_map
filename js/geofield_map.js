@@ -7,7 +7,7 @@
 
       // Init all maps in drupalSettings.
       if (drupalSettings['geofield_map']) {
-        $.each(drupalSettings['geofield_map'], function(mapid, options) {
+        $.each(drupalSettings['geofield_map'], function (mapid, options) {
           Drupal.geofieldMap.loadGoogle(mapid, function () {
             Drupal.geofieldMap.map_initialize({
               entity_operation: options.entity_operation,
@@ -71,7 +71,7 @@
      *
      * @param {geolocationCallback} callback - The callback
      */
-    addCallback:  function (callback) {
+    addCallback: function (callback) {
       var self = this;
       self.googleCallbacks = self.googleCallbacks || [];
       self.googleCallbacks.push({callback: callback});
@@ -125,7 +125,9 @@
     place_marker: function (mapid) {
       var self = this;
       if (self.map_data[mapid].click_to_place_marker) {
-        if (!window.confirm('Change marker position ?')) return;
+        if (!window.confirm('Change marker position ?')) {
+          return;
+        }
       }
 
       google.maps.event.trigger(self.map_data[mapid].map, 'resize');
@@ -135,8 +137,8 @@
       self.map_data[mapid].lng.val(position.lng().toFixed(6));
 
       if (self.map_data[mapid].search) {
-        self.geocoder.geocode({'latLng': position}, function (results, status) {
-          if (status == google.maps.GeocoderStatus.OK) {
+        self.geocoder.geocode({latLng: position}, function (results, status) {
+          if (status === google.maps.GeocoderStatus.OK) {
             if (results[0]) {
               self.map_data[mapid].search.val(results[0].formatted_address);
               self.map_data[mapid].geoaddress_field.val(results[0].formatted_address);
@@ -157,7 +159,7 @@
     geofield_onchange: function (mapid) {
       var self = this;
       var location = {};
-      switch(self.map_data[mapid].map_library) {
+      switch (self.map_data[mapid].map_library) {
         case 'leaflet':
           location = L.latLng(
             self.map_data[mapid].lat.val(),
@@ -179,7 +181,7 @@
     // Coordinates update.
     lat_lon_fields_update: function (mapid, position) {
       var self = this;
-      switch(self.map_data[mapid].map_library) {
+      switch (self.map_data[mapid].map_library) {
         case 'leaflet':
           self.map_data[mapid].lat.val(position.lat.toFixed(6));
           self.map_data[mapid].lng.val(position.lng.toFixed(6));
@@ -193,8 +195,8 @@
     // Reverse geocode.
     reverse_geocode: function (mapid, position) {
       var self = this;
-      self.geocoder.geocode({'latLng': position}, function (results, status) {
-        if (status == google.maps.GeocoderStatus.OK) {
+      self.geocoder.geocode({latLng: position}, function (results, status) {
+        if (status === google.maps.GeocoderStatus.OK) {
           if (results[0] && self.map_data[mapid].search) {
             self.map_data[mapid].search.val(results[0].formatted_address);
             self.map_data[mapid].geoaddress_field.val(self.map_data[mapid].search.val());
@@ -207,7 +209,7 @@
     getLatLng: function(mapid, lat, lng) {
       var self = this;
       var latLng = {};
-      switch(self.map_data[mapid].map_library) {
+      switch (self.map_data[mapid].map_library) {
         case 'leaflet':
           latLng = L.latLng(lat, lng);
           break;
@@ -221,8 +223,8 @@
     getGeofieldMap: function(mapid) {
       var self = this;
       var map = {};
-      var zoom_start = self.map_data[mapid].entity_operation != 'edit' ? Number(self.map_data[mapid].zoom_start) : Number(self.map_data[mapid].zoom_focus);
-      switch(self.map_data[mapid].map_library) {
+      var zoom_start = self.map_data[mapid].entity_operation !== 'edit' ? Number(self.map_data[mapid].zoom_start) : Number(self.map_data[mapid].zoom_focus);
+      switch (self.map_data[mapid].map_library) {
         case 'leaflet':
           map = L.map(mapid, {
             center: self.map_data[mapid].location,
@@ -231,12 +233,12 @@
 
           var baseLayers = {};
           for (var key in self.map_data[mapid].map_types_leaflet) {
-            if(self.map_data[mapid].map_types_leaflet.hasOwnProperty(key)) {
+            if (self.map_data[mapid].map_types_leaflet.hasOwnProperty(key)) {
               baseLayers[key] = L.tileLayer(self.map_data[mapid].map_types_leaflet[key].url, self.map_data[mapid].map_types_leaflet[key].options);
             }
           }
           baseLayers[self.map_data[mapid].map_type].addTo(map);
-          if(self.map_data[mapid].map_type_selector) {
+          if (self.map_data[mapid].map_type_selector) {
             L.control.layers(baseLayers).addTo(map);
           }
 
@@ -267,7 +269,7 @@
 
     setZoomToFocus: function(mapid) {
       var self = this;
-      switch(self.map_data[mapid].map_library) {
+      switch (self.map_data[mapid].map_library) {
         case 'leaflet':
           self.map_data[mapid].map.setZoom(self.map_data[mapid].zoom_focus, {animate: false});
           break;
@@ -280,7 +282,7 @@
     setMarker: function(mapid, location) {
       var self = this;
       var marker = {};
-      switch(self.map_data[mapid].map_library) {
+      switch (self.map_data[mapid].map_library) {
         case 'leaflet':
           marker = L.marker(location, {draggable: true});
           marker.addTo(self.map_data[mapid].map);
@@ -298,7 +300,7 @@
 
     setMarkerPosition: function(mapid, location) {
       var self = this;
-      switch(self.map_data[mapid].map_library) {
+      switch (self.map_data[mapid].map_library) {
         case 'leaflet':
           self.map_data[mapid].marker.setLatLng(location);
           break;
@@ -311,7 +313,7 @@
     getMarkerPosition: function(mapid) {
       var self = this;
       var latLng = {};
-      switch(self.map_data[mapid].map_library) {
+      switch (self.map_data[mapid].map_library) {
         case 'leaflet':
           latLng = self.map_data[mapid].marker.getLatLng();
           break;

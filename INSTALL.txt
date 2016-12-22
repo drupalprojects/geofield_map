@@ -1,6 +1,10 @@
 STEPS TO INSTALL:
 =========
 
-1. Install the module the drupal way (http://drupal.org/documentation/install/modules-themes/modules-8)
-2. In a Content Type including a Geofield Field, go to "Manage form display" and select "Geofield Map" as geofield Widget.
+1. Install the module the drupal way
+(http://drupal.org/documentation/install/modules-themes/modules-8)
+
+2. In a Content Type including a Geofield Field, go to "Manage form display"
+and select "Geofield Map" as geofield Widget.
+
 3. Specify the Widget further settings for both Google or Leaflet Map types;

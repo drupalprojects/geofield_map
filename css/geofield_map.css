@@ -1,7 +1,7 @@
 .geofield-map-cnt {
-	width: 600px;
-	height: 460px;
-	display: block;
+  width: 600px;
+  height: 460px;
+  display: block;
   margin: 10px 0;
   border: solid thin darkgray;
 }
