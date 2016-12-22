@@ -234,7 +234,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#title' => t('Map Library'),
       '#default_value' => $this->getSetting('map_library'),
       '#options' => array(
-        'gmap' => 'Google Maps',
+        'gmap' => t('Google Maps'),
         'leaflet' => t('Leaflet js'),
       ),
     );
