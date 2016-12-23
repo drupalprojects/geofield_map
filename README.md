@@ -10,7 +10,7 @@ adding the option to manage a [Leaflet Map](http://leafletjs.com/),
 besides the only [Google Map](https://developers.google.com/maps/web/) type one.
 
 Moreover it adds:
-- the ability search an address throughout a Geocoder Field, with 
+- the ability to search an address throughout a Geocoder Field, with 
 Autocompletion based on the Google Places API,
 - a Reverse Geocoding on the same field based on the map click or marker 
 dragging, etc.,
