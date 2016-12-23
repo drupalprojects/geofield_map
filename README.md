@@ -35,12 +35,14 @@ functionalities, for detailed Addresses Geocoding.
 The Module settings comprehend the following options:
 
 1. Use HTML5 Geolocation to find user location;
-2. Choose among different Map Types (Roadmap, Satellite, Hybrid, Terrain);
-2. Click to Find marker: Provides a button to recenter the map 
+2. Choose among different Map Types between Google Maps 
+(Roadmap, Satellite, Hybrid, Terrain) and Leaflet ones;
+3. Set specific Zoom levels for the Map (start, min, max);
+4. Click to Find marker: Provides a button to recenter the map 
 on the marker location;
-3. Click to place marker: Provides a button to place the marker 
+5. Click to place marker: Provides a button to place the marker 
 in the center location;
-4. Geoaddress Field: Allows to choose a "string" type field 
+6. Geoaddress Field: Allows to choose a "string" type field 
 (among the ones on the content type) to sync and populate 
 with the Search / Reverse Geocoded Address. Further settings allows to hide 
 and disable this "Geo address" Field in the content edit form;
