@@ -58,7 +58,7 @@ class GeofieldMap extends GeofieldElementBase {
    * @return array
    *   The processed element.
    */
-  public static function latLonProcess(array &$element, FormStateInterface $form_state, &$complete_form) {
+  public static function latLonProcess(array &$element, FormStateInterface $form_state, array &$complete_form) {
 
     // Attach GMap Js Api.
     $element['#attached']['library'][] = 'geofield_map/geofield_map.gmaps';

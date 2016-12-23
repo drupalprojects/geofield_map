@@ -1,5 +1,5 @@
 STEPS TO INSTALL:
-=========
+=================
 
 1. Install the module the drupal way
 (http://drupal.org/documentation/install/modules-themes/modules-8)

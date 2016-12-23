@@ -206,7 +206,7 @@
     },
 
     // Define a Geographical point, from coordinates.
-    getLatLng: function(mapid, lat, lng) {
+    getLatLng: function (mapid, lat, lng) {
       var self = this;
       var latLng = {};
       switch (self.map_data[mapid].map_library) {
@@ -220,7 +220,7 @@
     },
 
     // Define the Geofield Map.
-    getGeofieldMap: function(mapid) {
+    getGeofieldMap: function (mapid) {
       var self = this;
       var map = {};
       var zoom_start = self.map_data[mapid].entity_operation !== 'edit' ? Number(self.map_data[mapid].zoom_start) : Number(self.map_data[mapid].zoom_focus);
@@ -267,7 +267,7 @@
       return map;
     },
 
-    setZoomToFocus: function(mapid) {
+    setZoomToFocus: function (mapid) {
       var self = this;
       switch (self.map_data[mapid].map_library) {
         case 'leaflet':
@@ -275,11 +275,11 @@
           break;
 
         default:
-          self.map_data[mapid].map.setZoom(self.map_data[mapid].zoom_focus)
+          self.map_data[mapid].map.setZoom(self.map_data[mapid].zoom_focus);
       }
     },
 
-    setMarker: function(mapid, location) {
+    setMarker: function (mapid, location) {
       var self = this;
       var marker = {};
       switch (self.map_data[mapid].map_library) {
@@ -298,7 +298,7 @@
       return marker;
     },
 
-    setMarkerPosition: function(mapid, location) {
+    setMarkerPosition: function (mapid, location) {
       var self = this;
       switch (self.map_data[mapid].map_library) {
         case 'leaflet':
@@ -310,7 +310,7 @@
       }
     },
 
-    getMarkerPosition: function(mapid) {
+    getMarkerPosition: function (mapid) {
       var self = this;
       var latLng = {};
       switch (self.map_data[mapid].map_library) {
@@ -325,9 +325,9 @@
     },
 
 
-    mapSetCenter: function(mapid, location) {
+    mapSetCenter: function (mapid, location) {
       var self = this;
-      switch(self.map_data[mapid].map_library) {
+      switch (self.map_data[mapid].map_library) {
         case 'leaflet':
           self.map_data[mapid].map.panTo(location, {animate: false});
           break;
@@ -338,7 +338,7 @@
     },
 
     // Init Geofield Map and its functions.
-    map_initialize: function (params){
+    map_initialize: function (params) {
       this.map_data[params.mapid] = params;
       var self = this;
       jQuery.noConflict();
@@ -349,10 +349,10 @@
       }
 
       // Define the Geocoder Search Field Selector;
-      self.map_data[params.mapid].search = jQuery("#" + params.searchid);
+      self.map_data[params.mapid].search = jQuery('#' + params.searchid);
 
       // Define the Geoaddress Associated Field Selector;
-      self.map_data[params.mapid].geoaddress_field = jQuery("#" + params.geoaddress_field_id);
+      self.map_data[params.mapid].geoaddress_field = jQuery('#' + params.geoaddress_field_id);
 
       // Define the Geofield Location.
       var location = self.getLatLng(params.mapid, params.lat, params.lng);
@@ -384,13 +384,13 @@
 
       // Define Lat & Lng input selectors and all related functionalities and Geofield Map Listeners
       if (params.widget && params.latid && params.lngid) {
-        self.map_data[params.mapid].lat = jQuery("#" + params.latid);
-        self.map_data[params.mapid].lng = jQuery("#" + params.lngid);
+        self.map_data[params.mapid].lat = jQuery('#' + params.latid);
+        self.map_data[params.mapid].lng = jQuery('#' + params.lngid);
         if (self.map_data[params.mapid].search) {
           self.map_data[params.mapid].search.autocomplete({
             // This bit uses the geocoder to fetch address values.
             source: function (request, response) {
-              self.geocoder.geocode({'address': request.term }, function (results, status) {
+              self.geocoder.geocode({address: request.term}, function (results, status) {
                 response(jQuery.map(results, function (item) {
                   return {
                     label: item.formatted_address,
@@ -416,12 +416,12 @@
 
           // Geocode user input on enter.
           self.map_data[params.mapid].search.keydown(function (e) {
-            if (e.which == 13) {
+            if (e.which === 13) {
               e.preventDefault();
               var input = self.map_data[params.mapid].search.val();
               // Execute the geocoder
-              self.geocoder.geocode({'address': input }, function (results, status) {
-                if (status == google.maps.GeocoderStatus.OK) {
+              self.geocoder.geocode({address: input}, function (results, status) {
+                if (status === google.maps.GeocoderStatus.OK) {
                   if (results[0]) {
                     // Set the location
                     var location = self.getLatLng(params.mapid, results[0].geometry.location.lat(), results[0].geometry.location.lng());
@@ -437,7 +437,7 @@
             }
           });
 
-          if('gmap' == params.map_library) {
+          if('gmap' === params.map_library) {
             // Add listener to marker for reverse geocoding.
             google.maps.event.addListener(marker, 'dragend', function () {
               self.geofields_update(params.mapid, marker.getPosition());
@@ -451,7 +451,7 @@
 
           }
 
-          if('leaflet' == params.map_library) {
+          if (params.map_library === 'leaflet') {
             marker.on('dragend', function(e) {
               self.geofields_update(params.mapid, marker.getLatLng());
             });
@@ -470,7 +470,7 @@
         jQuery('#' + self.map_data[params.mapid].latid).on('change', function(e) {
           self.geofield_onchange(params.mapid);
         }).keydown(function (e) {
-          if (e.which == 13) {
+          if (e.which === 13) {
             e.preventDefault();
             self.geofield_onchange(params.mapid);
           }
@@ -480,7 +480,7 @@
         jQuery('#' + self.map_data[params.mapid].lngid).on('change', function(e) {
           self.geofield_onchange(params.mapid);
         }).keydown(function (e) {
-          if (e.which == 13) {
+          if (e.which === 13) {
             e.preventDefault();
             self.geofield_onchange(params.mapid);
           }
@@ -490,7 +490,8 @@
         if (self.map_data[params.mapid].geoaddress_field.length) {
           // Copy from the geoaddress_field.val
           self.map_data[params.mapid].search.val(self.map_data[params.mapid].geoaddress_field.val());
-        } else {
+        }
+        else {
           // Sets as reverse geocode from the Geofield.
           self.reverse_geocode(params.mapid, location);
         }
