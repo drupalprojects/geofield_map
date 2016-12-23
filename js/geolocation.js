@@ -1,13 +1,15 @@
 (function ($, Drupal) {
 
-  'use strict'
+  'use strict';
 
   Drupal.behaviors.geofieldMapGeolocation = {
     attach: function (context, settings) {
 
+      var fields = $(context);
+
       // Don't do anything if we're on field configuration
-      if (!$(context).find('#edit-instance').length) {
-        var fields = $(context);
+      if (!fields.find('#edit-instance').length) {
+
         // Check that we have something to fill up
         // On multi values check only that the first one is empty
         if (fields.find('.auto-geocode .geofield-lat').val() === '' && $fields.find('.auto-geocode .geofield-lon').val() === '') {

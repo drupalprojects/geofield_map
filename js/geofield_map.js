@@ -371,13 +371,13 @@
       self.map_data[params.mapid].marker = marker;
 
       // Bind click to find_marker functionality.
-      jQuery('#' + self.map_data[params.mapid].click_to_find_marker_id).click(function(e) {
+      jQuery('#' + self.map_data[params.mapid].click_to_find_marker_id).click(function (e) {
         e.preventDefault();
         self.find_marker(self.map_data[params.mapid].mapid);
       });
 
       // Bind click to place_marker functionality.
-      jQuery('#' + self.map_data[params.mapid].click_to_place_marker_id).click(function(e) {
+      jQuery('#' + self.map_data[params.mapid].click_to_place_marker_id).click(function (e) {
         e.preventDefault();
         self.place_marker(self.map_data[params.mapid].mapid);
       });
@@ -437,7 +437,7 @@
             }
           });
 
-          if('gmap' === params.map_library) {
+          if (params.map_library === 'gmap') {
             // Add listener to marker for reverse geocoding.
             google.maps.event.addListener(marker, 'dragend', function () {
               self.geofields_update(params.mapid, marker.getPosition());
@@ -452,11 +452,11 @@
           }
 
           if (params.map_library === 'leaflet') {
-            marker.on('dragend', function(e) {
+            marker.on('dragend', function (e) {
               self.geofields_update(params.mapid, marker.getLatLng());
             });
 
-            map.on('click', function(event) {
+            map.on('click', function (event) {
               var position = event.latlng;
               self.setMarkerPosition(params.mapid, position);
               self.geofields_update(params.mapid, position);
@@ -467,7 +467,7 @@
         }
 
         // Events on Lat field change.
-        jQuery('#' + self.map_data[params.mapid].latid).on('change', function(e) {
+        jQuery('#' + self.map_data[params.mapid].latid).on('change', function (e) {
           self.geofield_onchange(params.mapid);
         }).keydown(function (e) {
           if (e.which === 13) {
@@ -477,7 +477,7 @@
         });
 
         // Events on Lon field change.
-        jQuery('#' + self.map_data[params.mapid].lngid).on('change', function(e) {
+        jQuery('#' + self.map_data[params.mapid].lngid).on('change', function (e) {
           self.geofield_onchange(params.mapid);
         }).keydown(function (e) {
           if (e.which === 13) {
