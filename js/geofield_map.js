@@ -354,6 +354,9 @@
       // Define the Geoaddress Associated Field Selector;
       self.map_data[params.mapid].geoaddress_field = jQuery('#' + params.geoaddress_field_id);
 
+      console.log(params.geoaddress_field_id);
+      console.log(self.map_data[params.mapid].geoaddress_field);
+
       // Define the Geofield Location.
       var location = self.getLatLng(params.mapid, params.lat, params.lng);
       self.map_data[params.mapid].location = location;

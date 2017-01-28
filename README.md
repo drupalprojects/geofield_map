@@ -14,8 +14,8 @@ Moreover it adds:
 Autocompletion based on the Google Places API,
 - a Reverse Geocoding on the same field based on the map click or marker 
 dragging, etc.,
-- the possibility to permanently store the Geocoded address 
-in a "string" type field.
+- the possibility to permanently store the Geocoded address into the Entity Title
+or in a "string" type field (among the content type ones).
 
 ###Installation and Use
 
@@ -42,7 +42,7 @@ The Module settings comprehend the following options:
 on the marker location;
 5. Click to place marker: Provides a button to place the marker 
 in the center location;
-6. Geoaddress Field: Allows to choose a "string" type field 
-(among the ones on the content type) to sync and populate 
+6. Geoaddress Field: Allows to choose the Entity Title, or a "string" type field 
+(among the content type ones), to sync and populate 
 with the Search / Reverse Geocoded Address. Further settings allows to hide 
 and disable this "Geo address" Field in the content edit form;

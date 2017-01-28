@@ -345,6 +345,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
 
     $string_fields_options = [
       '0' => $this->t('- Any -'),
+      'title' => $this->t('- Title -'),
     ];
 
     foreach ($fields_list[$form['#entity_type']] as $k => $field) {
