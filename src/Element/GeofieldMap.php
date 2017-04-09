@@ -74,17 +74,29 @@ class GeofieldMap extends GeofieldElementBase {
       '#weight' => 0,
     ];
 
-    $element['map']['geocode'] = array(
-      '#prefix' => '<label>' . t("Geocode address") . '</label>',
-      '#type' => 'textfield',
-      '#placeholder' => t("Input you search location"),
-      '#size' => 60,
-      '#maxlength' => 128,
-      '#attributes' => [
-        'id' => 'search-' . $element['#id'],
-        'class' => ['form-text', 'form-autocomplete', 'geofield-map-search'],
-      ],
-    );
+    if (strlen($element['#gmap_api_key'] > 0)) {
+      $element['map']['geocode'] = array(
+        '#prefix' => '<label>' . t("Geocode address") . '</label>',
+        '#type' => 'textfield',
+        '#placeholder' => t("Input you search location"),
+        '#size' => 60,
+        '#maxlength' => 128,
+        '#attributes' => [
+          'id' => 'search-' . $element['#id'],
+          'class' => ['form-text', 'form-autocomplete', 'geofield-map-search'],
+        ],
+      );
+    }
+    else {
+      $element['map']['geocode_missing'] = array(
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => t('Gmap Api Key missing ! The Geocode Address and ReverseGeocode functionality not available.'),
+        '#attributes' => [
+          'class' => ['geofield-map-search-missing'],
+        ],
+      );
+    }
 
     $element['map']['geofield_map'] = array(
       '#type' => 'html_tag',
@@ -180,7 +192,7 @@ class GeofieldMap extends GeofieldElementBase {
         'zoom_max' => $element['#zoom']['max'],
         'latid' => $element['lat']['#attributes']['id'],
         'lngid' => $element['lon']['#attributes']['id'],
-        'searchid' => $element['map']['geocode']['#attributes']['id'],
+        'searchid' => isset($element['map']['geocode']) ? $element['map']['geocode']['#attributes']['id'] : NULL,
         'geoaddress_field' => ($element['#geoaddress_field']['field'] != '0') ? $element['#geoaddress_field']['field'] : NULL,
         'geoaddress_field_id' => ($element['#geoaddress_field']['field'] != '0') ? $complete_form[$element['#geoaddress_field']['field']]['widget'][0]['value']['#id'] : NULL,
         'mapid' => $mapid,

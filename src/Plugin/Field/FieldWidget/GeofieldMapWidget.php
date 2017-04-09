@@ -229,32 +229,29 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
 
     $elements['#tree'] = TRUE;
 
-    $elements['map_library'] = array(
-      '#type' => 'select',
-      '#title' => t('Map Library'),
-      '#default_value' => $this->getSetting('map_library'),
-      '#options' => array(
-        'gmap' => t('Google Maps'),
-        'leaflet' => t('Leaflet js'),
-      ),
-    );
-
     $elements['map_google_api_key'] = [
       '#type' => 'textfield',
-      '#title' => t('Gmap Api Key (@link)', array(
+      '#title' => $this->t('Gmap Api Key (@link)', array(
         '@link' => $this->link->generate(t('Get a Key/Authentication for Google Maps Javascript Library'), Url::fromUri('https://developers.google.com/maps/documentation/javascript/get-api-key', array('absolute' => TRUE, 'attributes' => array('target' => 'blank')))),
       )),
       '#default_value' => $this->getSetting('map_google_api_key'),
-      '#states' => [
-        'invisible' => [
-          ':input[name="fields[field_geofield][settings_edit_form][settings][map_library]"]' => ['value' => 'leaflet'],
-        ],
-      ],
+      '#description' => $this->t('Gmap Api Key is needed for the Geocoding and Reverse Geocoding functionalities, also with Leaflet Map rendering.'),
+      // @TODO: un-comment this '#required' => TRUE,
     ];
+
+    $elements['map_library'] = array(
+      '#type' => 'select',
+      '#title' => $this->t('Map Library'),
+      '#default_value' => $this->getSetting('map_library'),
+      '#options' => array(
+        'gmap' => $this->t('Google Maps'),
+        'leaflet' => $this->t('Leaflet js'),
+      ),
+    );
 
     $elements['map_type_google'] = [
       '#type' => 'select',
-      '#title' => t('Map type'),
+      '#title' => $this->t('Map type'),
       '#default_value' => $this->getSetting('map_type_google'),
       '#options' => $this->gMapTypesOptions,
       '#states' => [
@@ -266,7 +263,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
 
     $elements['map_type_leaflet'] = [
       '#type' => 'select',
-      '#title' => t('Map type'),
+      '#title' => $this->t('Map type'),
       '#default_value' => $this->getSetting('map_type_leaflet'),
       '#options' => $this->leafletTileLayersOptions,
       '#states' => [
@@ -278,7 +275,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
 
     $elements['map_type_selector'] = [
       '#type' => 'checkbox',
-      '#title' => t('Provide a Map type Selector on the Map'),
+      '#title' => $this->t('Provide a Map type Selector on the Map'),
       '#description' => $this->t('If checked, the user will be able to change Map Type throughout the selector.'),
       '#default_value' => $this->getSetting('map_type_selector'),
     ];
@@ -292,7 +289,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#type' => 'number',
       '#min' => 2,
       '#max' => 13,
-      '#title' => t('Start Zoom level'),
+      '#title' => $this->t('Start Zoom level'),
       '#description' => $this->t('The initial Zoom level for an empty Geofield.'),
       '#default_value' => $this->getSetting('zoom')['start'],
     );
@@ -301,7 +298,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#type' => 'number',
       '#min' => 8,
       '#max' => 16,
-      '#title' => t('Focus Zoom level'),
+      '#title' => $this->t('Focus Zoom level'),
       '#description' => $this->t('The Zoom level for an assigned Geofield or for Geocoding operations results.'),
       '#default_value' => $this->getSetting('zoom')['focus'],
     );
@@ -310,7 +307,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#type' => 'number',
       '#min' => 1,
       '#max' => 7,
-      '#title' => t('Min Zoom level'),
+      '#title' => $this->t('Min Zoom level'),
       '#description' => $this->t('The Min Zoom level for the Map.'),
       '#default_value' => $this->getSetting('zoom')['min'],
     );
@@ -319,21 +316,21 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#type' => 'number',
       '#min' => 7,
       '#max' => 18,
-      '#title' => t('Max Zoom level'),
+      '#title' => $this->t('Max Zoom level'),
       '#description' => $this->t('The Max Zoom level for the Map.'),
       '#default_value' => $this->getSetting('zoom')['max'],
     );
 
     $elements['click_to_find_marker'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Click to Find marker'),
+      '#title' => $this->t('Click to Find marker'),
       '#description' => $this->t('Provides a button to recenter the map on the marker location.'),
       '#default_value' => $this->getSetting('click_to_find_marker'),
     );
 
     $elements['click_to_place_marker'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Click to place marker'),
+      '#title' => $this->t('Click to place marker'),
       '#description' => $this->t('Provides a button to place the marker in the center location.'),
       '#default_value' => $this->getSetting('click_to_place_marker'),
     );
@@ -414,7 +411,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     ];
 
     $map_type_selector = [
-      '#markup' => $this->t('Map Type Selector: @state', array('@state' => $this->getSetting('map_type_selector') ? t('enabled') : t('disabled'))),
+      '#markup' => $this->t('Map Type Selector: @state', array('@state' => $this->getSetting('map_type_selector') ? $this->t('enabled') : $this->t('disabled'))),
     ];
 
     $map_zoom_levels = [
@@ -427,15 +424,15 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     $map_zoom_levels['#markup'] .= ' ' . $this->t('Max: @state;', array('@state' => $this->getSetting('zoom')['max']));
 
     $html5 = [
-      '#markup' => $this->t('HTML5 Geolocation button: @state', array('@state' => $this->getSetting('html5_geolocation') ? t('enabled') : t('disabled'))),
+      '#markup' => $this->t('HTML5 Geolocation button: @state', array('@state' => $this->getSetting('html5_geolocation') ? $this->t('enabled') : $this->t('disabled'))),
     ];
 
     $map_center = [
-      '#markup' => $this->t('Click to find marker: @state', array('@state' => $this->getSetting('click_to_find_marker') ? t('enabled') : t('disabled'))),
+      '#markup' => $this->t('Click to find marker: @state', array('@state' => $this->getSetting('click_to_find_marker') ? $this->t('enabled') : $this->t('disabled'))),
     ];
 
     $marker_center = [
-      '#markup' => $this->t('Click to place marker: @state', array('@state' => $this->getSetting('click_to_place_marker') ? t('enabled') : t('disabled'))),
+      '#markup' => $this->t('Click to place marker: @state', array('@state' => $this->getSetting('click_to_place_marker') ? $this->t('enabled') : $this->t('disabled'))),
     ];
 
     $geoaddress_field_field = [

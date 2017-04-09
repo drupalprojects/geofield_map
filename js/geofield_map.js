@@ -83,7 +83,7 @@
 
       // If a Google API key is set, define it.
       if (typeof drupalSettings['geofield_map'][mapid]['gmap_api_key'] !== 'undefined' && drupalSettings['geofield_map'][mapid]['gmap_api_key'] !== null) {
-        var gmap_api_key = drupalSettings['geofield_map'][mapid]['gmap_api_key'];
+        self.gmap_api_key = drupalSettings['geofield_map'][mapid]['gmap_api_key'];
       }
 
       // Add the callback.
@@ -102,7 +102,7 @@
         var scriptPath = '//maps.googleapis.com/maps/api/js?v=3.exp&sensor=false';
 
         // If a Google API key is set, use it.
-        if (gmap_api_key) {
+        if (self.gmap_api_key) {
           scriptPath += '&key=' + drupalSettings['geofield_map'][mapid]['gmap_api_key'];
         }
 
@@ -353,11 +353,15 @@
         self.geocoder = new google.maps.Geocoder();
       }
 
-      // Define the Geocoder Search Field Selector;
-      self.map_data[params.mapid].search = jQuery('#' + params.searchid);
+      if(params.searchid !== null) {
 
-      // Define the Geoaddress Associated Field Selector;
-      self.map_data[params.mapid].geoaddress_field = jQuery('#' + params.geoaddress_field_id);
+        // Define the Geocoder Search Field Selector;
+        self.map_data[params.mapid].search = jQuery('#' + params.searchid);
+
+        // Define the Geoaddress Associated Field Selector;
+        self.map_data[params.mapid].geoaddress_field = jQuery('#' + params.geoaddress_field_id);
+
+      }
 
       // Define the Geofield Location.
       var location = self.getLatLng(params.mapid, params.lat, params.lng);
@@ -391,6 +395,8 @@
       if (params.widget && params.latid && params.lngid) {
         self.map_data[params.mapid].lat = jQuery('#' + params.latid);
         self.map_data[params.mapid].lng = jQuery('#' + params.lngid);
+
+        // If it is defined the Geocode address Search field (dependant on the Gmaps API key)
         if (self.map_data[params.mapid].search) {
           self.map_data[params.mapid].search.autocomplete({
             // This bit uses the geocoder to fetch address values.
@@ -441,33 +447,32 @@
               });
             }
           });
+        }
 
-          if (params.map_library === 'gmap') {
-            // Add listener to marker for reverse geocoding.
-            google.maps.event.addListener(marker, 'dragend', function () {
-              self.geofields_update(params.mapid, marker.getPosition());
-            });
+        if (params.map_library === 'gmap') {
+          // Add listener to marker for reverse geocoding.
+          google.maps.event.addListener(marker, 'dragend', function () {
+            self.geofields_update(params.mapid, marker.getPosition());
+          });
 
-            google.maps.event.addListener(map, 'click', function (event) {
-              var position = self.getLatLng(params.mapid, event.latLng.lat(), event.latLng.lng());
-              self.setMarkerPosition(params.mapid, position);
-              self.geofields_update(params.mapid, position);
-            });
+          google.maps.event.addListener(map, 'click', function (event) {
+            var position = self.getLatLng(params.mapid, event.latLng.lat(), event.latLng.lng());
+            self.setMarkerPosition(params.mapid, position);
+            self.geofields_update(params.mapid, position);
+          });
 
-          }
+        }
 
-          if (params.map_library === 'leaflet') {
-            marker.on('dragend', function (e) {
-              self.geofields_update(params.mapid, marker.getLatLng());
-            });
+        if (params.map_library === 'leaflet') {
+          marker.on('dragend', function (e) {
+            self.geofields_update(params.mapid, marker.getLatLng());
+          });
 
-            map.on('click', function (event) {
-              var position = event.latlng;
-              self.setMarkerPosition(params.mapid, position);
-              self.geofields_update(params.mapid, position);
-            });
-
-          }
+          map.on('click', function (event) {
+            var position = event.latlng;
+            self.setMarkerPosition(params.mapid, position);
+            self.geofields_update(params.mapid, position);
+          });
 
         }
 
@@ -492,7 +497,7 @@
         });
 
         // Set default search field value.
-        if (self.map_data[params.mapid].geoaddress_field.length) {
+        if (self.map_data[params.mapid].search && self.map_data[params.mapid].geoaddress_field.length) {
           // Copy from the geoaddress_field.val
           self.map_data[params.mapid].search.val(self.map_data[params.mapid].geoaddress_field.val());
         }
