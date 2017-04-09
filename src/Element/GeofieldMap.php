@@ -74,7 +74,7 @@ class GeofieldMap extends GeofieldElementBase {
       '#weight' => 0,
     ];
 
-    if (strlen($element['#gmap_api_key'] > 0)) {
+    if (strlen($element['#gmap_api_key']) > 0) {
       $element['map']['geocode'] = array(
         '#prefix' => '<label>' . t("Geocode address") . '</label>',
         '#type' => 'textfield',
