@@ -42,7 +42,12 @@ The Module settings comprehend the following options:
 on the marker location;
 5. Click to place marker: Provides a button to place the marker 
 in the center location;
-6. Geoaddress Field: Allows to choose the Entity Title, or a "string" type field 
+6. Geoaddress Field: If a not null Google Maps API Key is set, 
+allows to choose the Entity Title, or a "string" type field 
 (among the content type ones), to sync and populate 
 with the Search / Reverse Geocoded Address. Further settings allows to hide 
 and disable this "Geo address" Field in the content edit form;
+
+Note: Valid Gmap Api Key is needed for the Geocoding and Reverse Geocoding functionalities, also with Leaflet Map rendering, 
+as they are based on Google Places library and geocoder.
+It is also needed to enable the Geoaddressed Field options, to allow the Searched / Reverse Geocoded Address functionalities.
