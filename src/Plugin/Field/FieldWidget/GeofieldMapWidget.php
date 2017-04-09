@@ -235,7 +235,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
         '@link' => $this->link->generate(t('Get a Key/Authentication for Google Maps Javascript Library'), Url::fromUri('https://developers.google.com/maps/documentation/javascript/get-api-key', array('absolute' => TRUE, 'attributes' => array('target' => 'blank')))),
       )),
       '#default_value' => $this->getSetting('map_google_api_key'),
-      '#description' => $this->t('Gmap Api Key is needed for the Geocoding and Reverse Geocoding functionalities, also with Leaflet Map rendering.'),
+      '#description' => $this->t('Gmap Api Key is needed for the Geocoding and Reverse Geocoding functionalities, also with Leaflet Map rendering.<br>This (not null) is needed to enable the Geoaddressed Field options, to allow the Searched / Reverse Geocoded Address functionalities.'),
       // @TODO: un-comment this '#required' => TRUE,
     ];
 
@@ -356,6 +356,11 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     $elements['geoaddress_field'] = array(
       '#type' => 'fieldset',
       '#title' => $this->t('Geoaddressed Field'),
+      '#states' => [
+        'invisible' => [
+          ':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][map_google_api_key]"]' => ['value' => ''],
+        ],
+      ],
     );
 
     $elements['geoaddress_field']['field'] = array(
@@ -371,11 +376,6 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#title' => $this->t('<strong>Hide</strong> this field in the Content Edit Form ?'),
       '#description' => $this->t('If checked, the selected Geoaddress Field will be Hidden to the user in the edit form, </br>and totally managed by the Geofield Reverse Geocode'),
       '#default_value' => $this->getSetting('geoaddress_field')['hidden'],
-      '#states' => [
-        'invisible' => [
-          ':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][geoaddress_field][field]"]' => ['value' => '0'],
-        ],
-      ],
     );
 
     $elements['geoaddress_field']['disabled'] = array(
@@ -385,7 +385,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#default_value' => $this->getSetting('geoaddress_field')['disabled'],
       '#states' => [
         'invisible' => [
-          ':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][geoaddress_field][field]"]' => ['value' => '0'],
+          ':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][geoaddress_field][hidden]"]' => ['checked' => TRUE],
         ],
       ],
     );
