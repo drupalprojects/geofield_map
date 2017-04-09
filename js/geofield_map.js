@@ -123,7 +123,7 @@
     find_marker: function (mapid) {
       var self = this;
       google.maps.event.trigger(self.map_data[mapid].map, 'resize');
-      self.map_data[mapid].map.setCenter(self.map_data[mapid].marker.getPosition());
+      self.mapSetCenter(mapid, self.getMarkerPosition(mapid));
     },
 
     // Place marker at the current center of the map.
@@ -137,10 +137,8 @@
 
       google.maps.event.trigger(self.map_data[mapid].map, 'resize');
       var position = self.map_data[mapid].map.getCenter();
-      self.map_data[mapid].marker.setPosition(position);
-      self.map_data[mapid].lat.val(position.lat().toFixed(6));
-      self.map_data[mapid].lng.val(position.lng().toFixed(6));
-
+      self.setMarkerPosition(mapid, position);
+      self.setLatLngValues(mapid, position);
       if (self.map_data[mapid].search) {
         self.geocoder.geocode({latLng: position}, function (results, status) {
           if (status === google.maps.GeocoderStatus.OK) {
@@ -156,7 +154,7 @@
     // Geofields update.
     geofields_update: function (mapid, position) {
       var self = this;
-      self.lat_lon_fields_update(mapid, position);
+      self.setLatLngValues(mapid, position);
       self.reverse_geocode(mapid, position);
     },
 
@@ -184,7 +182,7 @@
     },
 
     // Coordinates update.
-    lat_lon_fields_update: function (mapid, position) {
+    setLatLngValues: function (mapid, position) {
       var self = this;
       switch (self.map_data[mapid].map_library) {
         case 'leaflet':
@@ -420,7 +418,7 @@
               self.mapSetCenter(params.mapid, location);
               self.setZoomToFocus(params.mapid);
               // Fill the lat/lon fields with the new info
-              self.lat_lon_fields_update(params.mapid, self.getMarkerPosition(params.mapid, marker));
+              self.setLatLngValues(params.mapid, self.getMarkerPosition(params.mapid, marker));
               self.map_data[params.mapid].geoaddress_field.val(ui.item.value);
             }
           });
@@ -440,7 +438,7 @@
                     self.mapSetCenter(params.mapid, location);
                     self.setZoomToFocus(params.mapid);
                     // Fill the lat/lon fields with the new info
-                    self.lat_lon_fields_update(params.mapid, self.getMarkerPosition(params.mapid));
+                    self.setLatLngValues(params.mapid, self.getMarkerPosition(params.mapid));
                     self.map_data[params.mapid].geoaddress_field.val(self.map_data[params.mapid].search.val());
                   }
                 }
