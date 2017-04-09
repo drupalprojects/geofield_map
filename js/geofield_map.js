@@ -81,6 +81,11 @@
     loadGoogle: function (mapid, callback) {
       var self = this;
 
+      // If a Google API key is set, define it.
+      if (typeof drupalSettings['geofield_map'][mapid]['gmap_api_key'] !== 'undefined' && drupalSettings['geofield_map'][mapid]['gmap_api_key'] !== null) {
+        var gmap_api_key = drupalSettings['geofield_map'][mapid]['gmap_api_key'];
+      }
+
       // Add the callback.
       self.addCallback(callback);
 
@@ -97,7 +102,7 @@
         var scriptPath = '//maps.googleapis.com/maps/api/js?v=3.exp&sensor=false';
 
         // If a Google API key is set, use it.
-        if (typeof drupalSettings['geofield_map'][mapid]['gmap_api_key'] !== 'undefined') {
+        if (gmap_api_key) {
           scriptPath += '&key=' + drupalSettings['geofield_map'][mapid]['gmap_api_key'];
         }
 
@@ -353,9 +358,6 @@
 
       // Define the Geoaddress Associated Field Selector;
       self.map_data[params.mapid].geoaddress_field = jQuery('#' + params.geoaddress_field_id);
-
-      console.log(params.geoaddress_field_id);
-      console.log(self.map_data[params.mapid].geoaddress_field);
 
       // Define the Geofield Location.
       var location = self.getLatLng(params.mapid, params.lat, params.lng);

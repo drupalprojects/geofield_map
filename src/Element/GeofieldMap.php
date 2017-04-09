@@ -170,7 +170,7 @@ class GeofieldMap extends GeofieldElementBase {
       $mapid => [
         'entity_operation' => $entity_operation,
         'id' => $element['#id'],
-        'gmap_api_key' => $element['#gmap_api_key'] ? $element['#gmap_api_key'] : '',
+        'gmap_api_key' => $element['#gmap_api_key'] && strlen($element['#gmap_api_key']) > 0 ? $element['#gmap_api_key'] : NULL,
         'name' => $element['#name'],
         'lat' => floatval($element['lat']['#default_value']),
         'lng' => floatval($element['lon']['#default_value']),
