@@ -25,6 +25,8 @@ or in a "string" type field (among the content type ones).
 and select "Geofield Map" as geofield Widget.
 3. Specify the Widget further settings for both Google or Leaflet Map types;
 
+Note: A **Valid Gmap Api Key is needed for the Geocoding and Reverse Geocoding functionalities, also with Leaflet Map library**, as they are based on Google Places library and Geocoder. The GMap Api Key is also needed to enable the Geoaddressed Field options.
+
 ###Specifications
 
 The Geofield Map Widget provides interactive Map Click and Geo Marker Dragging 
@@ -47,7 +49,3 @@ allows to choose the Entity Title, or a "string" type field
 (among the content type ones), to sync and populate 
 with the Search / Reverse Geocoded Address. Further settings allows to hide 
 and disable this "Geo address" Field in the content edit form;
-
-Note: Valid Gmap Api Key is needed for the Geocoding and Reverse Geocoding functionalities, also with Leaflet Map rendering, 
-as they are based on Google Places library and geocoder.
-It is also needed to enable the Geoaddressed Field options, to allow the Searched / Reverse Geocoded Address functionalities.
