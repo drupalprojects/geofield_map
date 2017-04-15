@@ -1,15 +1,15 @@
 geofield_map.leaflet:
-  remote: http://leaflet.cloudmade.com
-  version: 0.7.3
+  remote: http://leafletjs.com/
+  version: 1.0.3
   license:
     name: Leaflet-License
-    url: https://github.com/Leaflet/Leaflet/blob/v0.7.3/LICENSE
+    url: https://github.com/Leaflet/Leaflet/blob/master/LICENSE
     gpl-compatible: true
   js:
-    //cdn.leafletjs.com/leaflet-0.7.3/leaflet.js: {}
+    https://unpkg.com/leaflet@1.0.3/dist/leaflet.js: {}
   css:
     component:
-      //cdn.leafletjs.com/leaflet-0.7.3/leaflet.css: {}
+      https://unpkg.com/leaflet@1.0.3/dist/leaflet.css: {}
 
 geofield_map.main:
   version: 1.x
