@@ -5,6 +5,11 @@
   margin: 10px 0;
   border: solid thin darkgray;
 }
+
+.geofield-map-cnt .leaflet-top {
+  z-index: 10;
+}
+
 .geofield-map-buttons {
   margin: 10px 0;
 }
