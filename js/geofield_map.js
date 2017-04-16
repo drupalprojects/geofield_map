@@ -206,6 +206,7 @@
           }
         }
       });
+      return status;
     },
 
     // Define a Geographical point, from coordinates.
