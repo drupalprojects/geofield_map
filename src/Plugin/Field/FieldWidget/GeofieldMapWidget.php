@@ -206,8 +206,8 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       'map_type_selector' => TRUE,
       'zoom_level' => 5,
       'zoom' => [
-        'start' => 5,
-        'focus' => 14,
+        'start' => 6,
+        'focus' => 12,
         'min' => 1,
         'max' => 17,
       ],
@@ -255,8 +255,8 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#default_value' => $this->getSetting('map_type_google'),
       '#options' => $this->gMapTypesOptions,
       '#states' => [
-        'invisible' => [
-          ':input[name="fields[field_geofield][settings_edit_form][settings][map_library]"]' => ['value' => 'leaflet'],
+        'visible' => [
+          ':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][map_library]"]' => ['value' => 'gmap'],
         ],
       ],
     ];
@@ -356,6 +356,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     $elements['geoaddress_field'] = array(
       '#type' => 'fieldset',
       '#title' => $this->t('Geoaddressed Field'),
+      '#description' => $this->t('If a not null Google Maps API Key is set, it is possible to choose the Entity Title, or a "string" type field (among the content type ones), to sync and populate with the Search / Reverse Geocoded Address.<br><strong> Note: In case of a multivalue Geofield, this is run just from the first Geofield Map</strong>'),
       '#states' => [
         'invisible' => [
           ':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][map_google_api_key]"]' => ['value' => ''],
@@ -366,7 +367,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     $elements['geoaddress_field']['field'] = array(
       '#type' => 'select',
       '#title' => $this->t('Choose an existing field where to store the Searched / Reverse Geocoded Address'),
-      '#description' => $this->t('Choose among text fields of this content type (title field excluded)'),
+      '#description' => $this->t('Choose among the Title and Text fields of this content type'),
       '#options' => $string_fields_options,
       '#default_value' => $this->getSetting('geoaddress_field')['field'],
     );

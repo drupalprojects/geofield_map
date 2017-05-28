@@ -8,6 +8,11 @@
       // Init all maps in drupalSettings.
       if (drupalSettings['geofield_map']) {
         $.each(drupalSettings['geofield_map'], function (mapid, options) {
+
+          // Define the first map id, for a multivalue geofield map.
+          if (mapid.indexOf('0-value') !== -1) {
+            Drupal.geofieldMap.firstMapId = mapid;
+          }
           Drupal.geofieldMap.loadGoogle(mapid, function () {
             Drupal.geofieldMap.map_initialize({
               entity_operation: options.entity_operation,
@@ -44,6 +49,7 @@
 
     geocoder: null,
     map_data: {},
+    firstMapId: null,
 
     // Google Maps are loaded lazily. In some situations load_google() is called twice, which results in
     // "You have included the Google Maps API multiple times on this page. This may cause unexpected errors." errors.
@@ -55,15 +61,8 @@
      */
     googleCallback: function () {
       var self = this;
-
-      // Ensure callbacks array;
-      self.googleCallbacks = self.googleCallbacks || [];
-
-      // Wait until the window load event to try to use the maps library.
-      $(document).ready(function (e) {
-        _.invoke(self.googleCallbacks, 'callback');
-        self.googleCallbacks = [];
-      });
+      _.invoke(self.googleCallbacks, 'callback');
+      self.googleCallbacks = [];
     },
 
     /**
@@ -73,6 +72,7 @@
      */
     addCallback: function (callback) {
       var self = this;
+      // Ensure callbacks array;
       self.googleCallbacks = self.googleCallbacks || [];
       self.googleCallbacks.push({callback: callback});
     },
@@ -144,7 +144,7 @@
           if (status === google.maps.GeocoderStatus.OK) {
             if (results[0]) {
               self.map_data[mapid].search.val(results[0].formatted_address);
-              self.map_data[mapid].geoaddress_field.val(results[0].formatted_address);
+              self.setGeoaddressField(mapid, results[0].formatted_address);
             }
           }
         });
@@ -202,7 +202,7 @@
         if (status === google.maps.GeocoderStatus.OK) {
           if (results[0] && self.map_data[mapid].search) {
             self.map_data[mapid].search.val(results[0].formatted_address);
-            self.map_data[mapid].geoaddress_field.val(self.map_data[mapid].search.val());
+            self.setGeoaddressField(mapid, self.map_data[mapid].search.val());
           }
         }
       });
@@ -228,11 +228,15 @@
       var self = this;
       var map = {};
       var zoom_start = self.map_data[mapid].entity_operation !== 'edit' ? Number(self.map_data[mapid].zoom_start) : Number(self.map_data[mapid].zoom_focus);
+      var zoom_min = Number(self.map_data[mapid].zoom_min);
+      var zoom_max = Number(self.map_data[mapid].zoom_max);
       switch (self.map_data[mapid].map_library) {
         case 'leaflet':
           map = L.map(mapid, {
             center: self.map_data[mapid].location,
-            zoom: zoom_start
+            zoom: zoom_start,
+            minZoom: zoom_min,
+            maxZoom: zoom_max
           });
 
           var baseLayers = {};
@@ -251,6 +255,8 @@
         default:
           var options = {
             zoom: zoom_start,
+            minZoom: zoom_min,
+            maxZoom: zoom_max,
             center: self.map_data[mapid].location,
             mapTypeId: google.maps.MapTypeId[self.map_data[mapid].map_type],
             mapTypeControl: !!self.map_data[mapid].map_type_selector,
@@ -266,7 +272,7 @@
               position: google.maps.ControlPosition.TOP_LEFT
             }
           };
-          map = new google.maps.Map(document.getElementById(self.map_data[mapid].mapid), options);
+          map = new google.maps.Map(document.getElementById(mapid), options);
       }
       return map;
     },
@@ -328,7 +334,6 @@
       return latLng;
     },
 
-
     mapSetCenter: function (mapid, location) {
       var self = this;
       switch (self.map_data[mapid].map_library) {
@@ -338,6 +343,13 @@
 
         default:
           self.map_data[mapid].map.setCenter(location);
+      }
+    },
+
+    setGeoaddressField: function(mapid, address) {
+      var self = this;
+      if (mapid === self.firstMapId) {
+        self.map_data[mapid].geoaddress_field.val(address);
       }
     },
 
@@ -366,143 +378,145 @@
       var location = self.getLatLng(params.mapid, params.lat, params.lng);
       self.map_data[params.mapid].location = location;
 
-      // Define the Geofield Map.
-      var map = self.getGeofieldMap(params.mapid);
+      if (document.getElementById(params.mapid)) {
+        // Define the Geofield Map.
+        var map = self.getGeofieldMap(params.mapid);
 
-      // Define a a Drupal.geofield_map map self property.
-      self.map_data[params.mapid].map = map;
+        // Define a a Drupal.geofield_map map self property.
+        self.map_data[params.mapid].map = map;
 
-      // Generate and Set Marker Location.
-      var marker = self.setMarker(params.mapid, location);
+        // Generate and Set Marker Location.
+        var marker = self.setMarker(params.mapid, location);
 
-      // Define a Drupal.geofield_map marker self property.
-      self.map_data[params.mapid].marker = marker;
+        // Define a Drupal.geofield_map marker self property.
+        self.map_data[params.mapid].marker = marker;
 
-      // Bind click to find_marker functionality.
-      jQuery('#' + self.map_data[params.mapid].click_to_find_marker_id).click(function (e) {
-        e.preventDefault();
-        self.find_marker(self.map_data[params.mapid].mapid);
-      });
+        // Bind click to find_marker functionality.
+        jQuery('#' + self.map_data[params.mapid].click_to_find_marker_id).click(function (e) {
+          e.preventDefault();
+          self.find_marker(self.map_data[params.mapid].mapid);
+        });
 
-      // Bind click to place_marker functionality.
-      jQuery('#' + self.map_data[params.mapid].click_to_place_marker_id).click(function (e) {
-        e.preventDefault();
-        self.place_marker(self.map_data[params.mapid].mapid);
-      });
+        // Bind click to place_marker functionality.
+        jQuery('#' + self.map_data[params.mapid].click_to_place_marker_id).click(function (e) {
+          e.preventDefault();
+          self.place_marker(self.map_data[params.mapid].mapid);
+        });
 
-      // Define Lat & Lng input selectors and all related functionalities and Geofield Map Listeners
-      if (params.widget && params.latid && params.lngid) {
-        self.map_data[params.mapid].lat = jQuery('#' + params.latid);
-        self.map_data[params.mapid].lng = jQuery('#' + params.lngid);
+        // Define Lat & Lng input selectors and all related functionalities and Geofield Map Listeners
+        if (params.widget && params.latid && params.lngid) {
+          self.map_data[params.mapid].lat = jQuery('#' + params.latid);
+          self.map_data[params.mapid].lng = jQuery('#' + params.lngid);
 
-        // If it is defined the Geocode address Search field (dependant on the Gmaps API key)
-        if (self.map_data[params.mapid].search) {
-          self.map_data[params.mapid].search.autocomplete({
-            // This bit uses the geocoder to fetch address values.
-            source: function (request, response) {
-              self.geocoder.geocode({address: request.term}, function (results, status) {
-                response(jQuery.map(results, function (item) {
-                  return {
-                    label: item.formatted_address,
-                    value: item.formatted_address,
-                    latitude: item.geometry.location.lat(),
-                    longitude: item.geometry.location.lng()
-                  };
-                }));
-              });
-            },
-            // This bit is executed upon selection of an address.
-            select: function (event, ui) {
-              var location = self.getLatLng(params.mapid, ui.item.latitude, ui.item.longitude);
-              // Set the location
-              self.setMarkerPosition(params.mapid, location);
-              self.mapSetCenter(params.mapid, location);
-              self.setZoomToFocus(params.mapid);
-              // Fill the lat/lon fields with the new info
-              self.setLatLngValues(params.mapid, self.getMarkerPosition(params.mapid, marker));
-              self.map_data[params.mapid].geoaddress_field.val(ui.item.value);
-            }
-          });
+          // If it is defined the Geocode address Search field (dependant on the Gmaps API key)
+          if (self.map_data[params.mapid].search) {
+            self.map_data[params.mapid].search.autocomplete({
+              // This bit uses the geocoder to fetch address values.
+              source: function (request, response) {
+                self.geocoder.geocode({address: request.term}, function (results, status) {
+                  response(jQuery.map(results, function (item) {
+                    return {
+                      label: item.formatted_address,
+                      value: item.formatted_address,
+                      latitude: item.geometry.location.lat(),
+                      longitude: item.geometry.location.lng()
+                    };
+                  }));
+                });
+              },
+              // This bit is executed upon selection of an address.
+              select: function (event, ui) {
+                var location = self.getLatLng(params.mapid, ui.item.latitude, ui.item.longitude);
+                // Set the location
+                self.setMarkerPosition(params.mapid, location);
+                self.mapSetCenter(params.mapid, location);
+                self.setZoomToFocus(params.mapid);
+                // Fill the lat/lon fields with the new info
+                self.setLatLngValues(params.mapid, self.getMarkerPosition(params.mapid, marker));
+                self.setGeoaddressField(params.mapid, ui.item.value);
+              }
+            });
 
-          // Geocode user input on enter.
-          self.map_data[params.mapid].search.keydown(function (e) {
+            // Geocode user input on enter.
+            self.map_data[params.mapid].search.keydown(function (e) {
+              if (e.which === 13) {
+                e.preventDefault();
+                var input = self.map_data[params.mapid].search.val();
+                // Execute the geocoder
+                self.geocoder.geocode({address: input}, function (results, status) {
+                  if (status === google.maps.GeocoderStatus.OK) {
+                    if (results[0]) {
+                      // Set the location
+                      var location = self.getLatLng(params.mapid, results[0].geometry.location.lat(), results[0].geometry.location.lng());
+                      self.setMarkerPosition(params.mapid, location);
+                      self.mapSetCenter(params.mapid, location);
+                      self.setZoomToFocus(params.mapid);
+                      // Fill the lat/lon fields with the new info
+                      self.setLatLngValues(params.mapid, self.getMarkerPosition(params.mapid));
+                      self.setGeoaddressField(params.mapid, self.map_data[params.mapid].search.val());
+                    }
+                  }
+                });
+              }
+            });
+          }
+
+          if (params.map_library === 'gmap') {
+            // Add listener to marker for reverse geocoding.
+            google.maps.event.addListener(marker, 'dragend', function () {
+              self.geofields_update(params.mapid, marker.getPosition());
+            });
+
+            google.maps.event.addListener(map, 'click', function (event) {
+              var position = self.getLatLng(params.mapid, event.latLng.lat(), event.latLng.lng());
+              self.setMarkerPosition(params.mapid, position);
+              self.geofields_update(params.mapid, position);
+            });
+
+          }
+
+          if (params.map_library === 'leaflet') {
+            marker.on('dragend', function (e) {
+              self.geofields_update(params.mapid, marker.getLatLng());
+            });
+
+            map.on('click', function (event) {
+              var position = event.latlng;
+              self.setMarkerPosition(params.mapid, position);
+              self.geofields_update(params.mapid, position);
+            });
+
+          }
+
+          // Events on Lat field change.
+          jQuery('#' + self.map_data[params.mapid].latid).on('change', function (e) {
+            self.geofield_onchange(params.mapid);
+          }).keydown(function (e) {
             if (e.which === 13) {
               e.preventDefault();
-              var input = self.map_data[params.mapid].search.val();
-              // Execute the geocoder
-              self.geocoder.geocode({address: input}, function (results, status) {
-                if (status === google.maps.GeocoderStatus.OK) {
-                  if (results[0]) {
-                    // Set the location
-                    var location = self.getLatLng(params.mapid, results[0].geometry.location.lat(), results[0].geometry.location.lng());
-                    self.setMarkerPosition(params.mapid, location);
-                    self.mapSetCenter(params.mapid, location);
-                    self.setZoomToFocus(params.mapid);
-                    // Fill the lat/lon fields with the new info
-                    self.setLatLngValues(params.mapid, self.getMarkerPosition(params.mapid));
-                    self.map_data[params.mapid].geoaddress_field.val(self.map_data[params.mapid].search.val());
-                  }
-                }
-              });
+              self.geofield_onchange(params.mapid);
             }
           });
-        }
 
-        if (params.map_library === 'gmap') {
-          // Add listener to marker for reverse geocoding.
-          google.maps.event.addListener(marker, 'dragend', function () {
-            self.geofields_update(params.mapid, marker.getPosition());
-          });
-
-          google.maps.event.addListener(map, 'click', function (event) {
-            var position = self.getLatLng(params.mapid, event.latLng.lat(), event.latLng.lng());
-            self.setMarkerPosition(params.mapid, position);
-            self.geofields_update(params.mapid, position);
-          });
-
-        }
-
-        if (params.map_library === 'leaflet') {
-          marker.on('dragend', function (e) {
-            self.geofields_update(params.mapid, marker.getLatLng());
-          });
-
-          map.on('click', function (event) {
-            var position = event.latlng;
-            self.setMarkerPosition(params.mapid, position);
-            self.geofields_update(params.mapid, position);
-          });
-
-        }
-
-        // Events on Lat field change.
-        jQuery('#' + self.map_data[params.mapid].latid).on('change', function (e) {
-          self.geofield_onchange(params.mapid);
-        }).keydown(function (e) {
-          if (e.which === 13) {
-            e.preventDefault();
+          // Events on Lon field change.
+          jQuery('#' + self.map_data[params.mapid].lngid).on('change', function (e) {
             self.geofield_onchange(params.mapid);
-          }
-        });
+          }).keydown(function (e) {
+            if (e.which === 13) {
+              e.preventDefault();
+              self.geofield_onchange(params.mapid);
+            }
+          });
 
-        // Events on Lon field change.
-        jQuery('#' + self.map_data[params.mapid].lngid).on('change', function (e) {
-          self.geofield_onchange(params.mapid);
-        }).keydown(function (e) {
-          if (e.which === 13) {
-            e.preventDefault();
-            self.geofield_onchange(params.mapid);
+          // Set default search field value (just to the first geofield_map).
+          if (params.mapid === self.firstMapId && self.map_data[params.mapid].search && self.map_data[params.mapid].geoaddress_field.val().length) {
+            // Copy from the geoaddress_field.val
+            self.map_data[params.mapid].search.val(self.map_data[params.mapid].geoaddress_field.val());
           }
-        });
-
-        // Set default search field value.
-        if (self.map_data[params.mapid].search && self.map_data[params.mapid].geoaddress_field.length) {
-          // Copy from the geoaddress_field.val
-          self.map_data[params.mapid].search.val(self.map_data[params.mapid].geoaddress_field.val());
-        }
-        else {
-          // Sets as reverse geocode from the Geofield.
-          self.reverse_geocode(params.mapid, location);
+          else if (self.map_data[params.mapid].search) {
+            // Sets as reverse geocode from the Geofield.
+            self.reverse_geocode(params.mapid, location);
+          }
         }
       }
     }
