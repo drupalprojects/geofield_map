@@ -227,6 +227,9 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
   public function settingsForm(array $form, FormStateInterface $form_state) {
     $elements = parent::settingsForm($form, $form_state);
 
+    // Attach Geofield Map Library.
+    $elements['#attached']['library'][] = 'geofield_map/geofield_map.main';
+
     $elements['#tree'] = TRUE;
 
     $elements['map_google_api_key'] = [
@@ -238,6 +241,20 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#description' => $this->t('Gmap Api Key is needed for the Geocoding and Reverse Geocoding functionalities, also with Leaflet Map rendering.<br>This (not null) is needed to enable the Geoaddressed Field options, to allow the Searched / Reverse Geocoded Address functionalities.'),
       // @TODO: un-comment this '#required' => TRUE,
     ];
+
+    $elements['map_google_api_key_missing'] = array(
+      '#type' => 'html_tag',
+      '#tag' => 'div',
+      '#value' => t("Gmap Api Key missing | The Geocode Address and ReverseGeocode functionalities won't be available."),
+      '#attributes' => [
+        'class' => ['geofield-map-search-missing'],
+      ],
+      '#states' => [
+        'visible' => [
+          ':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][map_google_api_key]"]' => ['value' => ''],
+        ],
+      ],
+    );
 
     $elements['map_library'] = array(
       '#type' => 'select',
