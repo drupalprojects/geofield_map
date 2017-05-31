@@ -496,7 +496,7 @@
         });
 
         // Set default search field value (just to the first geofield_map).
-        if (params.mapid === self.firstMapId && self.map_data[params.mapid].search && params.geoaddress_field_id !== null && self.map_data[params.mapid].geoaddress_field.val().length) {
+        if (params.mapid === self.firstMapId && self.map_data[params.mapid].search && params.geoaddress_field_id !== null && !!self.map_data[params.mapid].geoaddress_field.val()) {
           // Copy from the geoaddress_field.val
           self.map_data[params.mapid].search.val(self.map_data[params.mapid].geoaddress_field.val());
         }
