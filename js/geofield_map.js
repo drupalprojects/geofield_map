@@ -14,7 +14,7 @@
             Drupal.geofieldMap.firstMapId = mapid;
           }
           // Check if the Map container really exists and hasn't been yet initialized.
-          if ($('#'+mapid, context).length > 0 && !Drupal.geofieldMap.map_data[mapid]) {
+          if ($('#' + mapid, context).length > 0 && !Drupal.geofieldMap.map_data[mapid]) {
             if (options.gmap_api_key || options.map_library === 'gmap') {
               // Load before the Gmap Library, if needed.
               Drupal.geofieldMap.loadGoogle(mapid, function () {
@@ -341,6 +341,14 @@
       }
     },
 
+    map_refresh: function (mapid) {
+      var self = this;
+      setTimeout(function() {
+        google.maps.event.trigger(self.map_data[mapid].map, 'resize');
+        self.find_marker(mapid);
+      }, 10);
+    },
+
     // Init Geofield Map and its functions.
     map_initialize: function (params) {
       this.map_data[params.mapid] = params;
@@ -369,10 +377,25 @@
       // Define the Geofield Map.
       var map = self.getGeofieldMap(params.mapid);
 
-      // Define a a Drupal.geofield_map map self property
+      // Define a map self property
       self.map_data[params.mapid].map = map;
 
-      // Generate and Set Marker Location.
+      // Fix map issue in field_groups / details & vertical tabs
+      google.maps.event.addListenerOnce(map, "idle", function () {
+
+        // Show all map tiles when a map is shown in a vertical tab.
+        jQuery('#' + params.mapid).closest('div.vertical-tabs').find('.vertical-tabs__menu-item a').click(function () {
+          self.map_refresh(params.mapid);
+        });
+
+        // Show all map tiles when a map is shown in a collapsible detail/ single tab.
+        $('#' + params.mapid).closest('.field-group-details, .field-group-tab').find('summary').click(function () {
+           self.map_refresh(params.mapid);
+          }
+        );
+      });
+
+      // Generate and Set/Place Marker Location.
       var marker = self.setMarker(params.mapid, location);
 
       // Define a Drupal.geofield_map marker self property.
