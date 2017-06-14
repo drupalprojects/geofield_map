@@ -15,6 +15,10 @@
           }
           // Check if the Map container really exists and hasn't been yet initialized.
           if ($('#' + mapid, context).length > 0 && !Drupal.geofieldMap.map_data[mapid]) {
+
+            // Set the map_data[mapid] settings.
+            Drupal.geofieldMap.map_data[mapid] = options;
+
             if (options.gmap_api_key || options.map_library === 'gmap') {
               // Load before the Gmap Library, if needed.
               Drupal.geofieldMap.loadGoogle(mapid, function () {
@@ -69,11 +73,6 @@
     loadGoogle: function (mapid, callback) {
       var self = this;
 
-      // If a Google API key is set, define it.
-      if (typeof drupalSettings['geofield_map'][mapid]['gmap_api_key'] !== 'undefined' && drupalSettings['geofield_map'][mapid]['gmap_api_key'] !== null) {
-        self.gmap_api_key = drupalSettings['geofield_map'][mapid]['gmap_api_key'];
-      }
-
       // Add the callback.
       self.addCallback(callback);
 
@@ -90,8 +89,8 @@
         var scriptPath = '//maps.googleapis.com/maps/api/js?v=3.exp&sensor=false';
 
         // If a Google API key is set, use it.
-        if (self.gmap_api_key) {
-          scriptPath += '&key=' + drupalSettings['geofield_map'][mapid]['gmap_api_key'];
+        if (typeof self.map_data[mapid]['gmap_api_key'] !== 'undefined' && self.map_data[mapid]['gmap_api_key'] !== null) {
+          scriptPath += '&key=' + self.map_data[mapid]['gmap_api_key'];
         }
 
         $.getScript(scriptPath)
@@ -121,20 +120,9 @@
           return;
         }
       }
-
-      var position = self.map_data[mapid].map.getCenter();
-      self.setMarkerPosition(mapid, position);
-      self.setLatLngValues(mapid, position);
-      if (self.map_data[mapid].search) {
-        self.geocoder.geocode({latLng: position}, function (results, status) {
-          if (status === google.maps.GeocoderStatus.OK) {
-            if (results[0]) {
-              self.map_data[mapid].search.val(results[0].formatted_address);
-              self.setGeoaddressField(mapid, results[0].formatted_address);
-            }
-          }
-        });
-      }
+      var location = self.map_data[mapid].map.getCenter();
+      self.setMarkerPosition(mapid, location);
+      self.geofields_update(mapid, location);
     },
 
     // Geofields update.
@@ -351,7 +339,6 @@
 
     // Init Geofield Map and its functions.
     map_initialize: function (params) {
-      this.map_data[params.mapid] = params;
       var self = this;
       $.noConflict();
 
