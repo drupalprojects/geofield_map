@@ -353,7 +353,7 @@
     map_initialize: function (params) {
       this.map_data[params.mapid] = params;
       var self = this;
-      jQuery.noConflict();
+      $.noConflict();
 
       if (params.searchid !== null) {
 
@@ -363,10 +363,10 @@
         }
 
         // Define the Geocoder Search Field Selector;
-        self.map_data[params.mapid].search = jQuery('#' + params.searchid);
+        self.map_data[params.mapid].search = $('#' + params.searchid);
 
         // Define the Geoaddress Associated Field Selector;
-        self.map_data[params.mapid].geoaddress_field = jQuery('#' + params.geoaddress_field_id);
+        self.map_data[params.mapid].geoaddress_field = $('#' + params.geoaddress_field_id);
 
       }
 
@@ -384,7 +384,7 @@
       google.maps.event.addListenerOnce(map, "idle", function () {
 
         // Show all map tiles when a map is shown in a vertical tab.
-        jQuery('#' + params.mapid).closest('div.vertical-tabs').find('.vertical-tabs__menu-item a').click(function () {
+        $('#' + params.mapid).closest('div.vertical-tabs').find('.vertical-tabs__menu-item a').click(function () {
           self.map_refresh(params.mapid);
         });
 
@@ -402,21 +402,21 @@
       self.map_data[params.mapid].marker = marker;
 
       // Bind click to find_marker functionality.
-      jQuery('#' + self.map_data[params.mapid].click_to_find_marker_id).click(function (e) {
+      $('#' + self.map_data[params.mapid].click_to_find_marker_id).click(function (e) {
         e.preventDefault();
         self.find_marker(self.map_data[params.mapid].mapid);
       });
 
       // Bind click to place_marker functionality.
-      jQuery('#' + self.map_data[params.mapid].click_to_place_marker_id).click(function (e) {
+      $('#' + self.map_data[params.mapid].click_to_place_marker_id).click(function (e) {
         e.preventDefault();
         self.place_marker(self.map_data[params.mapid].mapid);
       });
 
       // Define Lat & Lng input selectors and all related functionalities and Geofield Map Listeners
       if (params.widget && params.latid && params.lngid) {
-        self.map_data[params.mapid].lat = jQuery('#' + params.latid);
-        self.map_data[params.mapid].lng = jQuery('#' + params.lngid);
+        self.map_data[params.mapid].lat = $('#' + params.latid);
+        self.map_data[params.mapid].lng = $('#' + params.lngid);
 
         // If it is defined the Geocode address Search field (dependant on the Gmaps API key)
         if (self.map_data[params.mapid].search) {
@@ -424,7 +424,7 @@
             // This bit uses the geocoder to fetch address values.
             source: function (request, response) {
               self.geocoder.geocode({address: request.term}, function (results, status) {
-                response(jQuery.map(results, function (item) {
+                response($.map(results, function (item) {
                   return {
                     label: item.formatted_address,
                     value: item.formatted_address,
@@ -441,9 +441,7 @@
               self.setMarkerPosition(params.mapid, location);
               self.mapSetCenter(params.mapid, location);
               self.setZoomToFocus(params.mapid);
-              // Fill the lat/lon fields with the new info
-              self.setLatLngValues(params.mapid, self.getMarkerPosition(params.mapid, marker));
-              self.setGeoaddressField(params.mapid, ui.item.value);
+              self.geofields_update(params.mapid, location);
             }
           });
 
@@ -461,9 +459,7 @@
                     self.setMarkerPosition(params.mapid, location);
                     self.mapSetCenter(params.mapid, location);
                     self.setZoomToFocus(params.mapid);
-                    // Fill the lat/lon fields with the new info
-                    self.setLatLngValues(params.mapid, self.getMarkerPosition(params.mapid));
-                    self.setGeoaddressField(params.mapid, self.map_data[params.mapid].search.val());
+                    self.geofields_update(params.mapid, location);
                   }
                 }
               });
@@ -477,6 +473,7 @@
             self.geofields_update(params.mapid, marker.getPosition());
           });
 
+          // Change marker position with mouse click.
           google.maps.event.addListener(map, 'click', function (event) {
             var position = self.getLatLng(params.mapid, event.latLng.lat(), event.latLng.lng());
             self.setMarkerPosition(params.mapid, position);
@@ -499,7 +496,7 @@
         }
 
         // Events on Lat field change.
-        jQuery('#' + self.map_data[params.mapid].latid).on('change', function (e) {
+        $('#' + self.map_data[params.mapid].latid).on('change', function (e) {
           self.geofield_onchange(params.mapid);
         }).keydown(function (e) {
           if (e.which === 13) {
@@ -509,7 +506,7 @@
         });
 
         // Events on Lon field change.
-        jQuery('#' + self.map_data[params.mapid].lngid).on('change', function (e) {
+        $('#' + self.map_data[params.mapid].lngid).on('change', function (e) {
           self.geofield_onchange(params.mapid);
         }).keydown(function (e) {
           if (e.which === 13) {
