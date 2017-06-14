@@ -60,7 +60,7 @@
     /**
      * Adds a callback that will be called once the maps library is loaded.
      *
-     * @param {geolocationCallback} callback - The callback
+     * @param {geopositionCallback} callback - The callback
      */
     addCallback: function (callback) {
       var self = this;
@@ -106,7 +106,7 @@
       }
     },
 
-    // Center the map to the marker location.
+    // Center the map to the marker position.
     find_marker: function (mapid) {
       var self = this;
       self.mapSetCenter(mapid, self.getMarkerPosition(mapid));
@@ -120,9 +120,9 @@
           return;
         }
       }
-      var location = self.map_data[mapid].map.getCenter();
-      self.setMarkerPosition(mapid, location);
-      self.geofields_update(mapid, location);
+      var position = self.map_data[mapid].map.getCenter();
+      self.setMarkerPosition(mapid, position);
+      self.geofields_update(mapid, position);
     },
 
     // Geofields update.
@@ -135,24 +135,24 @@
     // Onchange of Geofields.
     geofield_onchange: function (mapid) {
       var self = this;
-      var location = {};
+      var position = {};
       switch (self.map_data[mapid].map_library) {
         case 'leaflet':
-          location = L.latLng(
+          position = L.latLng(
             self.map_data[mapid].lat.val(),
             self.map_data[mapid].lng.val()
           );
           break;
         default:
-          location = new google.maps.LatLng(
+          position = new google.maps.LatLng(
             self.map_data[mapid].lat.val(),
             self.map_data[mapid].lng.val()
           );
       }
-      self.setMarkerPosition(mapid, location);
-      self.mapSetCenter(mapid, location);
+      self.setMarkerPosition(mapid, position);
+      self.mapSetCenter(mapid, position);
       self.setZoomToFocus(mapid);
-      self.reverse_geocode(mapid, location);
+      self.reverse_geocode(mapid, position);
     },
 
     // Coordinates update.
@@ -209,7 +209,7 @@
       switch (self.map_data[mapid].map_library) {
         case 'leaflet':
           map = L.map(mapid, {
-            center: self.map_data[mapid].location,
+            center: self.map_data[mapid].position,
             zoom: zoom_start,
             minZoom: zoom_min,
             maxZoom: zoom_max
@@ -233,7 +233,7 @@
             zoom: zoom_start,
             minZoom: zoom_min,
             maxZoom: zoom_max,
-            center: self.map_data[mapid].location,
+            center: self.map_data[mapid].position,
             mapTypeId: google.maps.MapTypeId[self.map_data[mapid].map_type],
             mapTypeControl: !!self.map_data[mapid].map_type_selector,
             mapTypeControlOptions: {
@@ -265,12 +265,12 @@
       }
     },
 
-    setMarker: function (mapid, location) {
+    setMarker: function (mapid, position) {
       var self = this;
       var marker = {};
       switch (self.map_data[mapid].map_library) {
         case 'leaflet':
-          marker = L.marker(location, {draggable: true});
+          marker = L.marker(position, {draggable: true});
           marker.addTo(self.map_data[mapid].map);
           break;
 
@@ -279,20 +279,20 @@
             map: self.map_data[mapid].map,
             draggable: self.map_data[mapid].widget
           });
-          marker.setPosition(location);
+          marker.setPosition(position);
       }
       return marker;
     },
 
-    setMarkerPosition: function (mapid, location) {
+    setMarkerPosition: function (mapid, position) {
       var self = this;
       switch (self.map_data[mapid].map_library) {
         case 'leaflet':
-          self.map_data[mapid].marker.setLatLng(location);
+          self.map_data[mapid].marker.setLatLng(position);
           break;
 
         default:
-          self.map_data[mapid].marker.setPosition(location);
+          self.map_data[mapid].marker.setPosition(position);
       }
     },
 
@@ -310,15 +310,15 @@
       return latLng;
     },
 
-    mapSetCenter: function (mapid, location) {
+    mapSetCenter: function (mapid, position) {
       var self = this;
       switch (self.map_data[mapid].map_library) {
         case 'leaflet':
-          self.map_data[mapid].map.panTo(location, {animate: false});
+          self.map_data[mapid].map.panTo(position, {animate: false});
           break;
 
         default:
-          self.map_data[mapid].map.setCenter(location);
+          self.map_data[mapid].map.setCenter(position);
       }
     },
 
@@ -357,9 +357,9 @@
 
       }
 
-      // Define the Geofield Location.
-      var location = self.getLatLng(params.mapid, params.lat, params.lng);
-      self.map_data[params.mapid].location = location;
+      // Define the Geofield Position.
+      var position = self.getLatLng(params.mapid, params.lat, params.lng);
+      self.map_data[params.mapid].position = position;
 
       // Define the Geofield Map.
       var map = self.getGeofieldMap(params.mapid);
@@ -382,8 +382,8 @@
         );
       });
 
-      // Generate and Set/Place Marker Location.
-      var marker = self.setMarker(params.mapid, location);
+      // Generate and Set/Place Marker Position.
+      var marker = self.setMarker(params.mapid, position);
 
       // Define a Drupal.geofield_map marker self property.
       self.map_data[params.mapid].marker = marker;
@@ -415,20 +415,20 @@
                   return {
                     label: item.formatted_address,
                     value: item.formatted_address,
-                    latitude: item.geometry.location.lat(),
-                    longitude: item.geometry.location.lng()
+                    latitude: item.geometry.position.lat(),
+                    longitude: item.geometry.position.lng()
                   };
                 }));
               });
             },
             // This bit is executed upon selection of an address.
             select: function (event, ui) {
-              var location = self.getLatLng(params.mapid, ui.item.latitude, ui.item.longitude);
-              // Set the location
-              self.setMarkerPosition(params.mapid, location);
-              self.mapSetCenter(params.mapid, location);
+              var position = self.getLatLng(params.mapid, ui.item.latitude, ui.item.longitude);
+              // Set the position
+              self.setMarkerPosition(params.mapid, position);
+              self.mapSetCenter(params.mapid, position);
               self.setZoomToFocus(params.mapid);
-              self.geofields_update(params.mapid, location);
+              self.geofields_update(params.mapid, position);
             }
           });
 
@@ -441,12 +441,12 @@
               self.geocoder.geocode({address: input}, function (results, status) {
                 if (status === google.maps.GeocoderStatus.OK) {
                   if (results[0]) {
-                    // Set the location
-                    var location = self.getLatLng(params.mapid, results[0].geometry.location.lat(), results[0].geometry.location.lng());
-                    self.setMarkerPosition(params.mapid, location);
-                    self.mapSetCenter(params.mapid, location);
+                    // Set the position
+                    var position = self.getLatLng(params.mapid, results[0].geometry.position.lat(), results[0].geometry.position.lng());
+                    self.setMarkerPosition(params.mapid, position);
+                    self.mapSetCenter(params.mapid, position);
                     self.setZoomToFocus(params.mapid);
-                    self.geofields_update(params.mapid, location);
+                    self.geofields_update(params.mapid, position);
                   }
                 }
               });
@@ -509,7 +509,7 @@
         }
         else if (self.map_data[params.mapid].search) {
           // Sets as reverse geocode from the Geofield.
-          self.reverse_geocode(params.mapid, location);
+          self.reverse_geocode(params.mapid, position);
         }
 
       }
