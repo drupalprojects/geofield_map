@@ -242,17 +242,23 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       // @TODO: un-comment this '#required' => TRUE,
     ];
 
+    // THe container is needed, as it seems the #states won't work
+    // on the html_div or markup elements.
     $elements['map_google_api_key_missing'] = array(
+      '#type' => 'container',
+      '#states' => [
+        'visible' => [
+          ':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][map_google_api_key]"]' => ['value' => ''],
+        ],
+      ],
+    );
+
+    $elements['map_google_api_key_missing']['tag'] = array(
       '#type' => 'html_tag',
       '#tag' => 'div',
       '#value' => t("Gmap Api Key missing | The Geocode Address and ReverseGeocode functionalities won't be available."),
       '#attributes' => [
         'class' => ['geofield-map-search-missing'],
-      ],
-      '#states' => [
-        'visible' => [
-          ':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][map_google_api_key]"]' => ['value' => ''],
-        ],
       ],
     );
 
