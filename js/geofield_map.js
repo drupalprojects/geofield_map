@@ -415,8 +415,8 @@
                   return {
                     label: item.formatted_address,
                     value: item.formatted_address,
-                    latitude: item.geometry.position.lat(),
-                    longitude: item.geometry.position.lng()
+                    latitude: item.geometry.location.lat(),
+                    longitude: item.geometry.location.lng()
                   };
                 }));
               });
@@ -442,7 +442,7 @@
                 if (status === google.maps.GeocoderStatus.OK) {
                   if (results[0]) {
                     // Set the position
-                    var position = self.getLatLng(params.mapid, results[0].geometry.position.lat(), results[0].geometry.position.lng());
+                    var position = self.getLatLng(params.mapid, results[0].geometry.location.lat(), results[0].geometry.location.lng());
                     self.setMarkerPosition(params.mapid, position);
                     self.mapSetCenter(params.mapid, position);
                     self.setZoomToFocus(params.mapid);
