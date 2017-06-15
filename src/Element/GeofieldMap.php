@@ -153,18 +153,19 @@ class GeofieldMap extends GeofieldElementBase {
     $element['lon']['#attributes']['id'] = 'lon-' . $element['#id'];
 
     // Geoaddress Field Settings.
-    $complete_form[$element['#geoaddress_field']['field']]['widget'][0]['value']['#description'] = (string) t('This value will be synchronized with the Geofield Map Reverse-Geocoded value.');
-    if ($element['#geoaddress_field']['hidden']) {
-      $complete_form[$element['#geoaddress_field']['field']]['#attributes']['class'][] = 'geofield_map_geoaddress_field_hidden';
-    }
-    if ($element['#geoaddress_field']['disabled']) {
-      $complete_form[$element['#geoaddress_field']['field']]['widget'][0]['value']['#attributes']['readonly'] = 'readonly';
-      $complete_form[$element['#geoaddress_field']['field']]['widget'][0]['value']['#description'] = (string) t('This field is readonly. It will be synchronized with the Geofield Map Reverse-Geocoded value.');
-
-    }
-    // Ensure the geoaddress_field has got an #id, otherwise generate it.
-    if (!isset($complete_form[$element['#geoaddress_field']['field']]['widget'][0]['value']['#id'])) {
-      $complete_form[$element['#geoaddress_field']['field']]['widget'][0]['value']['#id'] = $element['#geoaddress_field']['field'] . '-0';
+    if (!empty($element['#geoaddress_field']['field'])) {
+      $complete_form[$element['#geoaddress_field']['field']]['widget'][0]['value']['#description'] = (string) t('This value will be synchronized with the Geofield Map Reverse-Geocoded value.');
+      if ($element['#geoaddress_field']['hidden']) {
+        $complete_form[$element['#geoaddress_field']['field']]['#attributes']['class'][] = 'geofield_map_geoaddress_field_hidden';
+      }
+      if ($element['#geoaddress_field']['disabled']) {
+        $complete_form[$element['#geoaddress_field']['field']]['widget'][0]['value']['#attributes']['readonly'] = 'readonly';
+        $complete_form[$element['#geoaddress_field']['field']]['widget'][0]['value']['#description'] = (string) t('This field is readonly. It will be synchronized with the Geofield Map Reverse-Geocoded value.');
+      }
+      // Ensure the geoaddress_field has got an #id, otherwise generate it.
+      if (!isset($complete_form[$element['#geoaddress_field']['field']]['widget'][0]['value']['#id'])) {
+        $complete_form[$element['#geoaddress_field']['field']]['widget'][0]['value']['#id'] = $element['#geoaddress_field']['field'] . '-0';
+      }
     }
 
     // Attach Geofield Map Library.
@@ -190,8 +191,8 @@ class GeofieldMap extends GeofieldElementBase {
         'latid' => $element['lat']['#attributes']['id'],
         'lngid' => $element['lon']['#attributes']['id'],
         'searchid' => isset($element['map']['geocode']) ? $element['map']['geocode']['#attributes']['id'] : NULL,
-        'geoaddress_field' => ($element['#geoaddress_field']['field'] != '0') ? $element['#geoaddress_field']['field'] : NULL,
-        'geoaddress_field_id' => ($element['#geoaddress_field']['field'] != '0') ? $complete_form[$element['#geoaddress_field']['field']]['widget'][0]['value']['#id'] : NULL,
+        'geoaddress_field' => !empty($element['#geoaddress_field']['field']) ? $element['#geoaddress_field']['field'] : NULL,
+        'geoaddress_field_id' => !empty($element['#geoaddress_field']['field']) ? $complete_form[$element['#geoaddress_field']['field']]['widget'][0]['value']['#id'] : NULL,
         'mapid' => $mapid,
         'widget' => TRUE,
         'map_library' => $element['#map_library'],
