@@ -174,8 +174,8 @@
       var self = this;
       if (self.geocoder) {
         self.geocoder.geocode({latLng: position}, function (results, status) {
-          if (status === google.maps.GeocoderStatus.OK) {
-            if (results[0] && self.map_data[mapid].search) {
+          if (status === google.maps.GeocoderStatus.OK && results[0]) {
+            if (self.map_data[mapid].search) {
               self.map_data[mapid].search.val(results[0].formatted_address);
               self.setGeoaddressField(mapid, self.map_data[mapid].search.val());
             }
@@ -428,7 +428,8 @@
               self.setMarkerPosition(params.mapid, position);
               self.mapSetCenter(params.mapid, position);
               self.setZoomToFocus(params.mapid);
-              self.geofields_update(params.mapid, position);
+              self.setLatLngValues(params.mapid, position);
+              self.setGeoaddressField(params.mapid, ui.item.value);
             }
           });
 
@@ -446,7 +447,8 @@
                     self.setMarkerPosition(params.mapid, position);
                     self.mapSetCenter(params.mapid, position);
                     self.setZoomToFocus(params.mapid);
-                    self.geofields_update(params.mapid, position);
+                    self.setLatLngValues(params.mapid, position);
+                    self.setGeoaddressField(params.mapid, self.map_data[params.mapid].search.val());
                   }
                 }
               });
