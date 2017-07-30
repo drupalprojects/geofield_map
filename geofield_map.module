@@ -8,6 +8,7 @@
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
+use Drupal\Component\Utility\Html;
 
 /**
  * Implements hook_help().
@@ -27,4 +28,124 @@ function geofield_map_help($route_name, RouteMatchInterface $route_match) {
 
   }
   return $output;
+}
+
+/**
+ * Convert a geofield into an array of map points.
+ *
+ * The map points can then be fed into geofield_google_map().
+ *
+ * @param mixed $items
+ *   A single value or array of geo values, each as a string in any of the
+ *   supported formats or as an array of $item elements, each with a
+ *   $item['wkt'] field.
+ *
+ * @return array
+ *   The points array.
+ */
+function geofield_map_process_geofield($items = array()) {
+
+  if (!is_array($items)) {
+    $items = array($items);
+  }
+  $data = array();
+  foreach ($items as $item) {
+    // Auto-detect and parse the format (e.g. WKT, JSON etc)
+    if (!($geom = geoPHP::load(isset($item['wkt']) ? $item['wkt'] : $item))) {
+      continue;
+    }
+    $datum = array('type' => strtolower($geom->geometryType()));
+
+    switch ($datum['type']) {
+      case 'point':
+        $datum += array(
+          'lat' => $geom->getY(),
+          'lon' => $geom->getX(),
+        );
+        break;
+
+      case 'linestring':
+        $components = $geom->getComponents();
+        foreach ($components as $component) {
+          $datum['points'][] = array(
+            'lat' => $component->getY(),
+            'lon' => $component->getX(),
+          );
+        }
+        break;
+
+      case 'polygon':
+        $tmp = $geom->getComponents();
+        $components = $tmp[0]->getComponents();
+        foreach ($components as $component) {
+          $datum['points'][] = array(
+            'lat' => $component->getY(),
+            'lon' => $component->getX(),
+          );
+        }
+        break;
+
+      case 'multipolygon':
+      case 'multipolyline':
+      case 'multilinestring':
+        if ($datum['type'] == 'multilinestring') {
+          $datum['type'] = 'multipolyline';
+        }
+        if ($datum['type'] == 'multipolygon') {
+          $tmp = $geom->getComponents();
+          $components = $tmp[0]->getComponents();
+        }
+        else {
+          $components = $geom->getComponents();
+        }
+        foreach ($components as $key => $component) {
+          $subcomponents = $component->getComponents();
+          foreach ($subcomponents as $subcomponent) {
+            $datum['component'][$key]['points'][] = array(
+              'lat' => $subcomponent->getY(),
+              'lon' => $subcomponent->getX(),
+            );
+          }
+          unset($subcomponent);
+        }
+        break;
+    }
+    $data[] = $datum;
+  }
+
+  return $data;
+}
+
+/**
+ * Load all Geofield Google Map client files and return markup for a map.
+ *
+ * @param array $map
+ *   The map settings.
+ * @param array $features
+ *   The features.
+ *
+ * @return array
+ *   The returned render array.
+ */
+function geofield_map_googlemap_render($map, $features = array()) {
+  $map_id = Html::getUniqueId('geofield_google_map');
+
+  $settings[$map_id] = array(
+    'mapId' => $map_id,
+    'map' => $map,
+    // JS only works with arrays, make sure we have one with numeric keys.
+    'features' => array_values($features),
+  );
+  return array(
+    '#theme' => 'geofield_google_map',
+    '#map_id' => $map_id,
+    '#height' => '300px',
+    '#map' => $map,
+    '#attached' => array(
+      'library' => array('geofield_gmap/google_map'),
+      'drupalSettings' => array(
+        'geofield-google-map' => $settings,
+      ),
+    ),
+  );
 }

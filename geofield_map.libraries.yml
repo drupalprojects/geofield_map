@@ -1,4 +1,4 @@
-geofield_map.leaflet:
+leaflet:
   remote: http://leafletjs.com/
   version: 1.0.3
   license:
@@ -11,7 +11,7 @@ geofield_map.leaflet:
     component:
       https://unpkg.com/leaflet@1.0.3/dist/leaflet.css: {}
 
-geofield_map.main:
+main:
   version: 1.x
   css:
     component:
@@ -25,7 +25,21 @@ geofield_map.main:
       - core/drupalSettings
       - core/drupal.autocomplete
 
-geofield_map.geolocation:
+geolocation:
   version: 1.x
   js:
     js/geolocation.js: {}
+
+google_map:
+  version: 1.x
+  css:
+    component:
+      css/geofield_google_map.css: {}
+  js:
+    js/geofield_map.js: {}
+  dependencies:
+      - core/jquery
+      - core/jquery.once
+      - core/drupal
+      - core/drupalSettings
+      - core/drupal.autocomplete

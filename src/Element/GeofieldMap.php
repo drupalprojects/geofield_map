@@ -64,7 +64,7 @@ class GeofieldMap extends GeofieldElementBase {
     $element['#attached']['library'][] = 'geofield_map/geofield_map.gmaps';
 
     if ($element['#map_library'] == 'leaflet') {
-      $element['#attached']['library'][] = \Drupal::moduleHandler()->moduleExists('leaflet') ? 'leaflet/leaflet' : 'geofield_map/geofield_map.leaflet';
+      $element['#attached']['library'][] = \Drupal::moduleHandler()->moduleExists('leaflet') ? 'leaflet/leaflet' : 'geofield_map/leaflet';
     }
 
     $mapid = 'map-' . $element['#id'];
@@ -137,7 +137,7 @@ class GeofieldMap extends GeofieldElementBase {
     }
 
     if (!empty($element['#geolocation']) && $element['#geolocation'] == TRUE) {
-      $element['#attached']['library'][] = 'geofield_map/geofield_map.geolocation';
+      $element['#attached']['library'][] = 'geofield_map/geolocation';
       $element['map']['actions']['geolocation'] = array(
         '#type' => 'button',
         '#value' => t('Find my location'),
@@ -169,7 +169,7 @@ class GeofieldMap extends GeofieldElementBase {
     }
 
     // Attach Geofield Map Library.
-    $element['#attached']['library'][] = 'geofield_map/geofield_map.main';
+    $element['#attached']['library'][] = 'geofield_map/main';
 
     // The Node Form.
     /* @var \Drupal\node\NodeForm $nodeForm */

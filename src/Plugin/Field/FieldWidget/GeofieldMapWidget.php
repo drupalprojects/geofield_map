@@ -228,7 +228,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     $elements = parent::settingsForm($form, $form_state);
 
     // Attach Geofield Map Library.
-    $elements['#attached']['library'][] = 'geofield_map/geofield_map.main';
+    $elements['#attached']['library'][] = 'geofield_map/main';
 
     $elements['#tree'] = TRUE;
 
@@ -436,7 +436,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     ];
 
     $map_google_apy_key = [
-      '#markup' => $this->t('Google Maps API Key: @state', array('@state' => $this->getSetting('map_google_api_key') ? $this->getSetting('map_google_api_key') : '')),
+      '#markup' => $this->t('Google Maps API Key: @state', array('@state' => $this->getSetting('map_google_api_key') ? $this->getSetting('map_google_api_key') : t('<span style="color: red">Missing | Geocode Address and ReverseGeocode unavailable</span>'))),
     ];
 
     $map_type_selector = [
@@ -489,10 +489,6 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       'hidden' => $geoaddress_field_hidden,
       'disabled' => $geoaddress_field_disabled,
     ];
-
-    if ('leaflet' == $this->getSetting('map_library')) {
-      unset($container['map_google_apy_key']);
-    }
 
     return $container;
   }
