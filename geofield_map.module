@@ -142,7 +142,7 @@ function geofield_map_googlemap_render($map, $features = array()) {
     '#height' => '300px',
     '#map' => $map,
     '#attached' => array(
-      'library' => array('geofield_gmap/google_map'),
+      'library' => array('geofield_gmap/geofield_gmap'),
       'drupalSettings' => array(
         'geofield-google-map' => $settings,
       ),

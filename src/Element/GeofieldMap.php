@@ -60,9 +60,6 @@ class GeofieldMap extends GeofieldElementBase {
    */
   public static function latLonProcess(array &$element, FormStateInterface $form_state, array &$complete_form) {
 
-    // Attach GMap Js Api.
-    $element['#attached']['library'][] = 'geofield_map/geofield_map.gmaps';
-
     if ($element['#map_library'] == 'leaflet') {
       $element['#attached']['library'][] = \Drupal::moduleHandler()->moduleExists('leaflet') ? 'leaflet/leaflet' : 'geofield_map/leaflet';
     }

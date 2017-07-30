@@ -30,16 +30,10 @@ geolocation:
   js:
     js/geolocation.js: {}
 
-google_map:
+geofield_gmap:
   version: 1.x
   css:
     component:
       css/geofield_google_map.css: {}
   js:
     js/geofield_map.js: {}
-  dependencies:
-      - core/jquery
-      - core/jquery.once
-      - core/drupal
-      - core/drupalSettings
-      - core/drupal.autocomplete
