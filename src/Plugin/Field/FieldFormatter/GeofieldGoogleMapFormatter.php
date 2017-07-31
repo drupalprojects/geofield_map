@@ -3,10 +3,16 @@
 namespace Drupal\geofield_map\Plugin\Field\FieldFormatter;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Url;
 use Drupal\Core\Field\FieldItemInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Utility\LinkGeneratorInterface;
+use Drupal\Core\StringTranslation\TranslationInterface;
 
 /**
  * Plugin implementation of the 'geofield_google_map' formatter.
@@ -19,7 +25,56 @@ use Drupal\Core\Form\FormStateInterface;
  *   }
  * )
  */
-class GeofieldGoogleMapFormatter extends FormatterBase {
+class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFactoryPluginInterface {
+
+  /**
+   * The Link generator Service.
+   *
+   * @var \Drupal\Core\Utility\LinkGeneratorInterface
+   */
+  protected $link;
+
+  /**
+   * GeofieldGoogleMapFormatter constructor.
+   *
+   * {@inheritdoc}
+   *
+   * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
+   *   The Translation service.
+   * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
+   *   The Link Generator service.
+   */
+  public function __construct(
+    $plugin_id,
+    $plugin_definition,
+    FieldDefinitionInterface $field_definition,
+    array $settings,
+    $label,
+    $view_mode,
+    array $third_party_settings,
+    TranslationInterface $string_translation,
+    LinkGeneratorInterface $link_generator
+  ) {
+    parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $label, $view_mode, $third_party_settings);
+    $this->link = $link_generator;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $plugin_id,
+      $plugin_definition,
+      $configuration['field_definition'],
+      $configuration['settings'],
+      $configuration['label'],
+      $configuration['view_mode'],
+      $configuration['third_party_settings'],
+      $container->get('string_translation'),
+      $container->get('link_generator')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -49,9 +104,9 @@ class GeofieldGoogleMapFormatter extends FormatterBase {
       'map_center' => array(
         'lat' => 0,
         'lon' => 0,
-        ),
+      ),
         // Implement default settings.
-      ] + parent::defaultSettings();
+    ] + parent::defaultSettings();
   }
 
   /**
@@ -69,14 +124,9 @@ class GeofieldGoogleMapFormatter extends FormatterBase {
    * {@inheritdoc}
    */
   public function settingsSummary() {
-
-    $map_google_info = [
-      '#markup' => $this->t('Google Map Info: @state', array('@state' => $this->getSetting('map_google_info'))),
-    ];
     $map_google_apy_key = [
       '#markup' => $this->t('Google Maps API Key: @state', array('@state' => $this->getSetting('map_google_api_key') ? $this->getSetting('map_google_api_key') : t('<span style="color: red">Missing</span>'))),
     ];
-
     $map_width = [
       '#markup' => $this->t('Map width: @state', array('@state' => $this->getSetting('map_width'))),
     ];
@@ -107,7 +157,6 @@ class GeofieldGoogleMapFormatter extends FormatterBase {
     ];
 
     $summary = [
-      'map_google_info' => $map_google_info,
       'map_google_api_key' => $map_google_apy_key,
       'map_width' => $map_width,
       'map_height' => $map_height,
@@ -180,7 +229,15 @@ class GeofieldGoogleMapFormatter extends FormatterBase {
     $settings = $this->getSettings();
     $zooms_range = range($this->getSetting('map_min_zoom'), '22');
 
-    $element['map_width'] = array(
+    $elements['map_google_api_key'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Gmap Api Key (@link)', array(
+        '@link' => $this->link->generate(t('Get a Key/Authentication for Google Maps Javascript Library'), Url::fromUri('https://developers.google.com/maps/documentation/javascript/get-api-key', array('absolute' => TRUE, 'attributes' => array('target' => 'blank')))),
+      )),
+      '#default_value' => $this->getSetting('map_google_api_key'),
+    ];
+
+    $elements['map_width'] = array(
       '#type' => 'textfield',
       '#title' => t('Map width'),
       '#default_value' => $settings['map_width'],
@@ -189,7 +246,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase {
       '#description' => t('The default width of a Google map, as a CSS length or percentage. Examples: <em>50px</em>, <em>5em</em>, <em>2.5in</em>, <em>95%</em>'),
       '#required' => TRUE,
     );
-    $element['map_height'] = array(
+    $elements['map_height'] = array(
       '#type' => 'textfield',
       '#title' => t('Map height'),
       '#default_value' => $settings['map_height'],
@@ -198,7 +255,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase {
       '#description' => t('The default height of a Google map, as a CSS length or percentage. Examples: <em>50px</em>, <em>5em</em>, <em>2.5in</em>, <em>95%</em>'),
       '#required' => TRUE,
     );
-    $element['map_center'] = array(
+    $elements['map_center'] = array(
       '#type' => 'geofield_latlon',
       '#title' => t('Default Center'),
       '#default_value' => $settings['map_center'],
@@ -206,21 +263,21 @@ class GeofieldGoogleMapFormatter extends FormatterBase {
       '#description' => t('If there are no entries on the map, where should the map be centered?'),
       '#geolocation' => TRUE,
     );
-    $element['map_zoom'] = array(
+    $elements['map_zoom'] = array(
       '#type' => 'select',
       '#title' => t('Zoom'),
       '#default_value' => isset($settings['map_zoom']) ? $settings['map_zoom'] : min(8, $settings['map_max_zoom']),
       '#options' => array_combine($zooms_range, $zooms_range),
       '#description' => t('The default zoom level of a Google map.'),
     );
-    $element['map_min_zoom'] = array(
+    $elemenst['map_min_zoom'] = array(
       '#type' => 'select',
       '#title' => t('Zoom minimum'),
       '#default_value' => isset($settings['map_min_zoom']) ? $settings['map_min_zoom'] : 0,
       '#options' => array_combine($zooms_range, $zooms_range),
       '#description' => t('The minimum zoom level of a Google map.'),
     );
-    $element['map_max_zoom'] = array(
+    $elements['map_max_zoom'] = array(
       '#type' => 'select',
       '#title' => t('Zoom maximum'),
       '#default_value' => isset($settings['map_max_zoom']) ? $settings['map_max_zoom'] : 0,
@@ -228,7 +285,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase {
       '#description' => t('The maximum zoom level of a Google map. Set to 0 to ignore limit.'),
       '#element_validate' => array('map_zoom_level_validate'),
     );
-    $element['map_controltype'] = array(
+    $elements['map_controltype'] = array(
       '#type' => 'select',
       '#title' => t('Zoom Control Type'),
       '#options' => array(
@@ -239,7 +296,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase {
       ),
       '#default_value' => $settings['map_controltype'],
     );
-    $element['map_mtc'] = array(
+    $elements['map_mtc'] = array(
       '#type' => 'select',
       '#title' => t('Map Control Type'),
       '#options' => array(
@@ -249,7 +306,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase {
       ),
       '#default_value' => $settings['map_mtc'],
     );
-    $element['map_pancontrol'] = array(
+    $elements['map_pancontrol'] = array(
       '#type' => 'checkbox',
       '#title' => t('Show Pan control'),
       '#default_value' => $settings['map_pancontrol'],
@@ -267,7 +324,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase {
       $mapopts['physical'] = t('Terrain map');
     }
 
-    $element['map_maptype'] = array(
+    $elements['map_maptype'] = array(
       '#type' => 'select',
       '#title' => t('Default Map Type'),
       '#default_value' => $settings['map_maptype'],
@@ -278,7 +335,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase {
         'physical' => t('Terrain map'),
       ),
     );
-    $element['map_baselayers_map'] = array(
+    $elements['map_baselayers_map'] = array(
       '#type' => 'checkbox',
       '#title' => t('Standard street map'),
       '#description' => t('The standard default street map.'),
@@ -286,21 +343,21 @@ class GeofieldGoogleMapFormatter extends FormatterBase {
       '#return_value' => 1,
       '#prefix' => '<fieldset><legend>' . t('Enable map types') . '</legend>',
     );
-    $element['map_baselayers_satellite'] = array(
+    $elements['map_baselayers_satellite'] = array(
       '#type' => 'checkbox',
       '#title' => t('Standard satellite map'),
       '#description' => t('Satellite view without street overlay.'),
       '#default_value' => $settings['map_baselayers_satellite'],
       '#return_value' => 1,
     );
-    $element['map_baselayers_hybrid'] = array(
+    $elements['map_baselayers_hybrid'] = array(
       '#type' => 'checkbox',
       '#title' => t('Hybrid satellite map'),
       '#description' => t('Satellite view with street overlay.'),
       '#default_value' => $settings['map_baselayers_hybrid'],
       '#return_value' => 1,
     );
-    $element['map_baselayers_physical'] = array(
+    $elements['map_baselayers_physical'] = array(
       '#type' => 'checkbox',
       '#title' => t('Terrain map'),
       '#description' => t('Map with physical data (terrain, vegetation.)'),
@@ -308,14 +365,14 @@ class GeofieldGoogleMapFormatter extends FormatterBase {
       '#return_value' => 1,
       '#suffix' => '</fieldset>',
     );
-    $element['map_scale'] = array(
+    $elements['map_scale'] = array(
       '#type' => 'checkbox',
       '#title' => t('Scale'),
       '#description' => t('Show scale'),
       '#default_value' => $settings['map_scale'],
       '#return_value' => 1,
     );
-    $element['map_overview'] = array(
+    $elements['map_overview'] = array(
       '#type' => 'checkbox',
       '#title' => t('Overview map'),
       '#description' => t('Show overview map'),
@@ -323,35 +380,35 @@ class GeofieldGoogleMapFormatter extends FormatterBase {
       '#return_value' => 1,
     );
 
-    $element['map_overview_opened'] = array(
+    $elements['map_overview_opened'] = array(
       '#type' => 'checkbox',
       '#title' => t('Overview map state'),
       '#description' => t('Show overview map as open by default'),
       '#default_value' => $settings['map_overview_opened'],
       '#return_value' => 1,
     );
-    $element['map_scrollwheel'] = array(
+    $elements['map_scrollwheel'] = array(
       '#type' => 'checkbox',
       '#title' => t('Scrollwheel'),
       '#description' => t('Enable scrollwheel zooming'),
       '#default_value' => $settings['map_scrollwheel'],
       '#return_value' => 1,
     );
-    $element['map_draggable'] = array(
+    $elements['map_draggable'] = array(
       '#type' => 'checkbox',
       '#title' => t('Draggable'),
       '#description' => t('Enable dragging on the map'),
       '#default_value' => $settings['map_draggable'],
       '#return_value' => 1,
     );
-    $element['map_streetview_show'] = array(
+    $elements['map_streetview_show'] = array(
       '#type' => 'checkbox',
       '#title' => t('Show streetview button'),
       '#default_value' => $settings['map_streetview_show'],
       '#return_value' => 1,
     );
 
-    return $element;
+    return $elements;
 
   }
 

@@ -2,17 +2,17 @@
 
 namespace Drupal\geofield_map\Plugin\Field\FieldWidget;
 
+use Drupal\Core\Url;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\geofield\Plugin\Field\FieldWidget\GeofieldLatLonWidget;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Utility\LinkGeneratorInterface;
-use Drupal\Core\Url;
+use Drupal\Core\StringTranslation\TranslationInterface;
 
 /**
  * Plugin implementation of the 'geofield_map' widget.
@@ -239,10 +239,9 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       )),
       '#default_value' => $this->getSetting('map_google_api_key'),
       '#description' => $this->t('Gmap Api Key is needed for the Geocoding and Reverse Geocoding functionalities, also with Leaflet Map rendering.<br>This (not null) is needed to enable the Geoaddressed Field options, to allow the Searched / Reverse Geocoded Address functionalities.'),
-      // @TODO: un-comment this '#required' => TRUE,
     ];
 
-    // THe container is needed, as it seems the #states won't work
+    // The container is needed, as it seems the #states won't work
     // on the html_div or markup elements.
     $elements['map_google_api_key_missing'] = array(
       '#type' => 'container',
