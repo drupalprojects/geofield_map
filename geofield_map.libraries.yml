@@ -37,3 +37,8 @@ geofield_gmap:
       css/geofield_google_map.css: {}
   js:
     js/geofield_map.js: {}
+
+geojson:
+  version: 1.x
+  js:
+    js/geojson.js

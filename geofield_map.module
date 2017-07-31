@@ -44,6 +44,7 @@ function geofield_map_help($route_name, RouteMatchInterface $route_match) {
  *   The points array.
  */
 function geofield_map_process_geofield($items = array()) {
+  $geophp = \Drupal::service('geofield.geophp');
 
   if (!is_array($items)) {
     $items = array($items);
@@ -51,7 +52,7 @@ function geofield_map_process_geofield($items = array()) {
   $data = array();
   foreach ($items as $item) {
     // Auto-detect and parse the format (e.g. WKT, JSON etc)
-    if (!($geom = geoPHP::load(isset($item['wkt']) ? $item['wkt'] : $item))) {
+    if (!($geom = $geophp->load(isset($item['wkt']) ? $item['wkt'] : $item))) {
       continue;
     }
     $datum = array('type' => strtolower($geom->geometryType()));
@@ -117,34 +118,40 @@ function geofield_map_process_geofield($items = array()) {
 }
 
 /**
+ * Implements hook_theme().
+ */
+function geofield_map_theme($existing, $type, $theme, $path) {
+  return array(
+    'geofield_google_map' => array(
+      'variables' => array(
+        'map_id' => NULL,
+        'height' => '400px',
+        'width' => '100%',
+      ),
+    ),
+  );
+}
+
+
+/**
  * Load all Geofield Google Map client files and return markup for a map.
  *
- * @param array $map
- *   The map settings.
- * @param array $features
- *   The features.
+ * @param array $map_data
+ *   The map rendering data.
  *
  * @return array
  *   The returned render array.
  */
-function geofield_map_googlemap_render($map, $features = array()) {
-  $map_id = Html::getUniqueId('geofield_google_map');
-
-  $settings[$map_id] = array(
-    'mapId' => $map_id,
-    'map' => $map,
-    // JS only works with arrays, make sure we have one with numeric keys.
-    'features' => array_values($features),
-  );
+function geofield_map_googlemap_render($map_data) {
   return array(
     '#theme' => 'geofield_google_map',
-    '#map_id' => $map_id,
-    '#height' => '300px',
-    '#map' => $map,
+    '#map_id' => $map_data['map_id'],
+    '#height' => $map_data['map_height'],
+    '#width' => $map_data['map_width'],
     '#attached' => array(
       'library' => array('geofield_gmap/geofield_gmap'),
       'drupalSettings' => array(
-        'geofield-google-map' => $settings,
+        'geofield-google-map' => $map_data,
       ),
     ),
   );
