@@ -13,6 +13,7 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\Component\Serialization\Json;
 
 /**
  * Plugin implementation of the 'geofield_google_map' formatter.
@@ -26,6 +27,18 @@ use Drupal\Core\StringTranslation\TranslationInterface;
  * )
  */
 class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFactoryPluginInterface {
+
+  /**
+   * Google Map Types Options.
+   *
+   * @var array
+   */
+  protected $gMapTypesOptions = [
+    'roadmap' => 'Roadmap',
+    'satellite' => 'Satellite',
+    'hybrid' => 'Hybrid',
+    'terrain' => 'Terrain',
+  ];
 
   /**
    * The Link generator Service.
@@ -81,32 +94,41 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
    */
   public static function defaultSettings() {
     return [
-        'map_google_api_key' => '',
-        'map_width' => '100%',
-        'map_height' => '300px',
-        'map_zoom' => '8',
-        'map_min_zoom' => '0',
-        'map_max_zoom' => '22',
-        'map_controltype' => 'default',
-        'map_mtc' => 'standard',
-        'map_pancontrol' => 1,
-        'map_maptype' => 'map',
-        'map_baselayers_map' => 1,
-        'map_baselayers_satellite' => 1,
-        'map_baselayers_hybrid' => 1,
-        'map_baselayers_physical' => 0,
-        'map_scale' => 0,
-        'map_overview' => 0,
-        'map_overview_opened' => 0,
-        'map_scrollwheel' => 0,
-        'map_draggable' => 0,
-        'map_streetview_show' => 0,
-        'map_center' => [
-          'lat' => 0,
-          'lon' => 0,
+      'gmap_api_key' => '',
+      'map_dimensions' => [
+        'width' => '100%',
+        'height' => '300px',
+      ],
+      'map_center' => [
+        'lat' => 42,
+        'lon' => 12.5,
+      ],
+      'map_zoom_and_pan' => [
+        'zoom' => '8',
+        'min_zoom' => '0',
+        'max_zoom' => '22',
+        'scrollwheel' => 1,
+        'draggable' => 1,
+      ],
+      'map_controls' => [
+        'disable_default_ui' => 0,
+        'zoom_control' => 1,
+        'map_type_id' => 'roadmap',
+        'map_type_control' => 1,
+        'map_type_control_options_type_ids' => [
+          'roadmap' => 'roadmap',
+          'satellite' => 'satellite',
+          'hybrid' => 'hybrid',
+          'terrain' => 'terrain',
         ],
-        // Implement default settings.
-      ] + parent::defaultSettings();
+        'scale_control' => 1,
+        'street_view_control' => 1,
+        'fullscreen_control' => 1,
+      ],
+      'map_additional_options' => '',
+
+      // Implement default settings.
+    ] + parent::defaultSettings();
   }
 
   /**
@@ -124,51 +146,123 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
    * {@inheritdoc}
    */
   public function settingsSummary() {
-    $map_google_apy_key = [
-      '#markup' => $this->t('Google Maps API Key: @state', ['@state' => $this->getSetting('map_google_api_key') ? $this->getSetting('map_google_api_key') : t('<span style="color: red">Missing</span>')]),
+    $settings = $this->getSettings();
+
+    $gmap_api_key = [
+      '#markup' => $this->t('Google Maps API Key: @state', ['@state' => $settings['gmap_api_key'] ? $settings['gmap_api_key'] : $this->t('<span style="color: red">Missing</span>')]),
     ];
-    $map_width = [
-      '#markup' => $this->t('Map width: @state', ['@state' => $this->getSetting('map_width')]),
+    $map_dimensions = [
+      '#markup' => $this->t('Map Dimensions: Width: @width - Height: @height', ['@width' => $settings['map_dimensions']['width'], '@height' => $settings['map_dimensions']['height']]),
     ];
-    $map_height = [
-      '#markup' => $this->t('Map height: @state', ['@state' => $this->getSetting('map_height')]),
-    ];
-    $map_zoom = [
-      '#markup' => $this->t('Map zoom: @state', ['@state' => $this->getSetting('map_zoom')]),
-    ];
-    $map_min_zoom = [
-      '#markup' => $this->t('Min Map zoom: @state', ['@state' => $this->getSetting('map_min_zoom')]),
-    ];
-    $map_max_zoom = [
-      '#markup' => $this->t('Max Map zoom: @state', ['@state' => $this->getSetting('map_max_zoom')]),
-    ];
-    $map_max_zoom = [
-      '#markup' => $this->t('Max Map zoom: @state', ['@state' => $this->getSetting('map_max_zoom')]),
-    ];
-    $map_center_settings = $this->getSetting('map_center');
     $map_center = [
+      '#type' => 'html_tag',
+      '#tag' => 'div',
       '#markup' => $this->t('Map Default Center: @state_lat, @state_lon', [
-        '@state_lat' => $map_center_settings['lat'],
-        '@state_lon' => $map_center_settings['lon'],
+        '@state_lat' => $settings['map_center']['lat'],
+        '@state_lon' => $settings['map_center']['lon'],
       ]),
     ];
-    $map_streetview_show = [
-      '#markup' => $this->t('Streetview show: @state', ['@state' => $this->getSetting('map_streetview_show') ? 'Yes' : 'No']),
+    $map_zoom_and_pan = [
+      '#type' => 'html_tag',
+      '#tag' => 'div',
+      '#value' => '<u>' . $this->t('Map Zoom and Pan:') . '</u>',
+      'zoom' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Map Zoom: @state', ['@state' => $settings['map_zoom_and_pan']['zoom']]),
+      ],
+      'min_zoom' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Min Map Zoom: @state', ['@state' => $settings['map_zoom_and_pan']['min_zoom']]),
+      ],
+      'max_zoom' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Max Map Zoom: @state', ['@state' => $settings['map_zoom_and_pan']['max_zoom']]),
+      ],
+      'scrollwheel' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Scrollwheel: @state', ['@state' => $settings['map_zoom_and_pan']['scrollwheel'] ? $this->t('Yes') : $this->t('No')]),
+      ],
+      'draggable' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Draggable: @state', ['@state' => $settings['map_zoom_and_pan']['draggable'] ? $this->t('Yes') : $this->t('No')]),
+      ],
     ];
-    $other_settings = [
-      '#markup' => $this->t('and other settings ...'),
+
+    // Remove the unselected array keys
+    // from the map_type_control_options_type_ids.
+    $map_type_control_options_type_ids = array_filter($settings['map_controls']['map_type_control_options_type_ids'], function ($value) {
+      return $value !== 0;
+    });
+
+    $map_controls = [
+      '#type' => 'html_tag',
+      '#tag' => 'div',
+      '#value' => '<u>' . $this->t('Map Controls:') . '</u>',
+      'disable_default_ui' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Disable Default UI: @state', ['@state' => $settings['map_controls']['disable_default_ui'] ? $this->t('Yes') : $this->t('No')]),
+      ],
+      'zoom_control' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Zoom Control: @state', ['@state' => $settings['map_controls']['zoom_control'] ? $this->t('Yes') : $this->t('No')]),
+      ],
+      'map_type_id' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Default Map Type: @state', ['@state' => $settings['map_controls']['map_type_id']]),
+      ],
+      'map_type_control' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Map Type Control: @state', ['@state' => $settings['map_controls']['map_type_control'] ? $this->t('Yes') : $this->t('No')]),
+      ],
+      'map_type_control_options_type_ids' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $settings['map_controls']['map_type_control'] ? $this->t('Enabled Map Types: @state', ['@state' => implode(', ', array_keys($map_type_control_options_type_ids))]) : '',
+      ],
+      'scale_control' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Scale Control: @state', ['@state' => $settings['map_controls']['scale_control'] ? $this->t('Yes') : $this->t('No')]),
+      ],
+      'street_view_control' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Streetview Control: @state', ['@state' => $settings['map_controls']['street_view_control'] ? $this->t('Yes') : $this->t('No')]),
+      ],
+      'fullscreen_control' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Fullscreen Control: @state', ['@state' => $settings['map_controls']['fullscreen_control'] ? $this->t('Yes') : $this->t('No')]),
+      ],
+    ];
+
+    $map_additional_options = [
+      '#type' => 'html_tag',
+      '#tag' => 'div',
+      '#value' => '<u>' . $this->t('Map Additional Options:') . '</u>',
+      'value' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $settings['map_additional_options'],
+      ],
     ];
 
     $summary = [
-      'map_google_api_key' => $map_google_apy_key,
-      'map_width' => $map_width,
-      'map_height' => $map_height,
-      'map_zoom' => $map_zoom,
-      'map_min_zoom' => $map_min_zoom,
-      'map_max_zoom' => $map_max_zoom,
+      'gmap_api_key' => $gmap_api_key,
+      'map_dimensions' => $map_dimensions,
       'map_center' => $map_center,
-      'map_streetview_show' => $map_streetview_show,
-      'other_settings' => $other_settings,
+      'map_zoom_and_pan' => $map_zoom_and_pan,
+      'map_controls' => $map_controls,
+      'map_additional_options' => $map_additional_options,
     ];
 
     return $summary;
@@ -178,34 +272,48 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
    * {@inheritdoc}
    */
   public function viewElements(FieldItemListInterface $items, $langcode) {
-    $settings = $this->getSettings();
+    $element = [];
+    $geophp = \Drupal::service('geofield.geophp');
+
     /* @var \Drupal\Core\Entity\EntityInterface $entity */
     $entity = $items->getEntity();
     $entity_type = $entity->bundle();
     $entity_id = $entity->id();
+    /* @var \Drupal\Core\Field\FieldDefinitionInterface $field */
     $field = $items->getFieldDefinition();
 
-    $map_settings = [
-      'map_google_api_key' => isset($settings['map_google_api_key']) ? $settings['map_google_api_key'] : NULL,
-      'map_width' => isset($settings['map_width']) ? $settings['map_width'] : '100%',
-      'map_height' => isset($settings['map_height']) ? $settings['map_height'] : '300px',
-      'map_zoom' => isset($settings['map_zoom']) ? $settings['map_zoom'] : NULL,
-      'map_min_zoom' => isset($settings['map_min_zoom']) ? $settings['map_min_zoom'] : '0',
-      'map_max_zoom' => isset($settings['map_max_zoom']) ? $settings['map_max_zoom'] : '22',
-    ];
+    $map_settings = $this->getSettings();
 
-    $elements = [];
+    $map_settings['map_controls']['map_type_control_options_type_ids'] = array_keys(array_filter($map_settings['map_controls']['map_type_control_options_type_ids'], function ($value) {
+      return $value !== 0;
+    }));
+
+    $data = [];
     foreach ($items as $delta => $item) {
-      $features = geofield_map_process_geofield($item->value);
 
-      if (!empty($features)) {
-        $map_id = Html::getUniqueId("geofield_map_entity_{$entity_type}_{$entity_id}_{$field->get('field_name')}_{$delta}");
-        $map_settings['map_id'] = $map_id;
-        $map_settings['features'] = $features;
+      /* @var \Point $geometry */
+      $geometry = $geophp->load($item->value);
+      if (!empty($geometry)) {
+        $datum = json_decode($geometry->out('json'));
+        $datum->properties = array(
+          'description' => $entity->label(),
+        );
+        $data[] = $datum;
       }
-      $elements[$delta] = geofield_map_googlemap_render($map_settings);
     }
-    return $elements;
+
+    if (!empty($data)) {
+      $js_settings = array(
+        'mapid' => Html::getUniqueId("geofield_map_entity_{$entity_type}_{$entity_id}_{$field->getName()}"),
+        'map_settings' => $map_settings,
+        'data' => count($data) == 1 ? $data[0] : array(
+          'type' => 'GeometryCollection',
+          'geometries' => $data,
+        ),
+      );
+      $element = geofield_map_googlemap_render($js_settings);
+    }
+    return $element;
   }
 
   /**
@@ -229,12 +337,12 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
    * @return array
    *   The generated form elements array.
    */
-  protected function generateSettingsFormElements($element = []) {
+  protected function generateSettingsFormElements() {
 
+    $default_settings = self::defaultSettings();
     $settings = $this->getSettings();
-    $zooms_range = range($this->getSetting('map_min_zoom'), '22');
 
-    $elements['map_google_api_key'] = [
+    $elements['gmap_api_key'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Gmap Api Key (@link)', [
         '@link' => $this->link->generate(t('Get a Key/Authentication for Google Maps Javascript Library'), Url::fromUri('https://developers.google.com/maps/documentation/javascript/get-api-key', [
@@ -242,182 +350,220 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
           'attributes' => ['target' => 'blank'],
         ])),
       ]),
-      '#default_value' => $this->getSetting('map_google_api_key'),
+      '#default_value' => $settings['gmap_api_key'],
     ];
 
-    $elements['map_width'] = [
+    $elements['map_dimensions'] = array(
+      '#type' => 'fieldset',
+      '#title' => $this->t('Map Dimensions'),
+    );
+    $elements['map_dimensions']['width'] = [
       '#type' => 'textfield',
-      '#title' => t('Map width'),
-      '#default_value' => $settings['map_width'],
+      '#title' => $this->t('Map width'),
+      '#default_value' => $settings['map_dimensions']['width'],
       '#size' => 25,
       '#maxlength' => 25,
-      '#description' => t('The default width of a Google map, as a CSS length or percentage. Examples: <em>50px</em>, <em>5em</em>, <em>2.5in</em>, <em>95%</em>'),
+      '#description' => $this->t('The default width of a Google map, as a CSS length or percentage. Examples: <em>50px</em>, <em>5em</em>, <em>2.5in</em>, <em>95%</em>'),
       '#required' => TRUE,
     ];
-    $elements['map_height'] = [
+    $elements['map_dimensions']['height'] = [
       '#type' => 'textfield',
-      '#title' => t('Map height'),
-      '#default_value' => $settings['map_height'],
+      '#title' => $this->t('Map height'),
+      '#default_value' => $settings['map_dimensions']['height'],
       '#size' => 25,
       '#maxlength' => 25,
-      '#description' => t('The default height of a Google map, as a CSS length or percentage. Examples: <em>50px</em>, <em>5em</em>, <em>2.5in</em>, <em>95%</em>'),
+      '#description' => $this->t('The default height of a Google map, as a CSS length or percentage. Examples: <em>50px</em>, <em>5em</em>, <em>2.5in</em>, <em>95%</em>'),
       '#required' => TRUE,
     ];
+
+    $elements['gmaps_api_link_markup'] = [
+      '#markup' => $this->t('The following settings comply with the @gmaps_api_link.', [
+        '@gmaps_api_link' => $this->link->generate(t('Google Maps JavaScript API Library'), Url::fromUri('https://developers.google.com/maps/documentation/javascript', [
+          'absolute' => TRUE,
+          'attributes' => ['target' => 'blank'],
+        ])),
+      ]),
+    ];
+
     $elements['map_center'] = [
       '#type' => 'geofield_latlon',
-      '#title' => t('Default Center'),
+      '#title' => $this->t('Default Center'),
       '#default_value' => $settings['map_center'],
       '#size' => 25,
-      '#description' => t('If there are no entries on the map, where should the map be centered?'),
+      '#description' => $this->t('If there are no entries on the map, where should the map be centered?'),
       '#geolocation' => TRUE,
     ];
-    $elements['map_zoom'] = [
-      '#type' => 'select',
-      '#title' => t('Zoom'),
-      '#default_value' => isset($settings['map_zoom']) ? $settings['map_zoom'] : min(8, $settings['map_max_zoom']),
-      '#options' => array_combine($zooms_range, $zooms_range),
-      '#description' => t('The default zoom level of a Google map.'),
+
+    $elements['map_zoom_and_pan'] = array(
+      '#type' => 'fieldset',
+      '#title' => $this->t('Map Zoom and Pan'),
+    );
+    $elements['map_zoom_and_pan']['zoom'] = [
+      '#type' => 'number',
+      '#min' => $settings['map_zoom_and_pan']['min_zoom'],
+      '#max' => $settings['map_zoom_and_pan']['max_zoom'],
+      '#title' => $this->t('Initial Zoom'),
+      '#default_value' => $settings['map_zoom_and_pan']['zoom'],
+      '#description' => $this->t('The Initial Zoom level of the Google Map.'),
+      '#element_validate' => [[get_class($this), 'zoomLevelValidate']],
     ];
-    $elemenst['map_min_zoom'] = [
-      '#type' => 'select',
-      '#title' => t('Zoom minimum'),
-      '#default_value' => isset($settings['map_min_zoom']) ? $settings['map_min_zoom'] : 0,
-      '#options' => array_combine($zooms_range, $zooms_range),
-      '#description' => t('The minimum zoom level of a Google map.'),
+    $elements['map_zoom_and_pan']['min_zoom'] = [
+      '#type' => 'number',
+      '#min' => $default_settings['map_zoom_and_pan']['min_zoom'],
+      '#max' => $settings['map_zoom_and_pan']['max_zoom'],
+      '#title' => $this->t('Minimum Zoom'),
+      '#default_value' => $settings['map_zoom_and_pan']['min_zoom'],
+      '#description' => $this->t('The Minimum Zoom level of the Google Map.'),
     ];
-    $elements['map_max_zoom'] = [
-      '#type' => 'select',
-      '#title' => t('Zoom maximum'),
-      '#default_value' => isset($settings['map_max_zoom']) ? $settings['map_max_zoom'] : 0,
-      '#options' => array_combine($zooms_range, $zooms_range),
-      '#description' => t('The maximum zoom level of a Google map. Set to 0 to ignore limit.'),
-      '#element_validate' => ['map_zoom_level_validate'],
+    $elements['map_zoom_and_pan']['max_zoom'] = [
+      '#type' => 'number',
+      '#min' => $settings['map_zoom_and_pan']['min_zoom'],
+      '#max' => $default_settings['map_zoom_and_pan']['max_zoom'],
+      '#title' => $this->t('Maximum Zoom'),
+      '#default_value' => $settings['map_zoom_and_pan']['max_zoom'],
+      '#description' => $this->t('The Maximum Zoom level of the Google Map.'),
+      '#element_validate' => [[get_class($this), 'maxZoomLevelValidate']],
     ];
-    $elements['map_controltype'] = [
+    $elements['map_zoom_and_pan']['scrollwheel'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Scrollwheel'),
+      '#description' => $this->t('Enable scrollwheel zooming'),
+      '#default_value' => $settings['map_zoom_and_pan']['scrollwheel'],
+      '#return_value' => 1,
+    ];
+    $elements['map_zoom_and_pan']['draggable'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Draggable'),
+      '#description' => $this->t('Enable dragging/panning on the map'),
+      '#default_value' => $settings['map_zoom_and_pan']['draggable'],
+      '#return_value' => 1,
+    ];
+
+    $elements['map_controls'] = array(
+      '#type' => 'fieldset',
+      '#title' => $this->t('Map Controls'),
+    );
+    $elements['map_controls']['disable_default_ui'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Disable Default UI'),
+      '#description' => $this->t('This property disables any automatic UI behavior from the Google Maps JavaScript API'),
+      '#default_value' => $settings['map_controls']['disable_default_ui'],
+      '#return_value' => 1,
+    ];
+    $elements['map_controls']['zoom_control'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Zoom Control'),
+      '#description' => $this->t('The enabled/disabled state of the Zoom control.'),
+      '#default_value' => $settings['map_controls']['zoom_control'],
+      '#return_value' => 1,
+    ];
+    $elements['map_controls']['map_type_id'] = [
       '#type' => 'select',
-      '#title' => t('Zoom Control Type'),
-      '#options' => [
-        'none' => t('None'),
-        'default' => t('Default'),
-        'small' => t('Small'),
-        'large' => t('Large'),
+      '#title' => $this->t('Default Map Type'),
+      '#default_value' => $settings['map_controls']['map_type_id'],
+      '#options' => $this->gMapTypesOptions,
+    ];
+    $elements['map_controls']['map_type_control'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enabled Map Type Control'),
+      '#description' => $this->t('The initial enabled/disabled state of the Map type control.'),
+      '#default_value' => $settings['map_controls']['map_type_control'],
+      '#return_value' => 1,
+    ];
+    $elements['map_controls']['map_type_control_options_type_ids'] = [
+      '#type' => 'checkboxes',
+      '#title' => $this->t('The enabled Map Types'),
+      '#description' => $this->t('The Map Types that will be available in the Map Type Control.'),
+      '#default_value' => $settings['map_controls']['map_type_control_options_type_ids'],
+      '#options' => $this->gMapTypesOptions,
+      '#return_value' => 1,
+      '#states' => [
+        'visible' => [
+          ':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][map_controls][map_type_control]"]' => ['checked' => TRUE],
+        ],
       ],
-      '#default_value' => $settings['map_controltype'],
     ];
-    $elements['map_mtc'] = [
-      '#type' => 'select',
-      '#title' => t('Map Control Type'),
-      '#options' => [
-        'none' => t('None'),
-        'standard' => t('Horizontal bar'),
-        'menu' => t('Dropdown'),
-      ],
-      '#default_value' => $settings['map_mtc'],
-    ];
-    $elements['map_pancontrol'] = [
+    $elements['map_controls']['scale_control'] = [
       '#type' => 'checkbox',
-      '#title' => t('Show Pan control'),
-      '#default_value' => $settings['map_pancontrol'],
+      '#title' => $this->t('Scale Control'),
+      '#description' => $this->t('Show map scale'),
+      '#default_value' => $settings['map_controls']['scale_control'],
       '#return_value' => 1,
     ];
-
-    $mapopts = ['map' => t('Standard street map')];
-    if ($settings['map_baselayers_satellite']) {
-      $mapopts['satellite'] = t('Standard satellite map');
-    }
-    if ($settings['map_baselayers_hybrid']) {
-      $mapopts['hybrid'] = t('Hybrid satellite map');
-    }
-    if ($settings['map_baselayers_physical']) {
-      $mapopts['physical'] = t('Terrain map');
-    }
-
-    $elements['map_maptype'] = [
-      '#type' => 'select',
-      '#title' => t('Default Map Type'),
-      '#default_value' => $settings['map_maptype'],
-      '#options' => [
-        'map' => t('Standard street map'),
-        'satellite' => t('Standard satellite map'),
-        'hybrid' => t('Hybrid satellite map'),
-        'physical' => t('Terrain map'),
-      ],
-    ];
-    $elements['map_baselayers_map'] = [
+    $elements['map_controls']['street_view_control'] = [
       '#type' => 'checkbox',
-      '#title' => t('Standard street map'),
-      '#description' => t('The standard default street map.'),
-      '#default_value' => $settings['map_baselayers_map'],
-      '#return_value' => 1,
-      '#prefix' => '<fieldset><legend>' . t('Enable map types') . '</legend>',
-    ];
-    $elements['map_baselayers_satellite'] = [
-      '#type' => 'checkbox',
-      '#title' => t('Standard satellite map'),
-      '#description' => t('Satellite view without street overlay.'),
-      '#default_value' => $settings['map_baselayers_satellite'],
+      '#title' => $this->t('Streetview Control'),
+      '#description' => $this->t('Enable the Street View functionality on the Map.'),
+      '#default_value' => $settings['map_controls']['street_view_control'],
       '#return_value' => 1,
     ];
-    $elements['map_baselayers_hybrid'] = [
+    $elements['map_controls']['fullscreen_control'] = [
       '#type' => 'checkbox',
-      '#title' => t('Hybrid satellite map'),
-      '#description' => t('Satellite view with street overlay.'),
-      '#default_value' => $settings['map_baselayers_hybrid'],
+      '#title' => $this->t('Fullscreen Control'),
+      '#description' => $this->t('Enable the Fullscreen View of the Map.'),
+      '#default_value' => $settings['map_controls']['fullscreen_control'],
       '#return_value' => 1,
     ];
-    $elements['map_baselayers_physical'] = [
-      '#type' => 'checkbox',
-      '#title' => t('Terrain map'),
-      '#description' => t('Map with physical data (terrain, vegetation.)'),
-      '#default_value' => $settings['map_baselayers_physical'],
-      '#return_value' => 1,
-      '#suffix' => '</fieldset>',
+    $elements['map_additional_options'] = [
+      '#type' => 'textarea',
+      '#rows' => 6,
+      '#title' => $this->t('Map Additional Options'),
+      '#description' => $this->t('An object literal of additional map options, that comply with the Google Maps JavaScript API. The format should respect the javacript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the values.<br>It is even possible to input Map Control Positions. For this use the numeric values of the google.maps.ControlPosition, otherwise the option will be passed as incomprehensible string to Google Maps API.'),
+      '#default_value' => $settings['map_additional_options'],
+      '#placeholder' => $this->t('{"disableDoubleClickZoom": "cooperative",
+"gestureHandling": "none",
+"streetViewControlOptions": {"position": "7"}
+}'),
+      '#element_validate' => [[get_class($this), 'jsonValidate']],
     ];
-    $elements['map_scale'] = [
-      '#type' => 'checkbox',
-      '#title' => t('Scale'),
-      '#description' => t('Show scale'),
-      '#default_value' => $settings['map_scale'],
-      '#return_value' => 1,
-    ];
-    $elements['map_overview'] = [
-      '#type' => 'checkbox',
-      '#title' => t('Overview map'),
-      '#description' => t('Show overview map'),
-      '#default_value' => $settings['map_overview'],
-      '#return_value' => 1,
-    ];
-
-    $elements['map_overview_opened'] = [
-      '#type' => 'checkbox',
-      '#title' => t('Overview map state'),
-      '#description' => t('Show overview map as open by default'),
-      '#default_value' => $settings['map_overview_opened'],
-      '#return_value' => 1,
-    ];
-    $elements['map_scrollwheel'] = [
-      '#type' => 'checkbox',
-      '#title' => t('Scrollwheel'),
-      '#description' => t('Enable scrollwheel zooming'),
-      '#default_value' => $settings['map_scrollwheel'],
-      '#return_value' => 1,
-    ];
-    $elements['map_draggable'] = [
-      '#type' => 'checkbox',
-      '#title' => t('Draggable'),
-      '#description' => t('Enable dragging on the map'),
-      '#default_value' => $settings['map_draggable'],
-      '#return_value' => 1,
-    ];
-    $elements['map_streetview_show'] = [
-      '#type' => 'checkbox',
-      '#title' => t('Show streetview button'),
-      '#default_value' => $settings['map_streetview_show'],
-      '#return_value' => 1,
-    ];
-
     return $elements;
+  }
 
+  /**
+   * Form element validation handler for a Map Zoom level.
+   */
+  public static function zoomLevelValidate($element, FormStateInterface &$form_state) {
+    // Get to the actual values in a form tree.
+    $parents = $element['#parents'];
+    $values = $form_state->getValues();
+    for ($i = 0; $i < count($parents) - 1; $i++) {
+      $values = $values[$parents[$i]];
+    }
+    // Check the initial map zoom level.
+    $zoom = $element['#value'];
+    $min_zoom = $values['min_zoom'];
+    $max_zoom = $values['max_zoom'];
+    if ($zoom < $min_zoom || $zoom > $max_zoom) {
+      $form_state->setError($element, t('The @zoom_field should be between the Minimum and the Maximum Zoom levels.', ['@zoom_field' => $element['#title']]));
+    }
+  }
+
+  /**
+   * Form element validation handler for the Map Max Zoom level.
+   */
+  public static function maxZoomLevelValidate($element, FormStateInterface &$form_state) {
+    // Get to the actual values in a form tree.
+    $parents = $element['#parents'];
+    $values = $form_state->getValues();
+    for ($i = 0; $i < count($parents) - 1; $i++) {
+      $values = $values[$parents[$i]];
+    }
+    // Check the max zoom level.
+    $min_zoom = $values['min_zoom'];
+    $max_zoom = $element['#value'];
+    if ($max_zoom && $max_zoom <= $min_zoom) {
+      $form_state->setError($element, t('The Max Zoom level should be above the Minimum Zoom level.'));
+    }
+  }
+
+  /**
+   * Form element json format validation handler.
+   */
+  public static function jsonValidate($element, FormStateInterface &$form_state) {
+    // Check the jsonValue.
+    if (!empty($element['#value']) && JSON::decode($element['#value']) == NULL) {
+      $form_state->setError($element, t('The @field field is not valid Json Format.', ['@field' => $element['#title']]));
+    }
   }
 
 }

@@ -36,9 +36,14 @@ geofield_gmap:
     component:
       css/geofield_google_map.css: {}
   js:
-    js/geofield_map.js: {}
+    js/geofield_google_map.js: {}
+  dependencies:
+      - core/jquery
+      - core/jquery.once
+      - core/drupal
+      - core/drupalSettings
 
 geojson:
   version: 1.x
   js:
-    js/geojson.js
+    js/geojson.js: {}

@@ -8,7 +8,6 @@
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
-use Drupal\Component\Utility\Html;
 
 /**
  * Implements hook_help().
@@ -31,100 +30,13 @@ function geofield_map_help($route_name, RouteMatchInterface $route_match) {
 }
 
 /**
- * Convert a geofield into an array of map points.
- *
- * The map points can then be fed into geofield_google_map().
- *
- * @param mixed $items
- *   A single value or array of geo values, each as a string in any of the
- *   supported formats or as an array of $item elements, each with a
- *   $item['wkt'] field.
- *
- * @return array
- *   The points array.
- */
-function geofield_map_process_geofield($items = array()) {
-  $geophp = \Drupal::service('geofield.geophp');
-
-  if (!is_array($items)) {
-    $items = array($items);
-  }
-  $data = array();
-  foreach ($items as $item) {
-    // Auto-detect and parse the format (e.g. WKT, JSON etc)
-    if (!($geom = $geophp->load(isset($item['wkt']) ? $item['wkt'] : $item))) {
-      continue;
-    }
-    $datum = array('type' => strtolower($geom->geometryType()));
-
-    switch ($datum['type']) {
-      case 'point':
-        $datum += array(
-          'lat' => $geom->getY(),
-          'lon' => $geom->getX(),
-        );
-        break;
-
-      case 'linestring':
-        $components = $geom->getComponents();
-        foreach ($components as $component) {
-          $datum['points'][] = array(
-            'lat' => $component->getY(),
-            'lon' => $component->getX(),
-          );
-        }
-        break;
-
-      case 'polygon':
-        $tmp = $geom->getComponents();
-        $components = $tmp[0]->getComponents();
-        foreach ($components as $component) {
-          $datum['points'][] = array(
-            'lat' => $component->getY(),
-            'lon' => $component->getX(),
-          );
-        }
-        break;
-
-      case 'multipolygon':
-      case 'multipolyline':
-      case 'multilinestring':
-        if ($datum['type'] == 'multilinestring') {
-          $datum['type'] = 'multipolyline';
-        }
-        if ($datum['type'] == 'multipolygon') {
-          $tmp = $geom->getComponents();
-          $components = $tmp[0]->getComponents();
-        }
-        else {
-          $components = $geom->getComponents();
-        }
-        foreach ($components as $key => $component) {
-          $subcomponents = $component->getComponents();
-          foreach ($subcomponents as $subcomponent) {
-            $datum['component'][$key]['points'][] = array(
-              'lat' => $subcomponent->getY(),
-              'lon' => $subcomponent->getX(),
-            );
-          }
-          unset($subcomponent);
-        }
-        break;
-    }
-    $data[] = $datum;
-  }
-
-  return $data;
-}
-
-/**
  * Implements hook_theme().
  */
 function geofield_map_theme($existing, $type, $theme, $path) {
   return array(
     'geofield_google_map' => array(
       'variables' => array(
-        'map_id' => NULL,
+        'mapid' => NULL,
         'height' => '400px',
         'width' => '100%',
       ),
@@ -132,26 +44,25 @@ function geofield_map_theme($existing, $type, $theme, $path) {
   );
 }
 
-
 /**
  * Load all Geofield Google Map client files and return markup for a map.
  *
- * @param array $map_data
+ * @param array $js_settings
  *   The map rendering data.
  *
  * @return array
  *   The returned render array.
  */
-function geofield_map_googlemap_render($map_data) {
+function geofield_map_googlemap_render($js_settings) {
   return array(
     '#theme' => 'geofield_google_map',
-    '#map_id' => $map_data['map_id'],
-    '#height' => $map_data['map_height'],
-    '#width' => $map_data['map_width'],
+    '#mapid' => $js_settings['mapid'],
+    '#height' => $js_settings['map_settings']['map_dimensions']['height'],
+    '#width' => $js_settings['map_settings']['map_dimensions']['width'],
     '#attached' => array(
-      'library' => array('geofield_gmap/geofield_gmap'),
+      'library' => array('geofield_map/geojson', 'geofield_map/geofield_gmap'),
       'drupalSettings' => array(
-        'geofield-google-map' => $map_data,
+        'geofield_google_map' => $js_settings,
       ),
     ),
   );

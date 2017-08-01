@@ -1,13 +1,14 @@
 {#
 /**
  * @file
- * Theme implementation to display a Leaflet map.
+ * Theme implementation to display a Geofield Google Map.
  *
  * This creates a placeholder for the map to be injected in.
  *
  * Available variables:
- * - map_id
+ * - mapid
  * - height
+ * - width
  *
  * Note: min-width is set so that a map will show when "Inline" is specified
  * for the associated field label. This may of course be overridden. The default
@@ -17,4 +18,4 @@
  *
  */
 #}
-<div id="{{ map_id }}" style="min-width: 150px; width: {{ width }}; min-height: 150px; height: {{ height }}">This is the Map Container</div>
+<div id="{{ mapid }}" class="geofield-google-map" style="min-width: 150px; width: {{ width }}; min-height: 150px; height: {{ height }}">This is the Map Container</div>

@@ -135,10 +135,10 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
    * @var array
    */
   protected $gMapTypesOptions = [
-    'ROADMAP' => 'Roadmap',
-    'SATELLITE' => 'Satellite',
-    'HYBRID' => 'Hybrid',
-    'TERRAIN' => 'Terrain',
+    'roadmap' => 'Roadmap',
+    'satellite' => 'Satellite',
+    'hybrid' => 'Hybrid',
+    'terrain' => 'Terrain',
   ];
 
   /**
@@ -209,7 +209,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
         'start' => 6,
         'focus' => 12,
         'min' => 1,
-        'max' => 17,
+        'max' => 22,
       ],
       'click_to_find_marker' => FALSE,
       'click_to_place_marker' => FALSE,
@@ -222,10 +222,48 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
   }
 
   /**
+   * Form element validation handler for a Map Zoom level.
+   */
+  public static function zoomLevelValidate($element, FormStateInterface &$form_state) {
+    // Get to the actual values in a form tree.
+    $parents = $element['#parents'];
+    $values = $form_state->getValues();
+    for ($i = 0; $i < count($parents) - 1; $i++) {
+      $values = $values[$parents[$i]];
+    }
+    // Check the initial map zoom level.
+    $zoom = $element['#value'];
+    $min_zoom = $values['min'];
+    $max_zoom = $values['max'];
+    if ($zoom < $min_zoom || $zoom > $max_zoom) {
+      $form_state->setError($element, t('The @zoom_field should be between the Minimum and the Maximum Zoom levels.', ['@zoom_field' => $element['#title']]));
+    }
+  }
+
+  /**
+   * Form element validation handler for the Map Max Zoom level.
+   */
+  public static function maxZoomLevelValidate($element, FormStateInterface &$form_state) {
+    // Get to the actual values in a form tree.
+    $parents = $element['#parents'];
+    $values = $form_state->getValues();
+    for ($i = 0; $i < count($parents) - 1; $i++) {
+      $values = $values[$parents[$i]];
+    }
+    // Check the max zoom level.
+    $min_zoom = $values['min'];
+    $max_zoom = $element['#value'];
+    if ($max_zoom && $max_zoom <= $min_zoom) {
+      $form_state->setError($element, t('The Max Zoom level should be above the Minimum Zoom level.'));
+    }
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function settingsForm(array $form, FormStateInterface $form_state) {
-    $elements = parent::settingsForm($form, $form_state);
+
+    $default_settings = self::defaultSettings();
 
     // Attach Geofield Map Library.
     $elements['#attached']['library'][] = 'geofield_map/main';
@@ -309,26 +347,28 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
 
     $elements['zoom']['start'] = array(
       '#type' => 'number',
-      '#min' => 2,
-      '#max' => 13,
+      '#min' => $this->getSetting('zoom')['min'],
+      '#max' => $this->getSetting('zoom')['max'],
       '#title' => $this->t('Start Zoom level'),
       '#description' => $this->t('The initial Zoom level for an empty Geofield.'),
       '#default_value' => $this->getSetting('zoom')['start'],
+      '#element_validate' => [[get_class($this), 'zoomLevelValidate']],
     );
 
     $elements['zoom']['focus'] = array(
       '#type' => 'number',
-      '#min' => 8,
-      '#max' => 16,
+      '#min' => $this->getSetting('zoom')['min'],
+      '#max' => $this->getSetting('zoom')['max'],
       '#title' => $this->t('Focus Zoom level'),
       '#description' => $this->t('The Zoom level for an assigned Geofield or for Geocoding operations results.'),
       '#default_value' => $this->getSetting('zoom')['focus'],
+      '#element_validate' => [[get_class($this), 'zoomLevelValidate']],
     );
 
     $elements['zoom']['min'] = array(
       '#type' => 'number',
-      '#min' => 1,
-      '#max' => 7,
+      '#min' => $default_settings['zoom']['min'],
+      '#max' => $default_settings['zoom']['max'],
       '#title' => $this->t('Min Zoom level'),
       '#description' => $this->t('The Min Zoom level for the Map.'),
       '#default_value' => $this->getSetting('zoom')['min'],
@@ -336,11 +376,12 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
 
     $elements['zoom']['max'] = array(
       '#type' => 'number',
-      '#min' => 7,
-      '#max' => 18,
+      '#min' => $default_settings['zoom']['min'],
+      '#max' => $default_settings['zoom']['max'],
       '#title' => $this->t('Max Zoom level'),
       '#description' => $this->t('The Max Zoom level for the Map.'),
       '#default_value' => $this->getSetting('zoom')['max'],
+      '#element_validate' => [[get_class($this), 'maxZoomLevelValidate']],
     );
 
     $elements['click_to_find_marker'] = array(
@@ -418,7 +459,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       ],
     );
 
-    return $elements;
+    return $elements + parent::settingsForm($form, $form_state);
   }
 
   /**
