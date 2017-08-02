@@ -60,7 +60,7 @@
     /**
      * Adds a callback that will be called once the maps library is loaded.
      *
-     * @param {geopositionCallback} callback - The callback
+     * @param callback - The callback
      */
     addCallback: function (callback) {
       var self = this;

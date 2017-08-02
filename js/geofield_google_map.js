@@ -30,6 +30,7 @@
   Drupal.geoFieldMap = {
 
     map_data: {},
+    markers: [],
 
     // Google Maps are loaded lazily. In some situations load_google() is called twice, which results in
     // "You have included the Google Maps API multiple times on this page. This may cause unexpected errors." errors.
@@ -51,7 +52,7 @@
     /**
      * Adds a callback that will be called once the maps library is loaded.
      *
-     * @param {geopositionCallback} callback - The callback
+     * @param callback - The callback
      */
     addCallback: function (callback) {
       var self = this;
@@ -121,6 +122,8 @@
 
       }
       feature.setMap(map);
+      self.markers.push(feature);
+
       if (feature.getPosition) {
         range.extend(feature.getPosition());
       } else {
@@ -153,18 +156,18 @@
         var features = GeoJSON(data);
 
         var mapOptions = {
-          zoom: parseInt(map_settings.map_zoom_and_pan.zoom),
-          minZoom: parseInt(map_settings.map_zoom_and_pan.min_zoom),
-          maxZoom: parseInt(map_settings.map_zoom_and_pan.max_zoom),
+          zoom: map_settings.map_zoom_and_pan.zoom ? parseInt(map_settings.map_zoom_and_pan.zoom) : 8,
+          minZoom: map_settings.map_zoom_and_pan.min_zoom ? parseInt(map_settings.map_zoom_and_pan.min_zoom) : 1,
+          maxZoom: map_settings.map_zoom_and_pan.max_zoom ? parseInt(map_settings.map_zoom_and_pan.max_zoom) : 20,
           scrollwheel: !!map_settings.map_zoom_and_pan.scrollwheel,
           draggable: !!map_settings.map_zoom_and_pan.draggable,
           disableDefaultUI: !!map_settings.map_controls.disable_default_ui,
           zoomControl: !!map_settings.map_controls.zoom_control,
-          mapTypeId: map_settings.map_controls.map_type_id,
-          mapTypeControl: map_settings.map_controls.map_type_control,
+          mapTypeId: map_settings.map_controls.map_type_id ? map_settings.map_controls.map_type_id : 'roadmap',
+          mapTypeControl: !!map_settings.map_controls.map_type_control,
           mapTypeControlOptions: {
-            mapTypeIds: map_settings.map_controls.map_type_control_options_type_ids,
-            position: google.maps.ControlPosition.TOP_RIGHT,
+            mapTypeIds: map_settings.map_controls.map_type_control_options_type_ids ? map_settings.map_controls.map_type_control_options_type_ids : ['roadmap', 'satellite', 'hybrid'],
+            position: google.maps.ControlPosition.TOP_LEFT,
           },
           scaleControl: !!map_settings.map_controls.scale_control,
           streetViewControl: !!map_settings.map_controls.street_view_control,
@@ -192,6 +195,7 @@
 
         // Define a map self property, so other code can interact with it.
         self.map_data[mapid].map = map;
+        self.map_data[mapid].map_center = new google.maps.LatLng(map_settings.map_center.lat, map_settings.map_center.lon);
 
         var range = new google.maps.LatLngBounds();
 
@@ -222,6 +226,19 @@
           }
         }
 
+        // Implement Markeclustering.
+        var markeclusterOption = {
+          imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'
+        };
+
+        var markeclusterAdditionalOptions = map_settings.map_markercluster.markercluster_additional_options.length > 0 ? JSON.parse(map_settings.map_markercluster.markercluster_additional_options) : {};
+        // Merge markeclusterOption with markeclusterAdditionalOptions.
+        Object.assign(markeclusterOption, markeclusterAdditionalOptions);
+
+        if (typeof MarkerClusterer !== 'undefined' && map_settings.map_markercluster.markercluster_control) {
+          var markerCluster = new MarkerClusterer(map, self.markers, markeclusterOption);
+        }
+
         for (first in features) break;
         if (first !== 'type') {
           if (resetZoom) {
@@ -230,8 +247,7 @@
             map.setCenter(range.getCenter());
           }
         } else {
-          var center = map_settings.center;
-          map.setCenter(new google.maps.LatLng(center.lat, center.lon));
+          map.setCenter(self.map_data[mapid].map_center);
         }
       }
     }

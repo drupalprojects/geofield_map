@@ -54,7 +54,8 @@ function geofield_map_theme($existing, $type, $theme, $path) {
  *   The returned render array.
  */
 function geofield_map_googlemap_render($js_settings) {
-  return array(
+
+  $render_array = [
     '#theme' => 'geofield_google_map',
     '#mapid' => $js_settings['mapid'],
     '#height' => $js_settings['map_settings']['map_dimensions']['height'],
@@ -65,5 +66,11 @@ function geofield_map_googlemap_render($js_settings) {
         'geofield_google_map' => $js_settings,
       ),
     ),
-  );
+  ];
+
+  if ($js_settings['map_settings']['map_markercluster']['markercluster_control']) {
+    $render_array['#attached']['library'][] = 'geofield_map/marker_cluster';
+  }
+
+  return $render_array;
 }

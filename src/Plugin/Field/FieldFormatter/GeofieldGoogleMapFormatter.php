@@ -142,11 +142,15 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
         'icon_image_path' => '',
         'infowindow_field' => 'title',
       ],
+      'map_markercluster' => [
+        'markercluster_control' => 1,
+        'markercluster_additional_options' => '',
+      ],
       'map_additional_options' => '',
 
       // Implement default settings.
     ] + parent::defaultSettings();
-  }
+}
 
   /**
    * {@inheritdoc}
@@ -361,14 +365,42 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
 
     $elements['map_additional_options'] = [
       '#type' => 'textarea',
-      '#rows' => 6,
+      '#rows' => 5,
       '#title' => $this->t('Map Additional Options'),
-      '#description' => $this->t('<strong>These will override the above settings</strong><br>An object literal of additional map options, that comply with the Google Maps JavaScript API. The format should respect the javacript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the values.<br>It is even possible to input Map Control Positions. For this use the numeric values of the google.maps.ControlPosition, otherwise the option will be passed as incomprehensible string to Google Maps API.'),
+      '#description' => $this->t('<strong>These will override the above settings</strong><br>An object literal of additional map options, that comply with the Google Maps JavaScript API. The syntax should respect the javascript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.<br>It is even possible to input Map Control Positions. For this use the numeric values of the google.maps.ControlPosition, otherwise the option will be passed as incomprehensible string to Google Maps API.'),
       '#default_value' => $settings['map_additional_options'],
       '#placeholder' => $this->t('{"disableDoubleClickZoom": "cooperative",
 "gestureHandling": "none",
-"streetViewControlOptions": {"position": "7"}
+"streetViewControlOptions": {"position": 5}
 }'),
+      '#element_validate' => [[get_class($this), 'jsonValidate']],
+    ];
+
+    $elements['map_markercluster'] = array(
+      '#type' => 'fieldset',
+      '#title' => $this->t('Marker Clustering'),
+    );
+    $elements['map_markercluster']['markup'] = [
+      '#markup' => $this->t('Enable the functionality of the @markeclusterer_api_link.', [
+        '@markeclusterer_api_link' => $this->link->generate(t('Marker Clusterer Google Maps JavaScript Library'), Url::fromUri('https://github.com/googlemaps/js-marker-clusterer', [
+          'absolute' => TRUE,
+          'attributes' => ['target' => 'blank'],
+        ])),
+      ]),
+    ];
+    $elements['map_markercluster']['markercluster_control'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable Marker Clustering'),
+      '#default_value' => $settings['map_markercluster']['markercluster_control'],
+      '#return_value' => 1,
+    ];
+    $elements['map_markercluster']['markercluster_additional_options'] = [
+      '#type' => 'textarea',
+      '#rows' => 5,
+      '#title' => $this->t('Marker Cluster Additional Options'),
+      '#description' => $this->t('An object literal of additional marker cluster options, that comply with the Marker Clusterer Google Maps JavaScript Library. The syntax should respect the javascript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.'),
+      '#default_value' => $settings['map_markercluster']['markercluster_additional_options'],
+      '#placeholder' => $this->t('{"maxZoom": 12, "gridSize": 25, "imagePath": "/modules/custom/geofield_map/images/m"}'),
       '#element_validate' => [[get_class($this), 'jsonValidate']],
     ];
 
@@ -494,16 +526,42 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       ],
     ];
 
-    $map_additional_options = [
-      '#type' => 'html_tag',
-      '#tag' => 'div',
-      '#value' => '<u>' . $this->t('Map Additional Options:') . '</u>',
-      'value' => [
+    if (!empty($settings['map_additional_options'])) {
+      $map_additional_options = [
         '#type' => 'html_tag',
         '#tag' => 'div',
-        '#value' => $settings['map_additional_options'],
+        '#value' => '<u>' . $this->t('Map Additional Options:') . '</u>',
+        'value' => [
+          '#type' => 'html_tag',
+          '#tag' => 'div',
+          '#value' => $settings['map_additional_options'],
+        ],
+      ];
+    }
+
+    $map_markercluster = [
+      '#type' => 'html_tag',
+      '#tag' => 'div',
+      '#value' => '<u>' . $this->t('Marker Clustering:') . '</u>',
+      'markercluster_control' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Marker Cluster Enabled: @state', ['@state' => $settings['map_markercluster']['markercluster_control'] ? $this->t('Yes') : $this->t('No')]),
       ],
     ];
+
+    if (!empty($settings['map_markercluster']['markercluster_additional_options'])) {
+      $map_markercluster['markercluster_additional_options'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Marker Cluster Additional Options:'),
+        'value' => [
+          '#type' => 'html_tag',
+          '#tag' => 'div',
+          '#value' => $settings['map_markercluster']['markercluster_additional_options'],
+        ],
+      ];
+    }
 
     $summary = [
       'gmap_api_key' => $gmap_api_key,
@@ -512,7 +570,8 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       'map_zoom_and_pan' => $map_zoom_and_pan,
       'map_controls' => $map_controls,
       'map_marker_and_infowindow' => $map_marker_and_infowindow,
-      'map_additional_options' => $map_additional_options,
+      'map_additional_options' => isset($map_additional_options) ? $map_additional_options : NULL,
+      'map_markercluster' => $map_markercluster,
     ];
 
     return $summary;
@@ -563,17 +622,19 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       }
     }
 
+    $js_settings = [
+      'mapid' => Html::getUniqueId("geofield_map_entity_{$entity_type}_{$entity_id}_{$field->getName()}"),
+      'map_settings' => $map_settings,
+      'data' => [],
+    ];
+
     if (!empty($data)) {
-      $js_settings = array(
-        'mapid' => Html::getUniqueId("geofield_map_entity_{$entity_type}_{$entity_id}_{$field->getName()}"),
-        'map_settings' => $map_settings,
-        'data' => count($data) == 1 ? $data[0] : array(
-          'type' => 'GeometryCollection',
-          'geometries' => $data,
-        ),
-      );
-      $element = geofield_map_googlemap_render($js_settings);
+      $js_settings['data'] = count($data) == 1 ? $data[0] : [
+        'type' => 'GeometryCollection',
+        'geometries' => $data,
+      ];
     }
+    $element = geofield_map_googlemap_render($js_settings);
     return $element;
   }
 
