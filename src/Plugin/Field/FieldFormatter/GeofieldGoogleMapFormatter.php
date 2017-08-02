@@ -3,8 +3,8 @@
 namespace Drupal\geofield_map\Plugin\Field\FieldFormatter;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Url;
-use Drupal\Core\Field\FieldItemInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -14,6 +14,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Component\Serialization\Json;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
 
 /**
  * Plugin implementation of the 'geofield_google_map' formatter.
@@ -48,6 +49,13 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
   protected $link;
 
   /**
+   * The EntityField Manager service.
+   *
+   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
+   */
+  protected $entityFieldManager;
+
+  /**
    * GeofieldGoogleMapFormatter constructor.
    *
    * {@inheritdoc}
@@ -56,6 +64,8 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
    *   The Translation service.
    * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
    *   The Link Generator service.
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
+   *   The Entity Field Manager.
    */
   public function __construct(
     $plugin_id,
@@ -66,10 +76,12 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     $view_mode,
     array $third_party_settings,
     TranslationInterface $string_translation,
-    LinkGeneratorInterface $link_generator
+    LinkGeneratorInterface $link_generator,
+    EntityFieldManagerInterface $entity_field_manager
   ) {
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $label, $view_mode, $third_party_settings);
     $this->link = $link_generator;
+    $this->entityFieldManager = $entity_field_manager;
   }
 
   /**
@@ -85,7 +97,8 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       $configuration['view_mode'],
       $configuration['third_party_settings'],
       $container->get('string_translation'),
-      $container->get('link_generator')
+      $container->get('link_generator'),
+      $container->get('entity_field.manager')
     );
   }
 
@@ -125,6 +138,10 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
         'street_view_control' => 1,
         'fullscreen_control' => 1,
       ],
+      'map_marker_and_infowindow' => [
+        'icon_image_path' => '',
+        'infowindow_field' => 'title',
+      ],
       'map_additional_options' => '',
 
       // Implement default settings.
@@ -136,211 +153,10 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
    */
   public function settingsForm(array $form, FormStateInterface $form_state) {
 
-    /* @var array $elements */
-    $elements = $this->generateSettingsFormElements();
-
-    return $elements + parent::settingsForm($form, $form_state);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function settingsSummary() {
-    $settings = $this->getSettings();
-
-    $gmap_api_key = [
-      '#markup' => $this->t('Google Maps API Key: @state', ['@state' => $settings['gmap_api_key'] ? $settings['gmap_api_key'] : $this->t('<span style="color: red">Missing</span>')]),
-    ];
-    $map_dimensions = [
-      '#markup' => $this->t('Map Dimensions: Width: @width - Height: @height', ['@width' => $settings['map_dimensions']['width'], '@height' => $settings['map_dimensions']['height']]),
-    ];
-    $map_center = [
-      '#type' => 'html_tag',
-      '#tag' => 'div',
-      '#markup' => $this->t('Map Default Center: @state_lat, @state_lon', [
-        '@state_lat' => $settings['map_center']['lat'],
-        '@state_lon' => $settings['map_center']['lon'],
-      ]),
-    ];
-    $map_zoom_and_pan = [
-      '#type' => 'html_tag',
-      '#tag' => 'div',
-      '#value' => '<u>' . $this->t('Map Zoom and Pan:') . '</u>',
-      'zoom' => [
-        '#type' => 'html_tag',
-        '#tag' => 'div',
-        '#value' => $this->t('Map Zoom: @state', ['@state' => $settings['map_zoom_and_pan']['zoom']]),
-      ],
-      'min_zoom' => [
-        '#type' => 'html_tag',
-        '#tag' => 'div',
-        '#value' => $this->t('Min Map Zoom: @state', ['@state' => $settings['map_zoom_and_pan']['min_zoom']]),
-      ],
-      'max_zoom' => [
-        '#type' => 'html_tag',
-        '#tag' => 'div',
-        '#value' => $this->t('Max Map Zoom: @state', ['@state' => $settings['map_zoom_and_pan']['max_zoom']]),
-      ],
-      'scrollwheel' => [
-        '#type' => 'html_tag',
-        '#tag' => 'div',
-        '#value' => $this->t('Scrollwheel: @state', ['@state' => $settings['map_zoom_and_pan']['scrollwheel'] ? $this->t('Yes') : $this->t('No')]),
-      ],
-      'draggable' => [
-        '#type' => 'html_tag',
-        '#tag' => 'div',
-        '#value' => $this->t('Draggable: @state', ['@state' => $settings['map_zoom_and_pan']['draggable'] ? $this->t('Yes') : $this->t('No')]),
-      ],
-    ];
-
-    // Remove the unselected array keys
-    // from the map_type_control_options_type_ids.
-    $map_type_control_options_type_ids = array_filter($settings['map_controls']['map_type_control_options_type_ids'], function ($value) {
-      return $value !== 0;
-    });
-
-    $map_controls = [
-      '#type' => 'html_tag',
-      '#tag' => 'div',
-      '#value' => '<u>' . $this->t('Map Controls:') . '</u>',
-      'disable_default_ui' => [
-        '#type' => 'html_tag',
-        '#tag' => 'div',
-        '#value' => $this->t('Disable Default UI: @state', ['@state' => $settings['map_controls']['disable_default_ui'] ? $this->t('Yes') : $this->t('No')]),
-      ],
-      'zoom_control' => [
-        '#type' => 'html_tag',
-        '#tag' => 'div',
-        '#value' => $this->t('Zoom Control: @state', ['@state' => $settings['map_controls']['zoom_control'] ? $this->t('Yes') : $this->t('No')]),
-      ],
-      'map_type_id' => [
-        '#type' => 'html_tag',
-        '#tag' => 'div',
-        '#value' => $this->t('Default Map Type: @state', ['@state' => $settings['map_controls']['map_type_id']]),
-      ],
-      'map_type_control' => [
-        '#type' => 'html_tag',
-        '#tag' => 'div',
-        '#value' => $this->t('Map Type Control: @state', ['@state' => $settings['map_controls']['map_type_control'] ? $this->t('Yes') : $this->t('No')]),
-      ],
-      'map_type_control_options_type_ids' => [
-        '#type' => 'html_tag',
-        '#tag' => 'div',
-        '#value' => $settings['map_controls']['map_type_control'] ? $this->t('Enabled Map Types: @state', ['@state' => implode(', ', array_keys($map_type_control_options_type_ids))]) : '',
-      ],
-      'scale_control' => [
-        '#type' => 'html_tag',
-        '#tag' => 'div',
-        '#value' => $this->t('Scale Control: @state', ['@state' => $settings['map_controls']['scale_control'] ? $this->t('Yes') : $this->t('No')]),
-      ],
-      'street_view_control' => [
-        '#type' => 'html_tag',
-        '#tag' => 'div',
-        '#value' => $this->t('Streetview Control: @state', ['@state' => $settings['map_controls']['street_view_control'] ? $this->t('Yes') : $this->t('No')]),
-      ],
-      'fullscreen_control' => [
-        '#type' => 'html_tag',
-        '#tag' => 'div',
-        '#value' => $this->t('Fullscreen Control: @state', ['@state' => $settings['map_controls']['fullscreen_control'] ? $this->t('Yes') : $this->t('No')]),
-      ],
-    ];
-
-    $map_additional_options = [
-      '#type' => 'html_tag',
-      '#tag' => 'div',
-      '#value' => '<u>' . $this->t('Map Additional Options:') . '</u>',
-      'value' => [
-        '#type' => 'html_tag',
-        '#tag' => 'div',
-        '#value' => $settings['map_additional_options'],
-      ],
-    ];
-
-    $summary = [
-      'gmap_api_key' => $gmap_api_key,
-      'map_dimensions' => $map_dimensions,
-      'map_center' => $map_center,
-      'map_zoom_and_pan' => $map_zoom_and_pan,
-      'map_controls' => $map_controls,
-      'map_additional_options' => $map_additional_options,
-    ];
-
-    return $summary;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function viewElements(FieldItemListInterface $items, $langcode) {
-    $element = [];
-    $geophp = \Drupal::service('geofield.geophp');
-
-    /* @var \Drupal\Core\Entity\EntityInterface $entity */
-    $entity = $items->getEntity();
-    $entity_type = $entity->bundle();
-    $entity_id = $entity->id();
-    /* @var \Drupal\Core\Field\FieldDefinitionInterface $field */
-    $field = $items->getFieldDefinition();
-
-    $map_settings = $this->getSettings();
-
-    $map_settings['map_controls']['map_type_control_options_type_ids'] = array_keys(array_filter($map_settings['map_controls']['map_type_control_options_type_ids'], function ($value) {
-      return $value !== 0;
-    }));
-
-    $data = [];
-    foreach ($items as $delta => $item) {
-
-      /* @var \Point $geometry */
-      $geometry = $geophp->load($item->value);
-      if (!empty($geometry)) {
-        $datum = json_decode($geometry->out('json'));
-        $datum->properties = array(
-          'description' => $entity->label(),
-        );
-        $data[] = $datum;
-      }
-    }
-
-    if (!empty($data)) {
-      $js_settings = array(
-        'mapid' => Html::getUniqueId("geofield_map_entity_{$entity_type}_{$entity_id}_{$field->getName()}"),
-        'map_settings' => $map_settings,
-        'data' => count($data) == 1 ? $data[0] : array(
-          'type' => 'GeometryCollection',
-          'geometries' => $data,
-        ),
-      );
-      $element = geofield_map_googlemap_render($js_settings);
-    }
-    return $element;
-  }
-
-  /**
-   * Generate the output appropriate for one field item.
-   *
-   * @param \Drupal\Core\Field\FieldItemInterface $item
-   *   One field item.
-   *
-   * @return string
-   *   The textual output generated.
-   */
-  protected function viewValue(FieldItemInterface $item) {
-    // The text value has no text format assigned to it, so the user input
-    // should equal the output, including newlines.
-    return nl2br(Html::escape($item->value));
-  }
-
-  /**
-   * Generate the map settings form elements.
-   *
-   * @return array
-   *   The generated form elements array.
-   */
-  protected function generateSettingsFormElements() {
-
     $default_settings = self::defaultSettings();
     $settings = $this->getSettings();
+
+    $elements = [];
 
     $elements['gmap_api_key'] = [
       '#type' => 'textfield',
@@ -504,11 +320,50 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       '#default_value' => $settings['map_controls']['fullscreen_control'],
       '#return_value' => 1,
     ];
+
+    $fields_list = array_merge_recursive(
+      $this->entityFieldManager->getFieldMapByFieldType('string_long'),
+      $this->entityFieldManager->getFieldMapByFieldType('string')
+    );
+
+    $string_fields_options = [
+      '0' => $this->t('- Any - No Infowindow'),
+      'title' => $this->t('- Title -'),
+    ];
+
+    foreach ($fields_list[$form['#entity_type']] as $k => $field) {
+      if (in_array(
+          $form['#bundle'], $field['bundles']) &&
+        !in_array($k, ['title', 'revision_log'])) {
+        $string_fields_options[$k] = $k;
+      }
+    }
+
+    $elements['map_marker_and_infowindow'] = array(
+      '#type' => 'fieldset',
+      '#title' => $this->t('Map Marker and Infowindow'),
+    );
+    $elements['map_marker_and_infowindow']['icon_image_path'] = array(
+      '#type' => 'textfield',
+      '#title' => $this->t('Icon Image'),
+      '#description' => $this->t('Input the Specific Icon Image path (absolute or relative to the Drupal site root). If not set, the Default Google Marker will be used.'),
+      '#default_value' => $settings['map_marker_and_infowindow']['icon_image_path'],
+      '#placeholder' => 'https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png',
+      '#element_validate' => [[get_class($this), 'urlValidate']],
+    );
+    $elements['map_marker_and_infowindow']['infowindow_field'] = array(
+      '#type' => 'select',
+      '#title' => $this->t('Marker Infowindow Content from'),
+      '#description' => $this->t('Choose an existing string type field from which populate the Marker Infowindow'),
+      '#options' => $string_fields_options,
+      '#default_value' => $settings['map_marker_and_infowindow']['infowindow_field'],
+    );
+
     $elements['map_additional_options'] = [
       '#type' => 'textarea',
       '#rows' => 6,
       '#title' => $this->t('Map Additional Options'),
-      '#description' => $this->t('An object literal of additional map options, that comply with the Google Maps JavaScript API. The format should respect the javacript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the values.<br>It is even possible to input Map Control Positions. For this use the numeric values of the google.maps.ControlPosition, otherwise the option will be passed as incomprehensible string to Google Maps API.'),
+      '#description' => $this->t('<strong>These will override the above settings</strong><br>An object literal of additional map options, that comply with the Google Maps JavaScript API. The format should respect the javacript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the values.<br>It is even possible to input Map Control Positions. For this use the numeric values of the google.maps.ControlPosition, otherwise the option will be passed as incomprehensible string to Google Maps API.'),
       '#default_value' => $settings['map_additional_options'],
       '#placeholder' => $this->t('{"disableDoubleClickZoom": "cooperative",
 "gestureHandling": "none",
@@ -516,7 +371,210 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
 }'),
       '#element_validate' => [[get_class($this), 'jsonValidate']],
     ];
-    return $elements;
+
+    return $elements + parent::settingsForm($form, $form_state);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsSummary() {
+    $settings = $this->getSettings();
+
+    $gmap_api_key = [
+      '#markup' => $this->t('Google Maps API Key: @state', ['@state' => $settings['gmap_api_key'] ? $settings['gmap_api_key'] : $this->t('<span style="color: red">Missing</span>')]),
+    ];
+    $map_dimensions = [
+      '#markup' => $this->t('Map Dimensions: Width: @width - Height: @height', ['@width' => $settings['map_dimensions']['width'], '@height' => $settings['map_dimensions']['height']]),
+    ];
+    $map_center = [
+      '#type' => 'html_tag',
+      '#tag' => 'div',
+      '#markup' => $this->t('Map Default Center: @state_lat, @state_lon', [
+        '@state_lat' => $settings['map_center']['lat'],
+        '@state_lon' => $settings['map_center']['lon'],
+      ]),
+    ];
+    $map_zoom_and_pan = [
+      '#type' => 'html_tag',
+      '#tag' => 'div',
+      '#value' => '<u>' . $this->t('Map Zoom and Pan:') . '</u>',
+      'zoom' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Map Zoom: @state', ['@state' => $settings['map_zoom_and_pan']['zoom']]),
+      ],
+      'min_zoom' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Min Map Zoom: @state', ['@state' => $settings['map_zoom_and_pan']['min_zoom']]),
+      ],
+      'max_zoom' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Max Map Zoom: @state', ['@state' => $settings['map_zoom_and_pan']['max_zoom']]),
+      ],
+      'scrollwheel' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Scrollwheel: @state', ['@state' => $settings['map_zoom_and_pan']['scrollwheel'] ? $this->t('Yes') : $this->t('No')]),
+      ],
+      'draggable' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Draggable: @state', ['@state' => $settings['map_zoom_and_pan']['draggable'] ? $this->t('Yes') : $this->t('No')]),
+      ],
+    ];
+
+    // Remove the unselected array keys
+    // from the map_type_control_options_type_ids.
+    $map_type_control_options_type_ids = array_filter($settings['map_controls']['map_type_control_options_type_ids'], function ($value) {
+      return $value !== 0;
+    });
+
+    $map_controls = [
+      '#type' => 'html_tag',
+      '#tag' => 'div',
+      '#value' => '<u>' . $this->t('Map Controls:') . '</u>',
+      'disable_default_ui' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Disable Default UI: @state', ['@state' => $settings['map_controls']['disable_default_ui'] ? $this->t('Yes') : $this->t('No')]),
+      ],
+      'zoom_control' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Zoom Control: @state', ['@state' => $settings['map_controls']['zoom_control'] ? $this->t('Yes') : $this->t('No')]),
+      ],
+      'map_type_id' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Default Map Type: @state', ['@state' => $settings['map_controls']['map_type_id']]),
+      ],
+      'map_type_control' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Map Type Control: @state', ['@state' => $settings['map_controls']['map_type_control'] ? $this->t('Yes') : $this->t('No')]),
+      ],
+      'map_type_control_options_type_ids' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $settings['map_controls']['map_type_control'] ? $this->t('Enabled Map Types: @state', ['@state' => implode(', ', array_keys($map_type_control_options_type_ids))]) : '',
+      ],
+      'scale_control' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Scale Control: @state', ['@state' => $settings['map_controls']['scale_control'] ? $this->t('Yes') : $this->t('No')]),
+      ],
+      'street_view_control' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Streetview Control: @state', ['@state' => $settings['map_controls']['street_view_control'] ? $this->t('Yes') : $this->t('No')]),
+      ],
+      'fullscreen_control' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Fullscreen Control: @state', ['@state' => $settings['map_controls']['fullscreen_control'] ? $this->t('Yes') : $this->t('No')]),
+      ],
+    ];
+
+    $map_marker_and_infowindow = [
+      '#type' => 'html_tag',
+      '#tag' => 'div',
+      '#value' => '<u>' . $this->t('Map Marker and Infowindow:') . '</u>',
+      'icon_image_path' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Marker Icon: @state', ['@state' => !empty($settings['map_marker_and_infowindow']['icon_image_path']) ? $settings['map_marker_and_infowindow']['icon_image_path'] : $this->t('Default Google Marker')]),
+      ],
+      'infowindow_field' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Marker Infowindow @state', ['@state' => !empty($settings['map_marker_and_infowindow']['infowindow_field']) ? 'from: ' . $settings['map_marker_and_infowindow']['infowindow_field'] : $this->t('disabled')]),
+      ],
+    ];
+
+    $map_additional_options = [
+      '#type' => 'html_tag',
+      '#tag' => 'div',
+      '#value' => '<u>' . $this->t('Map Additional Options:') . '</u>',
+      'value' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $settings['map_additional_options'],
+      ],
+    ];
+
+    $summary = [
+      'gmap_api_key' => $gmap_api_key,
+      'map_dimensions' => $map_dimensions,
+      'map_center' => $map_center,
+      'map_zoom_and_pan' => $map_zoom_and_pan,
+      'map_controls' => $map_controls,
+      'map_marker_and_infowindow' => $map_marker_and_infowindow,
+      'map_additional_options' => $map_additional_options,
+    ];
+
+    return $summary;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function viewElements(FieldItemListInterface $items, $langcode) {
+    $element = [];
+    $geophp = \Drupal::service('geofield.geophp');
+
+    /* @var \Drupal\Core\Entity\EntityInterface $entity */
+    $entity = $items->getEntity();
+    $entity_type = $entity->bundle();
+    $entity_id = $entity->id();
+    /* @var \Drupal\Core\Field\FieldDefinitionInterface $field */
+    $field = $items->getFieldDefinition();
+
+    $map_settings = $this->getSettings();
+
+    // Transform into simple array values the map_type_control_options_type_ids.
+    $map_settings['map_controls']['map_type_control_options_type_ids'] = array_keys(array_filter($map_settings['map_controls']['map_type_control_options_type_ids'], function ($value) {
+      return $value !== 0;
+    }));
+
+    // Generate Absolute icon_image_path, if it is not.
+    $icon_image_path = $map_settings['map_marker_and_infowindow']['icon_image_path'];
+    if (!empty($icon_image_path) && !UrlHelper::isExternal($map_settings['map_marker_and_infowindow']['icon_image_path'])) {
+      $map_settings['map_marker_and_infowindow']['icon_image_path'] = Url::fromUri('base:' . $icon_image_path, ['absolute' => TRUE])
+        ->toString();
+    }
+
+    $data = [];
+    if (!empty($map_settings['map_marker_and_infowindow']['infowindow_field'])) {
+      $description = $map_settings['map_marker_and_infowindow']['infowindow_field'] != 'title' ? $entity->$map_settings['map_marker_and_infowindow']['infowindow_field']->value : $entity->label();
+    }
+    foreach ($items as $delta => $item) {
+
+      /* @var \Point $geometry */
+      $geometry = $geophp->load($item->value);
+      if (!empty($geometry)) {
+        $datum = json_decode($geometry->out('json'));
+        $datum->properties = array(
+          'description' => isset($description) ? $description : NULL,
+        );
+        $data[] = $datum;
+      }
+    }
+
+    if (!empty($data)) {
+      $js_settings = array(
+        'mapid' => Html::getUniqueId("geofield_map_entity_{$entity_type}_{$entity_id}_{$field->getName()}"),
+        'map_settings' => $map_settings,
+        'data' => count($data) == 1 ? $data[0] : array(
+          'type' => 'GeometryCollection',
+          'geometries' => $data,
+        ),
+      );
+      $element = geofield_map_googlemap_render($js_settings);
+    }
+    return $element;
   }
 
   /**
@@ -563,6 +621,24 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     // Check the jsonValue.
     if (!empty($element['#value']) && JSON::decode($element['#value']) == NULL) {
       $form_state->setError($element, t('The @field field is not valid Json Format.', ['@field' => $element['#title']]));
+    }
+  }
+
+  /**
+   * Form element url format validation handler.
+   */
+  public static function urlValidate($element, FormStateInterface &$form_state) {
+    global $base_url;
+    $path = $element['#value'];
+    // Check the jsonValue.
+    if (UrlHelper::isExternal($path) && !UrlHelper::isValid($path)) {
+      $form_state->setError($element, t('The @field field is not valid Url Format.', ['@field' => $element['#title']]));
+    }
+    elseif (!UrlHelper::isExternal($path)) {
+      $path = Url::fromUri('base:' . $path, ['absolute' => TRUE])->toString();
+      if (!UrlHelper::isValid($path)) {
+        $form_state->setError($element, t('The @field field is not valid internal Drupal path.', ['@field' => $element['#title']]));
+      }
     }
   }
 

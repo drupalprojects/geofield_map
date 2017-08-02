@@ -97,10 +97,28 @@
       }
     },
 
-    place_feature: function(feature, map, range) {
+    place_feature: function(feature, icon_image, map, range) {
+      var self = this;
       var properties = feature.get('geojsonProperties');
+
       if (feature.setTitle && properties && properties.title) {
         feature.setTitle(properties.title);
+      }
+      // Set the personalized Icon Image, if set.
+      if (feature.setIcon && icon_image && icon_image.length > 0) {
+        $.ajax({
+          url: icon_image,
+          type:'HEAD',
+          error: function()
+          {
+            console.log('Geofield Gmap: The Icon Image doesn\'t exist at the set path');
+          },
+          success: function()
+          {
+            feature.setIcon(icon_image);
+          }
+        });
+
       }
       feature.setMap(map);
       if (feature.getPosition) {
@@ -115,9 +133,9 @@
       if (properties && properties.description) {
         var bounds = feature.get('bounds');
         google.maps.event.addListener(feature, 'click', function() {
-          infowindow.setPosition(bounds.getCenter());
-          infowindow.setContent(properties.description);
-          infowindow.open(map);
+          map.infowindow.setPosition(bounds.getCenter());
+          map.infowindow.setContent(properties.description);
+          map.infowindow.open(map);
         });
       }
     },
@@ -150,7 +168,7 @@
           },
           scaleControl: !!map_settings.map_controls.scale_control,
           streetViewControl: !!map_settings.map_controls.street_view_control,
-          fullscreenControl: !!map_settings.map_controls.fullscreen_control
+          fullscreenControl: !!map_settings.map_controls.fullscreen_control,
         };
 
         var additionalOptions = map_settings.map_additional_options.length > 0 ? JSON.parse(map_settings.map_additional_options) : {};
@@ -177,12 +195,15 @@
 
         var range = new google.maps.LatLngBounds();
 
-        var infowindow = new google.maps.InfoWindow({
+        map.infowindow = new google.maps.InfoWindow({
           content: ''
         });
 
+        // Define the icon_image, if set.
+        var icon_image = map_settings.map_marker_and_infowindow.icon_image_path.length > 0 ? map_settings.map_marker_and_infowindow.icon_image_path : null;
+
         if (features.setMap) {
-          self.place_feature(features, map, range);
+          self.place_feature(features, icon_image, map, range);
           // Don't move the default zoom if we're only displaying one point.
           if (features.getPosition) {
             resetZoom = false;
@@ -190,11 +211,11 @@
         } else {
           for (var i in features) {
             if (features[i].setMap) {
-              self.place_feature(features[i], map, range);
+              self.place_feature(features[i], icon_image, map, range);
             } else {
               for (var j in features[i]) {
                 if (features[i][j].setMap) {
-                  self.place_feature(features[i][j], map, range);
+                  self.place_feature(features[i][j], icon_image, map, range);
                 }
               }
             }

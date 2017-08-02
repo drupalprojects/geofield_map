@@ -151,7 +151,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
    * @param \Drupal\Core\Render\RendererInterface $renderer
    *   The Renderer service.
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
-   *   The Renderer service.
+   *   The Entity Field Manager.
    * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
    *   The Link Generator service.
    */
@@ -344,7 +344,6 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#type' => 'fieldset',
       '#title' => $this->t('Zoom Settings'),
     );
-
     $elements['zoom']['start'] = array(
       '#type' => 'number',
       '#min' => $this->getSetting('zoom')['min'],
@@ -354,7 +353,6 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#default_value' => $this->getSetting('zoom')['start'],
       '#element_validate' => [[get_class($this), 'zoomLevelValidate']],
     );
-
     $elements['zoom']['focus'] = array(
       '#type' => 'number',
       '#min' => $this->getSetting('zoom')['min'],
@@ -364,7 +362,6 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#default_value' => $this->getSetting('zoom')['focus'],
       '#element_validate' => [[get_class($this), 'zoomLevelValidate']],
     );
-
     $elements['zoom']['min'] = array(
       '#type' => 'number',
       '#min' => $default_settings['zoom']['min'],
@@ -373,7 +370,6 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#description' => $this->t('The Min Zoom level for the Map.'),
       '#default_value' => $this->getSetting('zoom')['min'],
     );
-
     $elements['zoom']['max'] = array(
       '#type' => 'number',
       '#min' => $default_settings['zoom']['min'],
@@ -426,7 +422,6 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
         ],
       ],
     );
-
     $elements['geoaddress_field']['field'] = array(
       '#type' => 'select',
       '#title' => $this->t('Choose an existing field where to store the Searched / Reverse Geocoded Address'),
@@ -434,7 +429,6 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#options' => $string_fields_options,
       '#default_value' => $this->getSetting('geoaddress_field')['field'],
     );
-
     $elements['geoaddress_field']['hidden'] = array(
       '#type' => 'checkbox',
       '#title' => $this->t('<strong>Hide</strong> this field in the Content Edit Form ?'),
@@ -446,7 +440,6 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
         ],
       ],
     );
-
     $elements['geoaddress_field']['disabled'] = array(
       '#type' => 'checkbox',
       '#title' => $this->t('<strong>Disable</strong> this field in the Content Edit Form ?'),
