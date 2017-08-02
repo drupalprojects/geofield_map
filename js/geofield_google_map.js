@@ -12,11 +12,14 @@
           var map_settings = drupalSettings['geofield_google_map']['map_settings'];
           var data = drupalSettings['geofield_google_map']['data'];
 
+          // Set the map_data[mapid] settings.
+          Drupal.geoFieldMap.map_data[mapid] = map_settings;
+
           // Check if the element id matches the mapid.
           if ($(element).attr('id') === mapid) {
             // Load before the Gmap Library, if needed.
-            Drupal.geofieldGoogleMap.loadGoogle(mapid, map_settings.gmap_api_key, function () {
-              Drupal.geofieldGoogleMap.map_initialize(mapid, map_settings, data);
+            Drupal.geoFieldMap.loadGoogle(mapid, map_settings.gmap_api_key, function () {
+              Drupal.geoFieldMap.map_initialize(mapid, map_settings, data);
             });
           }
         });
@@ -24,7 +27,7 @@
     }
   };
 
-  Drupal.geofieldGoogleMap = {
+  Drupal.geoFieldMap = {
 
     map_data: {},
 
@@ -94,7 +97,7 @@
       }
     },
 
-    placeFeature: function(feature, map, range) {
+    place_feature: function(feature, map, range) {
       var properties = feature.get('geojsonProperties');
       if (feature.setTitle && properties && properties.title) {
         feature.setTitle(properties.title);
@@ -130,53 +133,47 @@
       // an AJAX/external javascript bug in core or something.
       if (typeof google !== 'undefined' && typeof google.maps.ZoomControlStyle !== 'undefined' && data !== undefined) {
         var features = GeoJSON(data);
-        // controltype
-        var controltype = map_settings.controltype;
-        if (controltype === 'default') { controltype = google.maps.ZoomControlStyle.DEFAULT; }
-        else if (controltype === 'small') { controltype = google.maps.ZoomControlStyle.SMALL; }
-        else if (controltype === 'large') { controltype = google.maps.ZoomControlStyle.LARGE; }
-        else { controltype = false }
 
-        // map type
-        var maptype = map_settings.maptype;
-        if (maptype) {
-          if (maptype === 'map' && map_settings.baselayers_map) { maptype = google.maps.MapTypeId.ROADMAP; }
-          if (maptype === 'satellite' && map_settings.baselayers_satellite) { maptype = google.maps.MapTypeId.SATELLITE; }
-          if (maptype === 'hybrid' && map_settings.baselayers_hybrid) { maptype = google.maps.MapTypeId.HYBRID; }
-          if (maptype === 'physical' && map_settings.baselayers_physical) { maptype = google.maps.MapTypeId.TERRAIN; }
-        }
-        else { maptype = google.maps.MapTypeId.ROADMAP; }
-
-        // menu type
-        var mtc = map_settings.mtc;
-        if (mtc === 'standard') { mtc = google.maps.MapTypeControlStyle.HORIZONTAL_BAR; }
-        else if (mtc === 'menu' ) { mtc = google.maps.MapTypeControlStyle.DROPDOWN_MENU; }
-        else { mtc = false; }
-
-        var myOptions = {
-          zoom: parseInt(map_settings.map_zoom),
-          minZoom: parseInt(map_settings.map_min_zoom),
-          maxZoom: parseInt(map_settings.map_max_zoom),
-          mapTypeId: (map_settings.map_maptype) ? map_settings.map_maptype : 'roadmap',
-          mapTypeControl: (!!map_settings.map_mtc),
-          mapTypeControlOptions: {style: map_settings.map_mtc},
-          zoomControl: map_settings.map_controltype !== false,
-          zoomControlOptions: {style: map_settings.map_controltype},
-          panControl: !!map_settings.map_pancontrol,
-          scrollwheel: !!map_settings.map_scrollwheel,
-          draggable: !!map_settings.map_draggable,
-          overviewMapControl: !!map_settings.map_overview,
-          overviewMapControlOptions: {opened: !!map_settings.map_overview_opened},
-          streetViewControl: !!map_settings.map_streetview_show,
-          scaleControl: !!map_settings.map_scale,
-          scaleControlOptions: {style: google.maps.ScaleControlStyle.DEFAULT},
-          center: {lat: -34.397, lng: 150.644},
+        var mapOptions = {
+          zoom: parseInt(map_settings.map_zoom_and_pan.zoom),
+          minZoom: parseInt(map_settings.map_zoom_and_pan.min_zoom),
+          maxZoom: parseInt(map_settings.map_zoom_and_pan.max_zoom),
+          scrollwheel: !!map_settings.map_zoom_and_pan.scrollwheel,
+          draggable: !!map_settings.map_zoom_and_pan.draggable,
+          disableDefaultUI: !!map_settings.map_controls.disable_default_ui,
+          zoomControl: !!map_settings.map_controls.zoom_control,
+          mapTypeId: map_settings.map_controls.map_type_id,
+          mapTypeControl: map_settings.map_controls.map_type_control,
+          mapTypeControlOptions: {
+            mapTypeIds: map_settings.map_controls.map_type_control_options_type_ids,
+            position: google.maps.ControlPosition.TOP_RIGHT,
+          },
+          scaleControl: !!map_settings.map_controls.scale_control,
+          streetViewControl: !!map_settings.map_controls.street_view_control,
+          fullscreenControl: !!map_settings.map_controls.fullscreen_control
         };
 
-        var map = new google.maps.Map(document.getElementById(mapid), myOptions);
-        // Store a reference to the map object so other code can interact
-        // with it.
-        Drupal.geoField.maps[mapid] = map;
+        var additionalOptions = map_settings.map_additional_options.length > 0 ? JSON.parse(map_settings.map_additional_options) : {};
+        // Transforms additionalOptions "true", "false" values into true & false.
+        for (var prop in additionalOptions) {
+          if (additionalOptions.hasOwnProperty(prop)) {
+            if (additionalOptions[prop] === 'true') {
+              additionalOptions[prop] = true;
+            }
+            if (additionalOptions[prop] === 'false') {
+              additionalOptions[prop] = false;
+            }
+          }
+        }
+
+        // Merge mapOptions with additionalOptions.
+        Object.assign(mapOptions, additionalOptions);
+
+        // Define the Geofield Google Map.
+        var map = new google.maps.Map(document.getElementById(mapid), mapOptions);
+
+        // Define a map self property, so other code can interact with it.
+        self.map_data[mapid].map = map;
 
         var range = new google.maps.LatLngBounds();
 
@@ -185,7 +182,7 @@
         });
 
         if (features.setMap) {
-          self.placeFeature(features, map, range);
+          self.place_feature(features, map, range);
           // Don't move the default zoom if we're only displaying one point.
           if (features.getPosition) {
             resetZoom = false;
@@ -193,11 +190,11 @@
         } else {
           for (var i in features) {
             if (features[i].setMap) {
-              self.placeFeature(features[i], map, range);
+              self.place_feature(features[i], map, range);
             } else {
               for (var j in features[i]) {
                 if (features[i][j].setMap) {
-                  self.placeFeature(features[i][j], map, range);
+                  self.place_feature(features[i][j], map, range);
                 }
               }
             }

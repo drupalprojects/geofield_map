@@ -11,22 +11,22 @@
 
           // Define the first map id, for a multivalue geofield map.
           if (mapid.indexOf('0-value') !== -1) {
-            Drupal.geofieldMap.firstMapId = mapid;
+            Drupal.geoFieldMap.firstMapId = mapid;
           }
           // Check if the Map container really exists and hasn't been yet initialized.
-          if ($('#' + mapid, context).length > 0 && !Drupal.geofieldMap.map_data[mapid]) {
+          if ($('#' + mapid, context).length > 0 && !Drupal.geoFieldMap.map_data[mapid]) {
 
             // Set the map_data[mapid] settings.
-            Drupal.geofieldMap.map_data[mapid] = options;
+            Drupal.geoFieldMap.map_data[mapid] = options;
 
             if (options.gmap_api_key || options.map_library === 'gmap') {
               // Load before the Gmap Library, if needed.
-              Drupal.geofieldMap.loadGoogle(mapid, function () {
-                Drupal.geofieldMap.map_initialize(options);
+              Drupal.geoFieldMap.loadGoogle(mapid, function () {
+                Drupal.geoFieldMap.map_initialize(options);
               });
             }
             else {
-              Drupal.geofieldMap.map_initialize(options);
+              Drupal.geoFieldMap.map_initialize(options);
             }
           }
         });
@@ -34,7 +34,7 @@
     }
   };
 
-  Drupal.geofieldMap = {
+  Drupal.geoFieldMap = {
 
     geocoder: null,
     map_data: {},
@@ -364,7 +364,7 @@
       // Define the Geofield Map.
       var map = self.getGeofieldMap(params.mapid);
 
-      // Define a map self property
+      // Define a map self property, so other code can interact with it.
       self.map_data[params.mapid].map = map;
 
       // Fix map issue in field_groups / details & vertical tabs
