@@ -98,7 +98,7 @@
       }
     },
 
-    place_feature: function(feature, icon_image, map, range) {
+    place_feature: function(feature, icon_image, map, mapBounds) {
       var self = this;
       var properties = feature.get('geojsonProperties');
 
@@ -126,11 +126,11 @@
       self.markers.push(feature);
 
       if (feature.getPosition) {
-        range.extend(feature.getPosition());
+        mapBounds.extend(feature.getPosition());
       } else {
         var path = feature.getPath();
         path.forEach(function(element) {
-          range.extend(element);
+          mapBounds.extend(element);
         });
       }
 
@@ -150,14 +150,12 @@
       var self = this;
       $.noConflict();
 
-      var resetZoom = true;
+      var zoomForce = !!map_settings.map_zoom_and_pan.zoom_force;
+      var centerForce = !!map_settings.map_center.center_force;
 
       // Checking to see if google variable exists. We need this b/c views breaks this sometimes. Probably
       // an AJAX/external javascript bug in core or something.
       if (typeof google !== 'undefined' && typeof google.maps.ZoomControlStyle !== 'undefined' && data !== undefined) {
-
-        // Parse the Geojson data into Google Maps Locations.
-        var features = GeoJSON(data);
 
         var mapOptions = {
           center: map_settings.map_center ? new google.maps.LatLng(map_settings.map_center.lat, map_settings.map_center.lon) : new google.maps.LatLng(42, 12.5),
@@ -202,57 +200,62 @@
         self.map_data[mapid].map = map;
         self.map_data[mapid].map_center = new google.maps.LatLng(map_settings.map_center.lat, map_settings.map_center.lon);
 
-        var range = new google.maps.LatLngBounds();
+        var mapBounds = new google.maps.LatLngBounds();
 
-        map.infowindow = new google.maps.InfoWindow({
-          content: ''
-        });
+        // Parse the Geojson data into Google Maps Locations.
+        var features = data.features && data.features.length > 0 ? GeoJSON(data) : null;
 
-        // Define the icon_image, if set.
-        var icon_image = map_settings.map_marker_and_infowindow.icon_image_path.length > 0 ? map_settings.map_marker_and_infowindow.icon_image_path : null;
+        if (features && (!features.type || features.type !== 'Error')) {
 
-        if (features.setMap) {
-          self.place_feature(features, icon_image, map, range);
-          // Don't move the default zoom if we're only displaying one point.
-          if (features.getPosition) {
-            resetZoom = false;
-          }
-        } else {
-          for (var i in features) {
-            if (features[i].setMap) {
-              self.place_feature(features[i], icon_image, map, range);
-            } else {
-              for (var j in features[i]) {
-                if (features[i][j].setMap) {
-                  self.place_feature(features[i][j], icon_image, map, range);
+          map.infowindow = new google.maps.InfoWindow({
+            content: ''
+          });
+
+          // Define the icon_image, if set.
+          var icon_image = map_settings.map_marker_and_infowindow.icon_image_path.length > 0 ? map_settings.map_marker_and_infowindow.icon_image_path : null;
+
+          if (features.setMap) {
+            self.place_feature(features, icon_image, map, mapBounds);
+          } else {
+            for (var i in features) {
+              if (features[i].setMap) {
+                self.place_feature(features[i], icon_image, map, mapBounds);
+              } else {
+                for (var j in features[i]) {
+                  if (features[i][j].setMap) {
+                    self.place_feature(features[i][j], icon_image, map, mapBounds);
+                  }
                 }
               }
             }
           }
-        }
 
-        // Implement Markeclustering.
-        var markeclusterOption = {
-          imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'
-        };
+          // Implement Markeclustering.
+          var markeclusterOption = {
+            imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'
+          };
 
-        var markeclusterAdditionalOptions = map_settings.map_markercluster.markercluster_additional_options.length > 0 ? JSON.parse(map_settings.map_markercluster.markercluster_additional_options) : {};
-        // Merge markeclusterOption with markeclusterAdditionalOptions.
-        Object.assign(markeclusterOption, markeclusterAdditionalOptions);
+          var markeclusterAdditionalOptions = map_settings.map_markercluster.markercluster_additional_options.length > 0 ? JSON.parse(map_settings.map_markercluster.markercluster_additional_options) : {};
+          // Merge markeclusterOption with markeclusterAdditionalOptions.
+          Object.assign(markeclusterOption, markeclusterAdditionalOptions);
 
-        if (typeof MarkerClusterer !== 'undefined' && map_settings.map_markercluster.markercluster_control) {
-          var markerCluster = new MarkerClusterer(map, self.markers, markeclusterOption);
-        }
-
-        for (first in features) break;
-        if (first !== 'type') {
-          if (resetZoom) {
-            map.fitBounds(range);
-          } else {
-            map.setCenter(range.getCenter());
+          if (typeof MarkerClusterer !== 'undefined' && map_settings.map_markercluster.markercluster_control) {
+            var markerCluster = new MarkerClusterer(map, self.markers, markeclusterOption);
           }
-        } else {
-          map.setCenter(self.map_data[mapid].map_center);
+        }
+
+        if(!mapBounds.isEmpty()) {
+          map.fitBounds(mapBounds);
+          google.maps.event.addListenerOnce(map, 'idle', function() {
+            // Just once the fitBounds completes we can check to override it
+            // https://stackoverflow.com/questions/10835496/is-there-a-callback-after-map-fitbounds
+            if (centerForce) {
+              map.setCenter(mapOptions.center);
+            }
+            if (zoomForce) {
+              map.setZoom(mapOptions.zoom);
+            }
+          });
         }
       }
     }

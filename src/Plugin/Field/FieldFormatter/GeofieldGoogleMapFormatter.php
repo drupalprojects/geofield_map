@@ -143,10 +143,11 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       'map_center' => [
         'lat' => '42',
         'lon' => '12.5',
-        'force' => 0,
+        'center_force' => 0,
       ],
       'map_zoom_and_pan' => [
         'zoom' => '8',
+        'zoom_force' => 0,
         'min_zoom' => '0',
         'max_zoom' => '22',
         'scrollwheel' => 1,
@@ -264,11 +265,11 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       '#size' => 25,
       '#description' => $this->t('If there are no entries on the map, where should the map be centered?'),
       '#geolocation' => TRUE,
-      'force' => [
+      'center_force' => [
         '#type' => 'checkbox',
         '#title' => $this->t('Force the Map Center'),
-        '#description' => $this->t('The Map will generally focus on the input Geofields.<br>This flag will instead force the Map Center notwithstanding the Geofield Values'),
-        '#default_value' => $settings['map_center']['force'],
+        '#description' => $this->t('The Map will generally focus center on the input Geofields.<br>This flag will instead force the Map Center notwithstanding the Geofield Values'),
+        '#default_value' => $settings['map_center']['center_force'],
         '#return_value' => 1,
       ],
     ];
@@ -285,6 +286,13 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       '#default_value' => $settings['map_zoom_and_pan']['zoom'],
       '#description' => $this->t('The Initial Zoom level of the Google Map.'),
       '#element_validate' => [[get_class($this), 'zoomLevelValidate']],
+    ];
+    $elements['map_zoom_and_pan']['zoom_force'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Force the Initial Zoom'),
+      '#description' => $this->t('The Map will generally focus zoom on the input Geofields bounds.<br>This flag will instead force the Map Zoom notwithstanding the Geofield Values'),
+      '#default_value' => $settings['map_zoom_and_pan']['zoom_force'],
+      '#return_value' => 1,
     ];
     $elements['map_zoom_and_pan']['min_zoom'] = [
       '#type' => 'number',
@@ -460,7 +468,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       '#title' => $this->t('Marker Cluster Additional Options'),
       '#description' => $this->t('An object literal of additional marker cluster options, that comply with the Marker Clusterer Google Maps JavaScript Library. The syntax should respect the javascript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.'),
       '#default_value' => $settings['map_markercluster']['markercluster_additional_options'],
-      '#placeholder' => $this->t('{"maxZoom": 12, "gridSize": 25, "imagePath": "/modules/custom/geofield_map/images/m"}'),
+      '#placeholder' => $this->t('{"maxZoom": 12, "gridSize": 25, "imagePath": "modules/custom/geofield_map/images/m"}'),
       '#element_validate' => [[get_class($this), 'jsonValidate']],
     ];
 
@@ -498,10 +506,10 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
         '@state_lat' => $settings['map_center']['lat'],
         '@state_lon' => $settings['map_center']['lon'],
       ]),
-      'force' => [
+      'center_force' => [
         '#type' => 'html_tag',
         '#tag' => 'div',
-        '#value' => $this->t('Force Map Center: @state', ['@state' => $settings['map_center']['force'] ? $this->t('Yes') : $this->t('No')]),
+        '#value' => $this->t('Force Map Center: @state', ['@state' => $settings['map_center']['center_force'] ? $this->t('Yes') : $this->t('No')]),
       ],
     ];
     $map_zoom_and_pan = [
@@ -512,6 +520,11 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
         '#type' => 'html_tag',
         '#tag' => 'div',
         '#value' => $this->t('Map Zoom: @state', ['@state' => $settings['map_zoom_and_pan']['zoom']]),
+      ],
+      'zoom_force' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Force Initial Zoom: @state', ['@state' => $settings['map_zoom_and_pan']['zoom_force'] ? $this->t('Yes') : $this->t('No')]),
       ],
       'min_zoom' => [
         '#type' => 'html_tag',
@@ -684,6 +697,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     $js_settings = [
       'mapid' => Html::getUniqueId("geofield_map_entity_{$entity_type}_{$entity_id}_{$field->getName()}"),
       'map_settings' => $map_settings,
+      'data' => [],
     ];
 
     $data = [];
@@ -707,7 +721,17 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       }
     }
 
-    if (!empty($data)) {
+    if (empty($data) && $map_settings['map_empty']['empty_behaviour'] !== '2') {
+      return [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $map_settings['map_empty']['empty_behaviour'] === '1' ? $map_settings['map_empty']['empty_message'] : '',
+        '#attributes' => [
+          'class' => ['empty-geofield'],
+        ],
+      ];
+    }
+    else {
       $js_settings['data'] = [
         'type' => 'FeatureCollection',
         'features' => $data,
