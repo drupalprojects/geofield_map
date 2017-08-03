@@ -105,6 +105,7 @@
       if (feature.setTitle && properties && properties.title) {
         feature.setTitle(properties.title);
       }
+
       // Set the personalized Icon Image, if set.
       if (feature.setIcon && icon_image && icon_image.length > 0) {
         $.ajax({
@@ -136,8 +137,9 @@
       if (properties && properties.description) {
         var bounds = feature.get('bounds');
         google.maps.event.addListener(feature, 'click', function() {
+          map.infowindow.setContent("<div style='max-width:200px; text-align: center;'>" + properties.description + "</div>");
+          map.infowindow.setOptions({pixelOffset: new google.maps.Size(0,-30)});
           map.infowindow.setPosition(bounds.getCenter());
-          map.infowindow.setContent(properties.description);
           map.infowindow.open(map);
         });
       }
@@ -153,6 +155,8 @@
       // Checking to see if google variable exists. We need this b/c views breaks this sometimes. Probably
       // an AJAX/external javascript bug in core or something.
       if (typeof google !== 'undefined' && typeof google.maps.ZoomControlStyle !== 'undefined' && data !== undefined) {
+
+        // Parse the Geojson data into Google Maps Locations.
         var features = GeoJSON(data);
 
         var mapOptions = {
@@ -207,7 +211,7 @@
         // Define the icon_image, if set.
         var icon_image = map_settings.map_marker_and_infowindow.icon_image_path.length > 0 ? map_settings.map_marker_and_infowindow.icon_image_path : null;
 
-/*        if (features.setMap) {
+        if (features.setMap) {
           self.place_feature(features, icon_image, map, range);
           // Don't move the default zoom if we're only displaying one point.
           if (features.getPosition) {
@@ -225,16 +229,7 @@
               }
             }
           }
-        }*/
-
-        map.data.addGeoJson(data);
-        map.data.addListener('click', function(event) {
-          var myHTML = event.feature.getProperty("description");
-          map.infowindow.setContent("<div style='max-width:200px; text-align: center;'>"+myHTML+"</div>");
-          map.infowindow.setPosition(event.feature.getGeometry().get());
-          map.infowindow.setOptions({pixelOffset: new google.maps.Size(0,-30)});
-          map.infowindow.open(map);
-        });
+        }
 
         // Implement Markeclustering.
         var markeclusterOption = {

@@ -15,6 +15,7 @@ use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\geofield\GeoPHP\GeoPHPInterface;
 
 /**
  * Plugin implementation of the 'geofield_google_map' formatter.
@@ -28,6 +29,17 @@ use Drupal\Core\Entity\EntityFieldManagerInterface;
  * )
  */
 class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFactoryPluginInterface {
+
+  /**
+   * Empty Map Options.
+   *
+   * @var array
+   */
+  protected $emptyMapOptions = [
+    '0' => 'Empty field',
+    '1' => 'Custom Message',
+    '2' => 'Empty Map Centered at the Default Center',
+  ];
 
   /**
    * Google Map Types Options.
@@ -56,6 +68,13 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
   protected $entityFieldManager;
 
   /**
+   * The GeoPHPWrapper service.
+   *
+   * @var \Drupal\geofield\GeoPHP\GeoPHPInterface
+   */
+  protected $GeoPHPWrapper;
+
+  /**
    * GeofieldGoogleMapFormatter constructor.
    *
    * {@inheritdoc}
@@ -66,6 +85,8 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
    *   The Link Generator service.
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
    *   The Entity Field Manager.
+   * @param \Drupal\geofield\GeoPHP\GeoPHPInterface $geophp_wrapper
+   *   The The GeoPHPWrapper.
    */
   public function __construct(
     $plugin_id,
@@ -77,11 +98,13 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     array $third_party_settings,
     TranslationInterface $string_translation,
     LinkGeneratorInterface $link_generator,
-    EntityFieldManagerInterface $entity_field_manager
+    EntityFieldManagerInterface $entity_field_manager,
+    GeoPHPInterface $geophp_wrapper
   ) {
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $label, $view_mode, $third_party_settings);
     $this->link = $link_generator;
     $this->entityFieldManager = $entity_field_manager;
+    $this->GeoPHPWrapper = $geophp_wrapper;
   }
 
   /**
@@ -98,7 +121,8 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       $configuration['third_party_settings'],
       $container->get('string_translation'),
       $container->get('link_generator'),
-      $container->get('entity_field.manager')
+      $container->get('entity_field.manager'),
+      $container->get('geofield.geophp')
     );
   }
 
@@ -110,11 +134,16 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       'gmap_api_key' => '',
       'map_dimensions' => [
         'width' => '100%',
-        'height' => '300px',
+        'height' => '450px',
+      ],
+      'map_empty' => [
+        'empty_behaviour' => '0',
+        'empty_message' => t('No Geofield Value entered for this field'),
       ],
       'map_center' => [
-        'lat' => 42,
-        'lon' => 12.5,
+        'lat' => '42',
+        'lon' => '12.5',
+        'force' => 0,
       ],
       'map_zoom_and_pan' => [
         'zoom' => '8',
@@ -205,6 +234,29 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       ]),
     ];
 
+    $elements['map_empty'] = array(
+      '#type' => 'fieldset',
+      '#title' => $this->t('Which behaviour for the empty map?'),
+      '#description' => $this->t('If there are no entries on the map, what should be the output of field?'),
+    );
+    $elements['map_empty']['empty_behaviour'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Behaviour'),
+      '#default_value' => $settings['map_empty']['empty_behaviour'],
+      '#options' => $this->emptyMapOptions,
+    ];
+    $elements['map_empty']['empty_message'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Empty Map Message'),
+      '#description' => $this->t('The message that should be rendered instead on an empty map.'),
+      '#default_value' => $settings['map_empty']['empty_message'],
+      '#states' => [
+        'visible' => [
+          ':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][map_empty][empty_behaviour]"]' => ['value' => '1'],
+        ],
+      ],
+    ];
+
     $elements['map_center'] = [
       '#type' => 'geofield_latlon',
       '#title' => $this->t('Default Center'),
@@ -212,6 +264,13 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       '#size' => 25,
       '#description' => $this->t('If there are no entries on the map, where should the map be centered?'),
       '#geolocation' => TRUE,
+      'force' => [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Force the Map Center'),
+        '#description' => $this->t('The Map will generally focus on the input Geofields.<br>This flag will instead force the Map Center notwithstanding the Geofield Values'),
+        '#default_value' => $settings['map_center']['force'],
+        '#return_value' => 1,
+      ],
     ];
 
     $elements['map_zoom_and_pan'] = array(
@@ -350,6 +409,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     $elements['map_marker_and_infowindow']['icon_image_path'] = array(
       '#type' => 'textfield',
       '#title' => $this->t('Icon Image'),
+      '#size' => '120',
       '#description' => $this->t('Input the Specific Icon Image path (absolute or relative to the Drupal site root). If not set, the Default Google Marker will be used.'),
       '#default_value' => $settings['map_marker_and_infowindow']['icon_image_path'],
       '#placeholder' => 'https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png',
@@ -419,13 +479,30 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     $map_dimensions = [
       '#markup' => $this->t('Map Dimensions: Width: @width - Height: @height', ['@width' => $settings['map_dimensions']['width'], '@height' => $settings['map_dimensions']['height']]),
     ];
+    $map_empty = [
+      '#type' => 'html_tag',
+      '#tag' => 'div',
+      '#value' => $this->t('Behaviour for the Empty Map: @state', ['@state' => $this->emptyMapOptions[$settings['map_empty']['empty_behaviour']]]),
+    ];
+
+    if ($settings['map_empty']['empty_behaviour'] === '1') {
+      $map_empty['message'] = [
+        '#markup' => $this->t('Empty Field Message: Width: @state', ['@state' => $settings['map_empty']['empty_message']]),
+      ];
+    }
+
     $map_center = [
       '#type' => 'html_tag',
       '#tag' => 'div',
-      '#markup' => $this->t('Map Default Center: @state_lat, @state_lon', [
+      '#value' => $this->t('Map Default Center: @state_lat, @state_lon', [
         '@state_lat' => $settings['map_center']['lat'],
         '@state_lon' => $settings['map_center']['lon'],
       ]),
+      'force' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Force Map Center: @state', ['@state' => $settings['map_center']['force'] ? $this->t('Yes') : $this->t('No')]),
+      ],
     ];
     $map_zoom_and_pan = [
       '#type' => 'html_tag',
@@ -566,6 +643,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     $summary = [
       'gmap_api_key' => $gmap_api_key,
       'map_dimensions' => $map_dimensions,
+      'map_empty' => $map_empty,
       'map_center' => $map_center,
       'map_zoom_and_pan' => $map_zoom_and_pan,
       'map_controls' => $map_controls,
@@ -581,8 +659,6 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
    * {@inheritdoc}
    */
   public function viewElements(FieldItemListInterface $items, $langcode) {
-    $element = [];
-    $geophp = \Drupal::service('geofield.geophp');
 
     /* @var \Drupal\Core\Entity\EntityInterface $entity */
     $entity = $items->getEntity();
@@ -618,7 +694,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     foreach ($items as $delta => $item) {
 
       /* @var \Point $geometry */
-      $geometry = $geophp->load($item->value);
+      $geometry = $this->GeoPHPWrapper->load($item->value);
       if (!empty($geometry)) {
         $datum = [
           "type" => "Feature",
@@ -692,7 +768,6 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
    * Form element url format validation handler.
    */
   public static function urlValidate($element, FormStateInterface &$form_state) {
-    global $base_url;
     $path = $element['#value'];
     // Check the jsonValue.
     if (UrlHelper::isExternal($path) && !UrlHelper::isValid($path)) {
