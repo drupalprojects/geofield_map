@@ -605,7 +605,13 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
         ->toString();
     }
 
+    $js_settings = [
+      'mapid' => Html::getUniqueId("geofield_map_entity_{$entity_type}_{$entity_id}_{$field->getName()}"),
+      'map_settings' => $map_settings,
+    ];
+
     $data = [];
+
     if (!empty($map_settings['map_marker_and_infowindow']['infowindow_field'])) {
       $description = $map_settings['map_marker_and_infowindow']['infowindow_field'] != 'title' ? $entity->$map_settings['map_marker_and_infowindow']['infowindow_field']->value : $entity->label();
     }
@@ -614,24 +620,21 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       /* @var \Point $geometry */
       $geometry = $geophp->load($item->value);
       if (!empty($geometry)) {
-        $datum = json_decode($geometry->out('json'));
-        $datum->properties = array(
+        $datum = [
+          "type" => "Feature",
+          "geometry" => json_decode($geometry->out('json')),
+        ];
+        $datum['properties'] = [
           'description' => isset($description) ? $description : NULL,
-        );
+        ];
         $data[] = $datum;
       }
     }
 
-    $js_settings = [
-      'mapid' => Html::getUniqueId("geofield_map_entity_{$entity_type}_{$entity_id}_{$field->getName()}"),
-      'map_settings' => $map_settings,
-      'data' => [],
-    ];
-
     if (!empty($data)) {
-      $js_settings['data'] = count($data) == 1 ? $data[0] : [
-        'type' => 'GeometryCollection',
-        'geometries' => $data,
+      $js_settings['data'] = [
+        'type' => 'FeatureCollection',
+        'features' => $data,
       ];
     }
     $element = geofield_map_googlemap_render($js_settings);
