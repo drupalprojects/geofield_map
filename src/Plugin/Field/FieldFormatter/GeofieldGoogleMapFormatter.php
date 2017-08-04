@@ -538,6 +538,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
    * {@inheritdoc}
    */
   public function settingsSummary() {
+
     $settings = $this->getSettings();
 
     $gmap_api_key = [
@@ -722,6 +723,15 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       'map_marker_and_infowindow' => $map_marker_and_infowindow,
       'map_additional_options' => isset($map_additional_options) ? $map_additional_options : NULL,
       'map_markercluster' => $map_markercluster,
+    ];
+
+    // Attach Geofield Map Library.
+    $summary['library'] = [
+      '#attached' => [
+        'library' => [
+          'geofield_map/geofield_map_general',
+        ],
+      ],
     ];
 
     return $summary;
