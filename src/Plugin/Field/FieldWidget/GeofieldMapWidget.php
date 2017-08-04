@@ -276,8 +276,9 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
    */
   public function settingsForm(array $form, FormStateInterface $form_state) {
 
-    $geofield_map_settings = $this->config->get('geofield_map.settings');
     $default_settings = self::defaultSettings();
+
+    $elements = [];
 
     // Attach Geofield Map Library.
     $elements['#attached']['library'] = [
@@ -287,12 +288,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
 
     $elements['#tree'] = TRUE;
 
-    if (!empty($geofield_map_settings->get('gmap_api_key'))) {
-      $gmap_api_key = $geofield_map_settings->get('gmap_api_key');
-    }
-    else {
-      $gmap_api_key = $this->getSetting('map_google_api_key');
-    }
+    $gmap_api_key = $this->getGmapApiKey();
 
     // If it is defined GMap API Key in the general configuration,
     // force to use it, instead.
@@ -304,7 +300,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
           '#type' => 'html_tag',
           '#tag' => 'div',
           '#value' => $this->t('<strong>Gmap Api Key:</strong> @gmaps_api_key_link', [
-            '@gmaps_api_key_link' => $this->link->generate($geofield_map_settings->get('gmap_api_key'), Url::fromRoute('geofield_map.settings', [], [
+            '@gmaps_api_key_link' => $this->link->generate($gmap_api_key, Url::fromRoute('geofield_map.settings', [], [
               'query' => [
                 'destination' => Url::fromRoute('<current>')
                   ->toString(),
@@ -493,14 +489,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
    */
   public function settingsSummary() {
 
-    $geofield_map_settings = $this->config->get('geofield_map.settings');
-
-    if (!empty($geofield_map_settings->get('gmap_api_key'))) {
-      $gmap_api_key = $geofield_map_settings->get('gmap_api_key');
-    }
-    else {
-      $gmap_api_key = $this->getSetting('map_google_api_key');
-    }
+    $gmap_api_key = $this->getGmapApiKey();
 
     $map_library = [
       '#markup' => $this->t('Map Library: @state', array('@state' => 'gmap' == $this->getSetting('map_library') ? 'Google Maps' : 'Leaflet Js')),
@@ -510,9 +499,14 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#markup' => $this->t('Map Type: @state', array('@state' => 'leaflet' == $this->getSetting('map_library') ? $this->getSetting('map_type_leaflet') : $this->getSetting('map_type_google'))),
     ];
 
-    $map_google_apy_key = [
+    $map_gmap_api_key = [
       '#markup' => $this->t('Google Maps API Key: @state', [
-        '@state' => !empty($gmap_api_key) ? $gmap_api_key : t("<span class='geofield-map-apikey-missing'>Gmap Api Key missing (Geocode functionalities not available).</span> @settings_page_link", [
+        '@state' => !empty($gmap_api_key) ? $this->link->generate($gmap_api_key, Url::fromRoute('geofield_map.settings', [], [
+          'query' => [
+            'destination' => Url::fromRoute('<current>')
+              ->toString(),
+          ],
+        ])) : t("<span class='geofield-map-apikey-missing'>Gmap Api Key missing (Geocode functionalities not available).</span> @settings_page_link", [
           '@settings_page_link' => $this->link->generate(t('Set it in the Geofield Map Configuration Page'), Url::fromRoute('geofield_map.settings', [], [
             'query' => [
               'destination' => Url::fromRoute('<current>')
@@ -563,7 +557,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     $summary = [
       'map_library' => $map_library,
       'map_type' => $map_type,
-      'map_google_apy_key' => $map_google_apy_key,
+      'map_gmap_api_key' => $map_gmap_api_key,
       'map_type_selector' => $map_type_selector,
       'map_zoom_levels' => $map_zoom_levels,
       'html5' => $html5,
@@ -592,6 +586,9 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
    * {@inheritdoc}
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
+
+    $gmap_api_key = $this->getGmapApiKey();
+
     $latlon_value = array();
 
     foreach ($this->components as $component) {
@@ -613,7 +610,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#click_to_place_marker' => $this->getSetting('click_to_place_marker'),
       '#geoaddress_field' => $this->getSetting('geoaddress_field'),
       '#error_label' => !empty($element['#title']) ? $element['#title'] : $this->fieldDefinition->getLabel(),
-      '#gmap_api_key' => $this->getSetting('map_google_api_key'),
+      '#gmap_api_key' => $gmap_api_key,
     );
 
     return array('value' => $element);
@@ -635,6 +632,24 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     }
 
     return $values;
+  }
+
+  /**
+   * Get the GMap Api Key from the geofield_map.settings configuration.
+   *
+   * @return string
+   *   The GMap Api Key
+   */
+  private function getGmapApiKey() {
+    $geofield_map_settings = $this->config->get('geofield_map.settings');
+
+    if (!empty($geofield_map_settings->get('gmap_api_key'))) {
+      $gmap_api_key = $geofield_map_settings->get('gmap_api_key');
+    }
+    else {
+      $gmap_api_key = $this->getSetting('map_google_api_key');
+    }
+    return $gmap_api_key;
   }
 
 }

@@ -144,55 +144,55 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
    */
   public static function defaultSettings() {
     return [
-        'gmap_api_key' => '',
-        'map_dimensions' => [
-          'width' => '100%',
-          'height' => '450px',
+      'gmap_api_key' => '',
+      'map_dimensions' => [
+        'width' => '100%',
+        'height' => '450px',
+      ],
+      'map_empty' => [
+        'empty_behaviour' => '0',
+        'empty_message' => t('No Geofield Value entered for this field'),
+      ],
+      'map_center' => [
+        'lat' => '42',
+        'lon' => '12.5',
+        'center_force' => 0,
+      ],
+      'map_zoom_and_pan' => [
+        'zoom' => '8',
+        'zoom_force' => 0,
+        'min_zoom' => '0',
+        'max_zoom' => '22',
+        'scrollwheel' => 1,
+        'draggable' => 1,
+      ],
+      'map_controls' => [
+        'disable_default_ui' => 0,
+        'zoom_control' => 1,
+        'map_type_id' => 'roadmap',
+        'map_type_control' => 1,
+        'map_type_control_options_type_ids' => [
+          'roadmap' => 'roadmap',
+          'satellite' => 'satellite',
+          'hybrid' => 'hybrid',
+          'terrain' => 'terrain',
         ],
-        'map_empty' => [
-          'empty_behaviour' => '0',
-          'empty_message' => t('No Geofield Value entered for this field'),
-        ],
-        'map_center' => [
-          'lat' => '42',
-          'lon' => '12.5',
-          'center_force' => 0,
-        ],
-        'map_zoom_and_pan' => [
-          'zoom' => '8',
-          'zoom_force' => 0,
-          'min_zoom' => '0',
-          'max_zoom' => '22',
-          'scrollwheel' => 1,
-          'draggable' => 1,
-        ],
-        'map_controls' => [
-          'disable_default_ui' => 0,
-          'zoom_control' => 1,
-          'map_type_id' => 'roadmap',
-          'map_type_control' => 1,
-          'map_type_control_options_type_ids' => [
-            'roadmap' => 'roadmap',
-            'satellite' => 'satellite',
-            'hybrid' => 'hybrid',
-            'terrain' => 'terrain',
-          ],
-          'scale_control' => 1,
-          'street_view_control' => 1,
-          'fullscreen_control' => 1,
-        ],
-        'map_marker_and_infowindow' => [
-          'icon_image_path' => '',
-          'infowindow_field' => 'title',
-        ],
-        'map_markercluster' => [
-          'markercluster_control' => 1,
-          'markercluster_additional_options' => '',
-        ],
-        'map_additional_options' => '',
+        'scale_control' => 1,
+        'street_view_control' => 1,
+        'fullscreen_control' => 1,
+      ],
+      'map_marker_and_infowindow' => [
+        'icon_image_path' => '',
+        'infowindow_field' => 'title',
+      ],
+      'map_markercluster' => [
+        'markercluster_control' => 1,
+        'markercluster_additional_options' => '',
+      ],
+      'map_additional_options' => '',
 
-        // Implement default settings.
-      ] + parent::defaultSettings();
+      // Implement default settings.
+    ] + parent::defaultSettings();
   }
 
   /**
@@ -200,61 +200,50 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
    */
   public function settingsForm(array $form, FormStateInterface $form_state) {
 
-    $geofield_map_settings = $this->config->get('geofield_map.settings');
     $default_settings = self::defaultSettings();
     $settings = $this->getSettings();
 
     $elements = [];
-    // Attach Geofield Map Library.
-    $elements['#attached']['library'][] = 'geofield_map/geofield_map_general';
 
-    if (empty($settings['gmap_api_key'])) {
-      $elements['gmap_api_key'] = [
-        '#type' => 'value',
-        '#value' => $geofield_map_settings->get('gmap_api_key'),
-        'markup' => [
-          '#type' => 'html_tag',
-          '#tag' => 'div',
-          '#value' => $this->t('Gmap Api Key: @gmaps_api_key', ['@gmaps_api_key' => $geofield_map_settings->get('gmap_api_key')]),
-        ],
+    // Attach Geofield Map Library.
+    $elements['#attached']['library'] = [
+      'geofield_map/geofield_map_general',
+    ];
+
+    $gmap_api_key = $this->getGmapApiKey();
+
+    // If it is defined GMap API Key in the general configuration,
+    // force to use it, instead.
+    if (!empty($gmap_api_key)) {
+      $elements['map_google_api_key'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('<strong>Gmap Api Key:</strong> @gmaps_api_key_link', [
+          '@gmaps_api_key_link' => $this->link->generate($gmap_api_key, Url::fromRoute('geofield_map.settings', [], [
+            'query' => [
+              'destination' => Url::fromRoute('<current>')
+                ->toString(),
+            ],
+          ])),
+        ]),
       ];
-      if (empty($geofield_map_settings->get('gmap_api_key'))) {
-        $elements['gmap_api_key']['markup'] = [
-          '#type' => 'html_tag',
-          '#tag' => 'div',
-          '#value' => t('Gmap Api Key missing. Set it up in the @link', [
-            '@link' => $this->link->generate(t('Geofield Map settings Page'), Url::fromRoute('geofield_map.settings')),
-          ]),
-          '#attributes' => [
-            'class' => ['geofield-map-apikey-missing'],
-          ],
-        ];
-      }
     }
     else {
-      $elements['gmap_api_key'] = [
-        '#type' => 'value',
-        '#value' => !empty($geofield_map_settings->get('gmap_api_key')) ? $geofield_map_settings->get('gmap_api_key') : $settings['gmap_api_key'],
-        'markup' => [
-          '#type' => 'html_tag',
-          '#tag' => 'div',
-          '#value' => $this->t('Gmap Api Key: @gmaps_api_key', ['@gmaps_api_key' => !empty($geofield_map_settings->get('gmap_api_key')) ? $geofield_map_settings->get('gmap_api_key') : $settings['gmap_api_key']]),
+      $elements['map_google_api_key_missing'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => t("Gmap Api Key missing | The Geocode Address and ReverseGeocode functionalities won't be available.<br>@settings_page_link", [
+          '@settings_page_link' => $this->link->generate(t('Set it in the Geofield Map Configuration Page'), Url::fromRoute('geofield_map.settings', [], [
+            'query' => [
+              'destination' => Url::fromRoute('<current>')
+                ->toString(),
+            ],
+          ])),
+        ]),
+        '#attributes' => [
+          'class' => ['geofield-map-apikey-missing'],
         ],
       ];
-
-      if (empty($geofield_map_settings->get('gmap_api_key'))) {
-        $elements['map_google_api_key_missing']['tag'] = [
-          '#type' => 'html_tag',
-          '#tag' => 'div',
-          '#value' => t('Please, copy this Gmap Api Key in the @link to make it generally available.', [
-            '@link' => $this->link->generate(t('Geofield Map settings Page'), Url::fromRoute('geofield_map.settings')),
-          ]),
-          '#attributes' => [
-            'class' => ['geofield-map-apikey-missing'],
-          ],
-        ];
-      }
-
     }
 
     $elements['map_dimensions'] = array(
@@ -322,7 +311,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       'center_force' => [
         '#type' => 'checkbox',
         '#title' => $this->t('Force the Map Center'),
-        '#description' => $this->t('The Map will generally focus center on the input Geofields.<br>This flag will instead force the Map Center notwithstanding the Geofield Values'),
+        '#description' => $this->t('The Map will generally focus center on the input Geofields.<br>This option will instead force the Map Center notwithstanding the Geofield Values'),
         '#default_value' => $settings['map_center']['center_force'],
         '#return_value' => 1,
       ],
@@ -344,7 +333,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     $elements['map_zoom_and_pan']['zoom_force'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Force the Initial Zoom'),
-      '#description' => $this->t('The Map will generally focus zoom on the input Geofields bounds.<br>This flag will instead force the Map Zoom notwithstanding the Geofield Values'),
+      '#description' => $this->t('The Map will generally focus zoom on the input Geofields bounds.<br>This option will instead force the Map Zoom notwithstanding the Geofield Values'),
       '#default_value' => $settings['map_zoom_and_pan']['zoom_force'],
       '#return_value' => 1,
     ];
@@ -540,9 +529,24 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
   public function settingsSummary() {
 
     $settings = $this->getSettings();
+    $gmap_api_key = $this->getGmapApiKey();
 
-    $gmap_api_key = [
-      '#markup' => $this->t('Google Maps API Key: @state', ['@state' => $settings['gmap_api_key'] ? $settings['gmap_api_key'] : $this->t('<span style="color: red">Missing</span>')]),
+    $map_gmap_api_key = [
+      '#markup' => $this->t('Google Maps API Key: @state', [
+        '@state' => !empty($gmap_api_key) ? $this->link->generate($gmap_api_key, Url::fromRoute('geofield_map.settings', [], [
+          'query' => [
+            'destination' => Url::fromRoute('<current>')
+              ->toString(),
+          ],
+        ])) : t("<span class='geofield-map-apikey-missing'>Gmap Api Key missing (Geocode functionalities not available).</span> @settings_page_link", [
+          '@settings_page_link' => $this->link->generate(t('Set it in the Geofield Map Configuration Page'), Url::fromRoute('geofield_map.settings', [], [
+            'query' => [
+              'destination' => Url::fromRoute('<current>')
+                ->toString(),
+            ],
+          ])),
+        ]),
+      ]),
     ];
     $map_dimensions = [
       '#markup' => $this->t('Map Dimensions: Width: @width - Height: @height', ['@width' => $settings['map_dimensions']['width'], '@height' => $settings['map_dimensions']['height']]),
@@ -714,7 +718,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     }
 
     $summary = [
-      'gmap_api_key' => $gmap_api_key,
+      'map_gmap_api_key' => $map_gmap_api_key,
       'map_dimensions' => $map_dimensions,
       'map_empty' => $map_empty,
       'map_center' => $map_center,
@@ -750,6 +754,9 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     $field = $items->getFieldDefinition();
 
     $map_settings = $this->getSettings();
+
+    // Set the gmap_api_key as map settings.
+    $map_settings['gmap_api_key'] = $this->getGmapApiKey();
 
     // Transform into simple array values the map_type_control_options_type_ids.
     $map_settings['map_controls']['map_type_control_options_type_ids'] = array_keys(array_filter($map_settings['map_controls']['map_type_control_options_type_ids'], function ($value) {
@@ -872,6 +879,18 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
         $form_state->setError($element, t('The @field field is not valid internal Drupal path.', ['@field' => $element['#title']]));
       }
     }
+  }
+
+  /**
+   * Get the GMap Api Key from the geofield_map.settings configuration.
+   *
+   * @return string
+   *   The GMap Api Key
+   */
+  private function getGmapApiKey() {
+    $geofield_map_settings = $this->config->get('geofield_map.settings');
+    $gmap_api_key = $geofield_map_settings->get('gmap_api_key');
+    return $gmap_api_key;
   }
 
 }

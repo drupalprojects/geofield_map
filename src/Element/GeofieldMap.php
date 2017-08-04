@@ -166,7 +166,7 @@ class GeofieldMap extends GeofieldElementBase {
     }
 
     // Attach Geofield Map Library.
-    $element['#attached']['library'][] = 'geofield_map/main';
+    $element['#attached']['library'][] = 'geofield_map/geofield_map_widget';
 
     // The Node Form.
     /* @var \Drupal\node\NodeForm $nodeForm */
