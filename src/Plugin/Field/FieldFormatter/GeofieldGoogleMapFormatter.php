@@ -9,6 +9,7 @@ use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Utility\LinkGeneratorInterface;
@@ -54,6 +55,13 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
   ];
 
   /**
+   * The config factory service.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $config;
+
+  /**
    * The Link generator Service.
    *
    * @var \Drupal\Core\Utility\LinkGeneratorInterface
@@ -79,6 +87,8 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
    *
    * {@inheritdoc}
    *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   A config factory for retrieving required config objects.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   The Translation service.
    * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
@@ -96,12 +106,14 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     $label,
     $view_mode,
     array $third_party_settings,
+    ConfigFactoryInterface $config_factory,
     TranslationInterface $string_translation,
     LinkGeneratorInterface $link_generator,
     EntityFieldManagerInterface $entity_field_manager,
     GeoPHPInterface $geophp_wrapper
   ) {
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $label, $view_mode, $third_party_settings);
+    $this->config = $config_factory;
     $this->link = $link_generator;
     $this->entityFieldManager = $entity_field_manager;
     $this->GeoPHPWrapper = $geophp_wrapper;
@@ -119,6 +131,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       $configuration['label'],
       $configuration['view_mode'],
       $configuration['third_party_settings'],
+      $container->get('config.factory'),
       $container->get('string_translation'),
       $container->get('link_generator'),
       $container->get('entity_field.manager'),
@@ -131,77 +144,118 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
    */
   public static function defaultSettings() {
     return [
-      'gmap_api_key' => '',
-      'map_dimensions' => [
-        'width' => '100%',
-        'height' => '450px',
-      ],
-      'map_empty' => [
-        'empty_behaviour' => '0',
-        'empty_message' => t('No Geofield Value entered for this field'),
-      ],
-      'map_center' => [
-        'lat' => '42',
-        'lon' => '12.5',
-        'center_force' => 0,
-      ],
-      'map_zoom_and_pan' => [
-        'zoom' => '8',
-        'zoom_force' => 0,
-        'min_zoom' => '0',
-        'max_zoom' => '22',
-        'scrollwheel' => 1,
-        'draggable' => 1,
-      ],
-      'map_controls' => [
-        'disable_default_ui' => 0,
-        'zoom_control' => 1,
-        'map_type_id' => 'roadmap',
-        'map_type_control' => 1,
-        'map_type_control_options_type_ids' => [
-          'roadmap' => 'roadmap',
-          'satellite' => 'satellite',
-          'hybrid' => 'hybrid',
-          'terrain' => 'terrain',
+        'gmap_api_key' => '',
+        'map_dimensions' => [
+          'width' => '100%',
+          'height' => '450px',
         ],
-        'scale_control' => 1,
-        'street_view_control' => 1,
-        'fullscreen_control' => 1,
-      ],
-      'map_marker_and_infowindow' => [
-        'icon_image_path' => '',
-        'infowindow_field' => 'title',
-      ],
-      'map_markercluster' => [
-        'markercluster_control' => 1,
-        'markercluster_additional_options' => '',
-      ],
-      'map_additional_options' => '',
+        'map_empty' => [
+          'empty_behaviour' => '0',
+          'empty_message' => t('No Geofield Value entered for this field'),
+        ],
+        'map_center' => [
+          'lat' => '42',
+          'lon' => '12.5',
+          'center_force' => 0,
+        ],
+        'map_zoom_and_pan' => [
+          'zoom' => '8',
+          'zoom_force' => 0,
+          'min_zoom' => '0',
+          'max_zoom' => '22',
+          'scrollwheel' => 1,
+          'draggable' => 1,
+        ],
+        'map_controls' => [
+          'disable_default_ui' => 0,
+          'zoom_control' => 1,
+          'map_type_id' => 'roadmap',
+          'map_type_control' => 1,
+          'map_type_control_options_type_ids' => [
+            'roadmap' => 'roadmap',
+            'satellite' => 'satellite',
+            'hybrid' => 'hybrid',
+            'terrain' => 'terrain',
+          ],
+          'scale_control' => 1,
+          'street_view_control' => 1,
+          'fullscreen_control' => 1,
+        ],
+        'map_marker_and_infowindow' => [
+          'icon_image_path' => '',
+          'infowindow_field' => 'title',
+        ],
+        'map_markercluster' => [
+          'markercluster_control' => 1,
+          'markercluster_additional_options' => '',
+        ],
+        'map_additional_options' => '',
 
-      // Implement default settings.
-    ] + parent::defaultSettings();
-}
+        // Implement default settings.
+      ] + parent::defaultSettings();
+  }
 
   /**
    * {@inheritdoc}
    */
   public function settingsForm(array $form, FormStateInterface $form_state) {
 
+    $geofield_map_settings = $this->config->get('geofield_map.settings');
     $default_settings = self::defaultSettings();
     $settings = $this->getSettings();
 
     $elements = [];
+    // Attach Geofield Map Library.
+    $elements['#attached']['library'][] = 'geofield_map/geofield_map_general';
 
-    $elements['gmap_api_key'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Gmap Api Key (@link)', [
-        '@link' => $this->link->generate(t('Get a Key/Authentication for Google Maps Javascript Library'), Url::fromUri('https://developers.google.com/maps/documentation/javascript/get-api-key', [
-          'absolute' => TRUE,
-          'attributes' => ['target' => 'blank'],
-        ])),
-      ]),
-      '#default_value' => $settings['gmap_api_key'],
-    ];
+    if (empty($settings['gmap_api_key'])) {
+      $elements['gmap_api_key'] = [
+        '#type' => 'value',
+        '#value' => $geofield_map_settings->get('gmap_api_key'),
+        'markup' => [
+          '#type' => 'html_tag',
+          '#tag' => 'div',
+          '#value' => $this->t('Gmap Api Key: @gmaps_api_key', ['@gmaps_api_key' => $geofield_map_settings->get('gmap_api_key')]),
+        ],
+      ];
+      if (empty($geofield_map_settings->get('gmap_api_key'))) {
+        $elements['gmap_api_key']['markup'] = [
+          '#type' => 'html_tag',
+          '#tag' => 'div',
+          '#value' => t('Gmap Api Key missing. Set it up in the @link', [
+            '@link' => $this->link->generate(t('Geofield Map settings Page'), Url::fromRoute('geofield_map.settings')),
+          ]),
+          '#attributes' => [
+            'class' => ['geofield-map-apikey-missing'],
+          ],
+        ];
+      }
+    }
+    else {
+      $elements['gmap_api_key'] = [
+        '#type' => 'value',
+        '#value' => !empty($geofield_map_settings->get('gmap_api_key')) ? $geofield_map_settings->get('gmap_api_key') : $settings['gmap_api_key'],
+        'markup' => [
+          '#type' => 'html_tag',
+          '#tag' => 'div',
+          '#value' => $this->t('Gmap Api Key: @gmaps_api_key', ['@gmaps_api_key' => !empty($geofield_map_settings->get('gmap_api_key')) ? $geofield_map_settings->get('gmap_api_key') : $settings['gmap_api_key']]),
+        ],
+      ];
+
+      if (empty($geofield_map_settings->get('gmap_api_key'))) {
+        $elements['map_google_api_key_missing']['tag'] = [
+          '#type' => 'html_tag',
+          '#tag' => 'div',
+          '#value' => t('Please, copy this Gmap Api Key in the @link to make it generally available.', [
+            '@link' => $this->link->generate(t('Geofield Map settings Page'), Url::fromRoute('geofield_map.settings')),
+          ]),
+          '#attributes' => [
+            'class' => ['geofield-map-apikey-missing'],
+          ],
+        ];
+      }
+
+    }
 
     $elements['map_dimensions'] = array(
       '#type' => 'fieldset',
@@ -470,6 +524,11 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       '#default_value' => $settings['map_markercluster']['markercluster_additional_options'],
       '#placeholder' => $this->t('{"maxZoom": 12, "gridSize": 25, "imagePath": "modules/custom/geofield_map/images/m"}'),
       '#element_validate' => [[get_class($this), 'jsonValidate']],
+      '#states' => [
+        'visible' => [
+          ':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][map_markercluster][markercluster_control]"]' => ['checked' => TRUE],
+        ],
+      ],
     ];
 
     return $elements + parent::settingsForm($form, $form_state);

@@ -266,7 +266,10 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     $default_settings = self::defaultSettings();
 
     // Attach Geofield Map Library.
-    $elements['#attached']['library'][] = 'geofield_map/main';
+    $elements['#attached']['library'] = [
+      'geofield_map/geofield_map_general',
+      'geofield_map/geofield_map_widget',
+    ];
 
     $elements['#tree'] = TRUE;
 
@@ -295,7 +298,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#tag' => 'div',
       '#value' => t("Gmap Api Key missing | The Geocode Address and ReverseGeocode functionalities won't be available."),
       '#attributes' => [
-        'class' => ['geofield-map-search-missing'],
+        'class' => ['geofield-map-apikey-missing'],
       ],
     );
 

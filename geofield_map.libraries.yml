@@ -11,11 +11,17 @@ leaflet:
     component:
       https://unpkg.com/leaflet@1.0.3/dist/leaflet.css: {}
 
-main:
+geofield_map_general:
   version: 1.x
   css:
     component:
-      css/geofield_map.css: {}
+      css/geofield_map_general.css: {}
+
+geofield_map_widget:
+  version: 1.x
+  css:
+    component:
+      css/geofield_map_widget.css: {}
   js:
     js/geofield_map.js: {}
   dependencies:
