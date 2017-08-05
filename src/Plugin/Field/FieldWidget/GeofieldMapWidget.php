@@ -2,6 +2,7 @@
 
 namespace Drupal\geofield_map\Plugin\Field\FieldWidget;
 
+use Drupal\geofield_map\GeofieldMapFieldTrait;
 use Drupal\Core\Url;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
@@ -27,6 +28,8 @@ use Drupal\Core\StringTranslation\TranslationInterface;
  * )
  */
 class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactoryPluginInterface {
+
+  use GeofieldMapFieldTrait;
 
   /**
    * The config factory service.
@@ -212,63 +215,26 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
    */
   public static function defaultSettings() {
     return array(
-        'map_library' => 'gmap',
-        'map_google_api_key' => '',
-        'map_type_google' => 'ROADMAP',
-        'map_type_leaflet' => 'OpenStreetMap_Mapnik',
-        'map_type_selector' => TRUE,
-        'zoom_level' => 5,
-        'zoom' => [
-          'start' => 6,
-          'focus' => 12,
-          'min' => 1,
-          'max' => 22,
-        ],
-        'click_to_find_marker' => FALSE,
-        'click_to_place_marker' => FALSE,
-        'geoaddress_field' => [
-          'field' => '0',
-          'hidden' => FALSE,
-          'disabled' => TRUE,
-        ],
-      ) + parent::defaultSettings();
-  }
-
-  /**
-   * Form element validation handler for a Map Zoom level.
-   */
-  public static function zoomLevelValidate($element, FormStateInterface &$form_state) {
-    // Get to the actual values in a form tree.
-    $parents = $element['#parents'];
-    $values = $form_state->getValues();
-    for ($i = 0; $i < count($parents) - 1; $i++) {
-      $values = $values[$parents[$i]];
-    }
-    // Check the initial map zoom level.
-    $zoom = $element['#value'];
-    $min_zoom = $values['min'];
-    $max_zoom = $values['max'];
-    if ($zoom < $min_zoom || $zoom > $max_zoom) {
-      $form_state->setError($element, t('The @zoom_field should be between the Minimum and the Maximum Zoom levels.', ['@zoom_field' => $element['#title']]));
-    }
-  }
-
-  /**
-   * Form element validation handler for the Map Max Zoom level.
-   */
-  public static function maxZoomLevelValidate($element, FormStateInterface &$form_state) {
-    // Get to the actual values in a form tree.
-    $parents = $element['#parents'];
-    $values = $form_state->getValues();
-    for ($i = 0; $i < count($parents) - 1; $i++) {
-      $values = $values[$parents[$i]];
-    }
-    // Check the max zoom level.
-    $min_zoom = $values['min'];
-    $max_zoom = $element['#value'];
-    if ($max_zoom && $max_zoom <= $min_zoom) {
-      $form_state->setError($element, t('The Max Zoom level should be above the Minimum Zoom level.'));
-    }
+      'map_library' => 'gmap',
+      'map_google_api_key' => '',
+      'map_type_google' => 'ROADMAP',
+      'map_type_leaflet' => 'OpenStreetMap_Mapnik',
+      'map_type_selector' => TRUE,
+      'zoom_level' => 5,
+      'zoom' => [
+        'start' => 6,
+        'focus' => 12,
+        'min' => 1,
+        'max' => 22,
+      ],
+      'click_to_find_marker' => FALSE,
+      'click_to_place_marker' => FALSE,
+      'geoaddress_field' => [
+        'field' => '0',
+        'hidden' => FALSE,
+        'disabled' => TRUE,
+      ],
+    ) + parent::defaultSettings();
   }
 
   /**
@@ -396,7 +362,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#min' => $default_settings['zoom']['min'],
       '#max' => $default_settings['zoom']['max'],
       '#title' => $this->t('Min Zoom level'),
-      '#description' => $this->t('The Min Zoom level for the Map.'),
+      '#description' => $this->t('The Minimum Zoom level for the Map.'),
       '#default_value' => $this->getSetting('zoom')['min'],
     );
     $elements['zoom']['max'] = array(
@@ -404,7 +370,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#min' => $default_settings['zoom']['min'],
       '#max' => $default_settings['zoom']['max'],
       '#title' => $this->t('Max Zoom level'),
-      '#description' => $this->t('The Max Zoom level for the Map.'),
+      '#description' => $this->t('The Maximum Zoom level for the Map.'),
       '#default_value' => $this->getSetting('zoom')['max'],
       '#element_validate' => [[get_class($this), 'maxZoomLevelValidate']],
     );
@@ -601,7 +567,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#geolocation' => $this->getSetting('html5_geolocation'),
       '#geofield_map_geolocation_override' => $this->getSetting('html5_geolocation'),
       '#map_library' => $this->getSetting('map_library'),
-      '#map_type' => 'leaflet' == $this->getSetting('map_library') ? $this->getSetting('map_type_leaflet') : $this->getSetting('map_type_google'),
+      '#map_type' => 'leaflet' === $this->getSetting('map_library') ? $this->getSetting('map_type_leaflet') : $this->getSetting('map_type_google'),
       '#map_type_selector' => $this->getSetting('map_type_selector'),
       '#map_types_google' => $this->gMapTypesOptions,
       '#map_types_leaflet' => $this->leafletTileLayers,
@@ -632,24 +598,6 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     }
 
     return $values;
-  }
-
-  /**
-   * Get the GMap Api Key from the geofield_map.settings configuration.
-   *
-   * @return string
-   *   The GMap Api Key
-   */
-  private function getGmapApiKey() {
-    $geofield_map_settings = $this->config->get('geofield_map.settings');
-
-    if (!empty($geofield_map_settings->get('gmap_api_key'))) {
-      $gmap_api_key = $geofield_map_settings->get('gmap_api_key');
-    }
-    else {
-      $gmap_api_key = $this->getSetting('map_google_api_key');
-    }
-    return $gmap_api_key;
   }
 
 }

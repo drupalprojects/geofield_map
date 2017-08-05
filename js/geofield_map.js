@@ -234,7 +234,7 @@
             minZoom: zoom_min,
             maxZoom: zoom_max,
             center: self.map_data[mapid].position,
-            mapTypeId: google.maps.MapTypeId[self.map_data[mapid].map_type],
+            mapTypeId: self.map_data[mapid].map_type,
             mapTypeControl: !!self.map_data[mapid].map_type_selector,
             mapTypeControlOptions: {
               position: google.maps.ControlPosition.TOP_RIGHT

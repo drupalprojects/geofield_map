@@ -150,7 +150,7 @@
       var self = this;
       $.noConflict();
 
-      var zoomForce = !!map_settings.map_zoom_and_pan.zoom_force;
+      var zoomForce = !!map_settings.map_zoom_and_pan.zoom.force;
       var centerForce = !!map_settings.map_center.center_force;
 
       // Checking to see if google variable exists. We need this b/c views breaks this sometimes. Probably
@@ -159,9 +159,9 @@
 
         var mapOptions = {
           center: map_settings.map_center ? new google.maps.LatLng(map_settings.map_center.lat, map_settings.map_center.lon) : new google.maps.LatLng(42, 12.5),
-          zoom: map_settings.map_zoom_and_pan.zoom ? parseInt(map_settings.map_zoom_and_pan.zoom) : 8,
-          minZoom: map_settings.map_zoom_and_pan.min_zoom ? parseInt(map_settings.map_zoom_and_pan.min_zoom) : 1,
-          maxZoom: map_settings.map_zoom_and_pan.max_zoom ? parseInt(map_settings.map_zoom_and_pan.max_zoom) : 20,
+          zoom: map_settings.map_zoom_and_pan.zoom.initial ? parseInt(map_settings.map_zoom_and_pan.zoom.initial) : 8,
+          minZoom: map_settings.map_zoom_and_pan.zoom.min ? parseInt(map_settings.map_zoom_and_pan.zoom.min) : 1,
+          maxZoom: map_settings.map_zoom_and_pan.zoom.max ? parseInt(map_settings.map_zoom_and_pan.zoom.max) : 20,
           scrollwheel: !!map_settings.map_zoom_and_pan.scrollwheel,
           draggable: !!map_settings.map_zoom_and_pan.draggable,
           disableDefaultUI: !!map_settings.map_controls.disable_default_ui,

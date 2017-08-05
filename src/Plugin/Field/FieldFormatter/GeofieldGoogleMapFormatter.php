@@ -2,6 +2,7 @@
 
 namespace Drupal\geofield_map\Plugin\Field\FieldFormatter;
 
+use Drupal\geofield_map\GeofieldMapFieldTrait;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Url;
@@ -14,7 +15,6 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
-use Drupal\Component\Serialization\Json;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\geofield\GeoPHP\GeoPHPInterface;
 
@@ -30,6 +30,8 @@ use Drupal\geofield\GeoPHP\GeoPHPInterface;
  * )
  */
 class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFactoryPluginInterface {
+
+  use GeofieldMapFieldTrait;
 
   /**
    * Empty Map Options.
@@ -159,10 +161,12 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
         'center_force' => 0,
       ],
       'map_zoom_and_pan' => [
-        'zoom' => '8',
-        'zoom_force' => 0,
-        'min_zoom' => '0',
-        'max_zoom' => '22',
+        'zoom' => [
+          'initial' => 6,
+          'force' => 0,
+          'min' => 1,
+          'max' => 22,
+        ],
         'scrollwheel' => 1,
         'draggable' => 1,
       ],
@@ -186,7 +190,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
         'infowindow_field' => 'title',
       ],
       'map_markercluster' => [
-        'markercluster_control' => 1,
+        'markercluster_control' => 0,
         'markercluster_additional_options' => '',
       ],
       'map_additional_options' => '',
@@ -322,37 +326,39 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       '#title' => $this->t('Map Zoom and Pan'),
     );
     $elements['map_zoom_and_pan']['zoom'] = [
-      '#type' => 'number',
-      '#min' => $settings['map_zoom_and_pan']['min_zoom'],
-      '#max' => $settings['map_zoom_and_pan']['max_zoom'],
-      '#title' => $this->t('Initial Zoom'),
-      '#default_value' => $settings['map_zoom_and_pan']['zoom'],
-      '#description' => $this->t('The Initial Zoom level of the Google Map.'),
-      '#element_validate' => [[get_class($this), 'zoomLevelValidate']],
-    ];
-    $elements['map_zoom_and_pan']['zoom_force'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Force the Initial Zoom'),
-      '#description' => $this->t('The Map will generally focus zoom on the input Geofields bounds.<br>This option will instead force the Map Zoom notwithstanding the Geofield Values'),
-      '#default_value' => $settings['map_zoom_and_pan']['zoom_force'],
-      '#return_value' => 1,
-    ];
-    $elements['map_zoom_and_pan']['min_zoom'] = [
-      '#type' => 'number',
-      '#min' => $default_settings['map_zoom_and_pan']['min_zoom'],
-      '#max' => $settings['map_zoom_and_pan']['max_zoom'],
-      '#title' => $this->t('Minimum Zoom'),
-      '#default_value' => $settings['map_zoom_and_pan']['min_zoom'],
-      '#description' => $this->t('The Minimum Zoom level of the Google Map.'),
-    ];
-    $elements['map_zoom_and_pan']['max_zoom'] = [
-      '#type' => 'number',
-      '#min' => $settings['map_zoom_and_pan']['min_zoom'],
-      '#max' => $default_settings['map_zoom_and_pan']['max_zoom'],
-      '#title' => $this->t('Maximum Zoom'),
-      '#default_value' => $settings['map_zoom_and_pan']['max_zoom'],
-      '#description' => $this->t('The Maximum Zoom level of the Google Map.'),
-      '#element_validate' => [[get_class($this), 'maxZoomLevelValidate']],
+      'initial' => [
+        '#type' => 'number',
+        '#min' => $settings['map_zoom_and_pan']['zoom']['min'],
+        '#max' => $settings['map_zoom_and_pan']['zoom']['max'],
+        '#title' => $this->t('Start Zoom'),
+        '#default_value' => $settings['map_zoom_and_pan']['zoom']['initial'],
+        '#description' => $this->t('The Initial Zoom level of the Google Map.'),
+        '#element_validate' => [[get_class($this), 'zoomLevelValidate']],
+      ],
+      'force' => [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Force the Start Zoom'),
+        '#description' => $this->t('The Map will generally focus zoom on the input Geofields bounds.<br>This option will instead force the Map Zoom notwithstanding the Geofield Values'),
+        '#default_value' => $settings['map_zoom_and_pan']['zoom']['force'],
+        '#return_value' => 1,
+      ],
+      'min' => [
+        '#type' => 'number',
+        '#min' => $default_settings['map_zoom_and_pan']['zoom']['min'],
+        '#max' => $settings['map_zoom_and_pan']['zoom']['max'],
+        '#title' => $this->t('Min Zoom Level'),
+        '#default_value' => $settings['map_zoom_and_pan']['zoom']['min'],
+        '#description' => $this->t('The Minimum Zoom level for the Map.'),
+      ],
+      'max' => [
+        '#type' => 'number',
+        '#min' => $settings['map_zoom_and_pan']['zoom']['min'],
+        '#max' => $default_settings['map_zoom_and_pan']['zoom']['max'],
+        '#title' => $this->t('Max Zoom Level'),
+        '#default_value' => $settings['map_zoom_and_pan']['zoom']['max'],
+        '#description' => $this->t('The Maximum Zoom level for the Map.'),
+        '#element_validate' => [[get_class($this), 'maxZoomLevelValidate']],
+      ],
     ];
     $elements['map_zoom_and_pan']['scrollwheel'] = [
       '#type' => 'checkbox',
@@ -581,24 +587,26 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       '#tag' => 'div',
       '#value' => '<u>' . $this->t('Map Zoom and Pan:') . '</u>',
       'zoom' => [
-        '#type' => 'html_tag',
-        '#tag' => 'div',
-        '#value' => $this->t('Map Zoom: @state', ['@state' => $settings['map_zoom_and_pan']['zoom']]),
-      ],
-      'zoom_force' => [
-        '#type' => 'html_tag',
-        '#tag' => 'div',
-        '#value' => $this->t('Force Initial Zoom: @state', ['@state' => $settings['map_zoom_and_pan']['zoom_force'] ? $this->t('Yes') : $this->t('No')]),
-      ],
-      'min_zoom' => [
-        '#type' => 'html_tag',
-        '#tag' => 'div',
-        '#value' => $this->t('Min Map Zoom: @state', ['@state' => $settings['map_zoom_and_pan']['min_zoom']]),
-      ],
-      'max_zoom' => [
-        '#type' => 'html_tag',
-        '#tag' => 'div',
-        '#value' => $this->t('Max Map Zoom: @state', ['@state' => $settings['map_zoom_and_pan']['max_zoom']]),
+        'initial' => [
+          '#type' => 'html_tag',
+          '#tag' => 'div',
+          '#value' => $this->t('Start Zoom: @state', ['@state' => $settings['map_zoom_and_pan']['zoom']['initial']]),
+        ],
+        'force' => [
+          '#type' => 'html_tag',
+          '#tag' => 'div',
+          '#value' => $this->t('Force Start Zoom: @state', ['@state' => $settings['map_zoom_and_pan']['zoom']['force'] ? $this->t('Yes') : $this->t('No')]),
+        ],
+        'min' => [
+          '#type' => 'html_tag',
+          '#tag' => 'div',
+          '#value' => $this->t('Min Zoom: @state', ['@state' => $settings['map_zoom_and_pan']['zoom']['min']]),
+        ],
+        'max' => [
+          '#type' => 'html_tag',
+          '#tag' => 'div',
+          '#value' => $this->t('Max Zoom: @state', ['@state' => $settings['map_zoom_and_pan']['zoom']['max']]),
+        ],
       ],
       'scrollwheel' => [
         '#type' => 'html_tag',
@@ -815,82 +823,6 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     }
     $element = geofield_map_googlemap_render($js_settings);
     return $element;
-  }
-
-  /**
-   * Form element validation handler for a Map Zoom level.
-   */
-  public static function zoomLevelValidate($element, FormStateInterface &$form_state) {
-    // Get to the actual values in a form tree.
-    $parents = $element['#parents'];
-    $values = $form_state->getValues();
-    for ($i = 0; $i < count($parents) - 1; $i++) {
-      $values = $values[$parents[$i]];
-    }
-    // Check the initial map zoom level.
-    $zoom = $element['#value'];
-    $min_zoom = $values['min_zoom'];
-    $max_zoom = $values['max_zoom'];
-    if ($zoom < $min_zoom || $zoom > $max_zoom) {
-      $form_state->setError($element, t('The @zoom_field should be between the Minimum and the Maximum Zoom levels.', ['@zoom_field' => $element['#title']]));
-    }
-  }
-
-  /**
-   * Form element validation handler for the Map Max Zoom level.
-   */
-  public static function maxZoomLevelValidate($element, FormStateInterface &$form_state) {
-    // Get to the actual values in a form tree.
-    $parents = $element['#parents'];
-    $values = $form_state->getValues();
-    for ($i = 0; $i < count($parents) - 1; $i++) {
-      $values = $values[$parents[$i]];
-    }
-    // Check the max zoom level.
-    $min_zoom = $values['min_zoom'];
-    $max_zoom = $element['#value'];
-    if ($max_zoom && $max_zoom <= $min_zoom) {
-      $form_state->setError($element, t('The Max Zoom level should be above the Minimum Zoom level.'));
-    }
-  }
-
-  /**
-   * Form element json format validation handler.
-   */
-  public static function jsonValidate($element, FormStateInterface &$form_state) {
-    // Check the jsonValue.
-    if (!empty($element['#value']) && JSON::decode($element['#value']) == NULL) {
-      $form_state->setError($element, t('The @field field is not valid Json Format.', ['@field' => $element['#title']]));
-    }
-  }
-
-  /**
-   * Form element url format validation handler.
-   */
-  public static function urlValidate($element, FormStateInterface &$form_state) {
-    $path = $element['#value'];
-    // Check the jsonValue.
-    if (UrlHelper::isExternal($path) && !UrlHelper::isValid($path)) {
-      $form_state->setError($element, t('The @field field is not valid Url Format.', ['@field' => $element['#title']]));
-    }
-    elseif (!UrlHelper::isExternal($path)) {
-      $path = Url::fromUri('base:' . $path, ['absolute' => TRUE])->toString();
-      if (!UrlHelper::isValid($path)) {
-        $form_state->setError($element, t('The @field field is not valid internal Drupal path.', ['@field' => $element['#title']]));
-      }
-    }
-  }
-
-  /**
-   * Get the GMap Api Key from the geofield_map.settings configuration.
-   *
-   * @return string
-   *   The GMap Api Key
-   */
-  private function getGmapApiKey() {
-    $geofield_map_settings = $this->config->get('geofield_map.settings');
-    $gmap_api_key = $geofield_map_settings->get('gmap_api_key');
-    return $gmap_api_key;
   }
 
 }
