@@ -434,7 +434,8 @@ trait GeofieldMapFieldTrait {
 
       $info_window_source_options = $string_fields_options;
 
-    } else {
+    }
+    else {
       $info_window_source_options = $settings['infowindow_content_options'];
     }
 
@@ -568,6 +569,60 @@ trait GeofieldMapFieldTrait {
         $form_state->setError($element, t('The @field field is not valid internal Drupal path.', ['@field' => $element['#title']]));
       }
     }
+  }
+
+  /**
+   * Pre Process the MapSettings.
+   *
+   * Performs some preprocess on the maps settings before sending to js.
+   *
+   * @param array $map_settings
+   *   The map settings.
+   */
+  protected function preProcessMapSettings(&$map_settings) {
+    // Set the gmap_api_key as map settings.
+    $map_settings['gmap_api_key'] = $this->getGmapApiKey();
+
+    // Transform into simple array values the map_type_control_options_type_ids.
+    $map_settings['map_controls']['map_type_control_options_type_ids'] = array_keys(array_filter($map_settings['map_controls']['map_type_control_options_type_ids'], function ($value) {
+      return $value !== 0;
+    }));
+
+    // Generate Absolute icon_image_path, if it is not.
+    $icon_image_path = $map_settings['map_marker_and_infowindow']['icon_image_path'];
+    if (!empty($icon_image_path) && !UrlHelper::isExternal($map_settings['map_marker_and_infowindow']['icon_image_path'])) {
+      $map_settings['map_marker_and_infowindow']['icon_image_path'] = Url::fromUri('base:' . $icon_image_path, ['absolute' => TRUE])
+        ->toString();
+    }
+  }
+
+
+  /**
+   * Transform Geofield data into Geojson features.
+   *
+   * @param array $items
+   *   The Geofield Data Values.
+   * @param string $description
+   *   The description value.
+   */
+  protected function getGeoJsonData($items, $description = NULL) {
+    $data = [];
+    foreach ($items as $delta => $item) {
+
+      /* @var \Point $geometry */
+      $geometry = $this->GeoPHPWrapper->load(is_a($item, '\Drupal\geofield\Plugin\Field\FieldType\GeofieldItem') ? $item->value : $item);
+      if (!empty($geometry)) {
+        $datum = [
+          "type" => "Feature",
+          "geometry" => json_decode($geometry->out('json')),
+        ];
+        $datum['properties'] = [
+          'description' => isset($description) ? $description : NULL,
+        ];
+        $data[] = $datum;
+      }
+    }
+    return $data;
   }
 
 }

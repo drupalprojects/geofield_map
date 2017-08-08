@@ -3,6 +3,9 @@
 namespace Drupal\geofield_map\Plugin\views\style;
 
 use Drupal\geofield_map\GeofieldMapFieldTrait;
+use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\Url;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\Plugin\views\style\StylePluginBase;
@@ -15,6 +18,7 @@ use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Utility\LinkGeneratorInterface;
+use Drupal\geofield\GeoPHP\GeoPHPInterface;
 
 /**
  * Style plugin to render a View output as a Leaflet map.
@@ -99,6 +103,13 @@ class GeofieldGoogleMapViewStyle extends StylePluginBase implements ContainerFac
   protected $link;
 
   /**
+   * The GeoPHPWrapper service.
+   *
+   * @var \Drupal\geofield\GeoPHP\GeoPHPInterface
+   */
+  protected $GeoPHPWrapper;
+
+  /**
    * Constructs a GeofieldGoogleMapView style instance.
    *
    * {@inheritdoc}
@@ -115,6 +126,8 @@ class GeofieldGoogleMapViewStyle extends StylePluginBase implements ContainerFac
    *   The renderer.
    * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
    *   The Link Generator service.
+   * @param \Drupal\geofield\GeoPHP\GeoPHPInterface $geophp_wrapper
+   *   The The GeoPHPWrapper.
    */
   public function __construct(
     array $configuration,
@@ -125,7 +138,8 @@ class GeofieldGoogleMapViewStyle extends StylePluginBase implements ContainerFac
     EntityFieldManagerInterface $entity_field_manager,
     EntityDisplayRepositoryInterface $entity_display,
     RendererInterface $renderer,
-    LinkGeneratorInterface $link_generator
+    LinkGeneratorInterface $link_generator,
+    GeoPHPInterface $geophp_wrapper
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
@@ -135,6 +149,7 @@ class GeofieldGoogleMapViewStyle extends StylePluginBase implements ContainerFac
     $this->config = $config_factory;
     $this->renderer = $renderer;
     $this->link = $link_generator;
+    $this->GeoPHPWrapper = $geophp_wrapper;
 
   }
 
@@ -151,7 +166,8 @@ class GeofieldGoogleMapViewStyle extends StylePluginBase implements ContainerFac
       $container->get('entity_field.manager'),
       $container->get('entity_display.repository'),
       $container->get('renderer'),
-      $container->get('link_generator')
+      $container->get('link_generator'),
+      $container->get('geofield.geophp')
     );
   }
 
@@ -226,33 +242,15 @@ class GeofieldGoogleMapViewStyle extends StylePluginBase implements ContainerFac
       '#required' => TRUE,
     );
 
-    // Name field.
-/*    $form['name_field'] = array(
-      '#type' => 'select',
-      '#title' => $this->t('Title Field'),
-      '#description' => $this->t('Choose the field which will appear as a title on tooltips.'),
-      '#options' => array_merge(array('' => ''), $fields),
-      '#default_value' => $this->options['name_field'],
-    );*/
-
     $desc_options = array_merge(array('0' => $this->t('- Any - No Infowindow')), $fields);
     // Add an option to render the entire entity using a view mode.
     if ($this->entityType) {
       $desc_options += array(
-        '#rendered_entity' => $this->t('< @entity entity >', array('@entity' => $this->entityType)),
+        '#rendered_entity' => $this->t('- Rendered @entity entity -', array('@entity' => $this->entityType)),
       );
     }
 
     $this->options['infowindow_content_options'] = $desc_options;
-
-/*    $form['description_field'] = array(
-      '#type' => 'select',
-      '#title' => $this->t('Description Field'),
-      '#description' => $this->t('Choose the field or rendering method which will appear as a description on tooltips or popups.'),
-      '#required' => FALSE,
-      '#options' => $desc_options,
-      '#default_value' => $this->options['description_field'],
-    );*/
 
     if ($this->entityType) {
 
@@ -264,14 +262,15 @@ class GeofieldGoogleMapViewStyle extends StylePluginBase implements ContainerFac
       // The View Mode drop-down is visible conditional on "#rendered_entity"
       // being selected in the Description drop-down above.
       $form['view_mode'] = array(
+        '#fieldset' => 'map_marker_and_infowindow',
         '#type' => 'select',
         '#title' => $this->t('View mode'),
-        '#description' => $this->t('View modes are ways of displaying entities.'),
+        '#description' => $this->t('View mode the entity will be displayed in the Infowindow.'),
         '#options' => $view_mode_options,
         '#default_value' => !empty($this->options['view_mode']) ? $this->options['view_mode'] : 'full',
         '#states' => array(
           'visible' => array(
-            ':input[name="style_options[description_field]"]' => array(
+            ':input[name="style_options[map_marker_and_infowindow][infowindow_field]"]' => array(
               'value' => '#rendered_entity',
             ),
           ),
@@ -280,6 +279,8 @@ class GeofieldGoogleMapViewStyle extends StylePluginBase implements ContainerFac
     }
 
     $form = $form + $this->generateGmapSettingsForm($form, $form_state, $this->options, $default_settings);
+
+
   }
 
   /**
@@ -294,9 +295,21 @@ class GeofieldGoogleMapViewStyle extends StylePluginBase implements ContainerFac
    * Renders the View.
    */
   public function render() {
-    $data = array();
-    $geofield_name = $this->options['data_source'];
-    if ($this->options['data_source']) {
+
+    $map_settings = $this->options;
+
+    // Performs some preprocess on the maps settings before sending to js.
+    $this->preProcessMapSettings($map_settings);
+
+    $js_settings = [
+      'mapid' => Html::getUniqueId("geofield_map_view_" . $this->view->id() . '_' . $this->view->current_display),
+      'map_settings' => $map_settings,
+      'data' => [],
+    ];
+
+    $data = [];
+    $geofield_name = $map_settings['data_source'];
+    if ($map_settings['data_source']) {
       $this->renderFields($this->view->result);
       /* @var \Drupal\views\ResultRow  $result */
       foreach ($this->view->result as $id => $result) {
@@ -309,47 +322,32 @@ class GeofieldGoogleMapViewStyle extends StylePluginBase implements ContainerFac
           $geofield_value = $this->rendered_fields[$id][$geofield_name];
         }
         if (!empty($geofield_value)) {
-          $points = leaflet_process_geofield($geofield_value);
 
+          $description_field = $map_settings['map_marker_and_infowindow']['infowindow_field'];
+          $description = NULL;
           // Render the entity with the selected view mode.
-          if ($this->options['description_field'] === '#rendered_entity' && is_object($result)) {
+          if ($description_field === '#rendered_entity' && is_object($result)) {
             $entity = $this->entityManager->getStorage($this->entityType)->load($result->nid);
-            $build = $this->entityManager->getViewBuilder($entity->getEntityTypeId())->view($entity, $this->options['view_mode'], $entity->language());
+            $build = $this->entityManager->getViewBuilder($entity->getEntityTypeId())->view($entity, $map_settings['view_mode'], $entity->language());
             $description = $this->renderer->render($build);
           }
           // Normal rendering via fields.
-          elseif ($this->options['description_field']) {
-            $description = $this->rendered_fields[$id][$this->options['description_field']];
+          elseif ($description_field) {
+            $description = $this->rendered_fields[$id][$description_field];
           }
 
-          // Attach pop-ups if we have a description field.
-          if (isset($description)) {
-            foreach ($points as &$point) {
-              $point['popup'] = $description;
-            }
-          }
-
-          // Attach also titles, they might be used later on.
-          if ($this->options['name_field']) {
-            foreach ($points as &$point) {
-              $point['label'] = $this->rendered_fields[$id][$this->options['name_field']];
-            }
-          }
-
-          $data = array_merge($data, $points);
-
-          if (!empty($this->options['icon']) && $this->options['icon']['iconUrl']) {
-            foreach ($data as $key => $feature) {
-              $data[$key]['icon'] = $this->options['icon'];
-            }
-          }
+          $data = array_merge($data, $this->getGeoJsonData($geofield_value, $description));
         }
       }
     }
 
-    // Always render the map, even if we do not have any data.
-    $map = leaflet_map_get_info($this->options['map']);
-    return leaflet_render_map($map, $data, $this->options['height'] . 'px');
+    $js_settings['data'] = [
+      'type' => 'FeatureCollection',
+      'features' => $data,
+    ];
+
+    $element = geofield_map_googlemap_render($js_settings);
+    return $element;
   }
 
   /**

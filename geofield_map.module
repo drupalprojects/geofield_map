@@ -66,8 +66,11 @@ function geofield_map_googlemap_render($js_settings) {
         'geofield_map/geofield_gmap',
       ],
       'drupalSettings' => [
-        'geofield_google_map' => $js_settings,
+        'geofield_google_map' => [$js_settings['mapid'] => $js_settings],
       ],
+    ],
+    '#cache' => [
+      'contexts' => ['url.path', 'url.query_args'],
     ],
   ];
 

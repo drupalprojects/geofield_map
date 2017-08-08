@@ -7,12 +7,14 @@
 
 
       if (drupalSettings['geofield_google_map']) {
-        $.each(drupalSettings['geofield_google_map'], function (mapid, options) {
-          var map_settings = options['map_settings'];
-          var data = options['data'];
+        $(context).find('.geofield-google-map').once('geofield-processed').each(function (index, element) {
+          var mapid = $(element).attr('id');
 
           // Check if the Map container really exists and hasn't been yet initialized.
-          if ($('#' + mapid, context).length > 0 && !Drupal.geoFieldMap.map_data[mapid]) {
+          if (drupalSettings['geofield_google_map'][mapid] && !Drupal.geoFieldMap.map_data[mapid]) {
+
+            var map_settings = drupalSettings['geofield_google_map'][mapid]['map_settings'];
+            var data = drupalSettings['geofield_google_map'][mapid]['data'];
 
             // Set the map_data[mapid] settings.
             Drupal.geoFieldMap.map_data[mapid] = map_settings;
@@ -123,6 +125,7 @@
 
       }
       feature.setMap(self.map_data[mapid].map);
+      var map = self.map_data[mapid].map;
       self.markers.push(feature);
 
       if (feature.getPosition) {
@@ -235,11 +238,11 @@
           } else {
             for (var i in features) {
               if (features[i].setMap) {
-                self.place_feature(features, icon_image, mapid);
+                self.place_feature(features[i], icon_image, mapid);
               } else {
                 for (var j in features[i]) {
                   if (features[i][j].setMap) {
-                    self.place_feature(features, icon_image, mapid);
+                    self.place_feature(features[i][j], icon_image, mapid);
                   }
                 }
               }
@@ -260,7 +263,7 @@
           }
         }
 
-        if(!mapBounds.isEmpty()) {
+        if(!self.map_data[mapid].map_bounds.isEmpty()) {
           map.fitBounds(self.map_data[mapid].map_bounds);
           google.maps.event.addListenerOnce(map, 'idle', function() {
             // Just once the fitBounds completes we can check to override it

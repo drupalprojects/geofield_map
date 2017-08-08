@@ -45,18 +45,6 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
   ];
 
   /**
-   * Google Map Types Options.
-   *
-   * @var array
-   */
-  protected $gMapTypesOptions = [
-    'roadmap' => 'Roadmap',
-    'satellite' => 'Satellite',
-    'hybrid' => 'Hybrid',
-    'terrain' => 'Terrain',
-  ];
-
-  /**
    * The config factory service.
    *
    * @var \Drupal\Core\Config\ConfigFactoryInterface
@@ -395,20 +383,8 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
 
     $map_settings = $this->getSettings();
 
-    // Set the gmap_api_key as map settings.
-    $map_settings['gmap_api_key'] = $this->getGmapApiKey();
-
-    // Transform into simple array values the map_type_control_options_type_ids.
-    $map_settings['map_controls']['map_type_control_options_type_ids'] = array_keys(array_filter($map_settings['map_controls']['map_type_control_options_type_ids'], function ($value) {
-      return $value !== 0;
-    }));
-
-    // Generate Absolute icon_image_path, if it is not.
-    $icon_image_path = $map_settings['map_marker_and_infowindow']['icon_image_path'];
-    if (!empty($icon_image_path) && !UrlHelper::isExternal($map_settings['map_marker_and_infowindow']['icon_image_path'])) {
-      $map_settings['map_marker_and_infowindow']['icon_image_path'] = Url::fromUri('base:' . $icon_image_path, ['absolute' => TRUE])
-        ->toString();
-    }
+    // Performs some preprocess on the maps settings before sending to js.
+    $this->preProcessMapSettings($map_settings);
 
     $js_settings = [
       'mapid' => Html::getUniqueId("geofield_map_entity_{$entity_type}_{$entity_id}_{$field->getName()}"),
@@ -416,26 +392,12 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       'data' => [],
     ];
 
-    $data = [];
-
+    $description = NULL;
     if (!empty($map_settings['map_marker_and_infowindow']['infowindow_field'])) {
       $description = $map_settings['map_marker_and_infowindow']['infowindow_field'] != 'title' ? $entity->$map_settings['map_marker_and_infowindow']['infowindow_field']->value : $entity->label();
     }
-    foreach ($items as $delta => $item) {
 
-      /* @var \Point $geometry */
-      $geometry = $this->GeoPHPWrapper->load($item->value);
-      if (!empty($geometry)) {
-        $datum = [
-          "type" => "Feature",
-          "geometry" => json_decode($geometry->out('json')),
-        ];
-        $datum['properties'] = [
-          'description' => isset($description) ? $description : NULL,
-        ];
-        $data[] = $datum;
-      }
-    }
+    $data = $this->getGeoJsonData($items, $description);
 
     if (empty($data) && $map_settings['map_empty']['empty_behaviour'] !== '2') {
       return [

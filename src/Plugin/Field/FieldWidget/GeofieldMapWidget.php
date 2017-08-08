@@ -141,18 +141,6 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
   protected $leafletTileLayersOptions;
 
   /**
-   * Google Map Types Options.
-   *
-   * @var array
-   */
-  protected $gMapTypesOptions = [
-    'roadmap' => 'Roadmap',
-    'satellite' => 'Satellite',
-    'hybrid' => 'Hybrid',
-    'terrain' => 'Terrain',
-  ];
-
-  /**
    * GeofieldMapWidget constructor.
    *
    * {@inheritdoc}
