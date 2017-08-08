@@ -1,22 +1,22 @@
 (function ($, Drupal, drupalSettings) {
 
   Drupal.behaviors.geofieldGoogleMap = {
-    attach: function(context, settings) {
+    attach: function (context, settings) {
       Drupal.geoField = Drupal.geoField || {};
       Drupal.geoField.maps = Drupal.geoField.maps || {};
 
 
       if (drupalSettings['geofield_google_map']) {
-        $(context).find('.geofield-google-map').once('geofield-processed').each(function (index, element) {
-          var mapid = drupalSettings['geofield_google_map']['mapid'];
-          var map_settings = drupalSettings['geofield_google_map']['map_settings'];
-          var data = drupalSettings['geofield_google_map']['data'];
+        $.each(drupalSettings['geofield_google_map'], function (mapid, options) {
+          var map_settings = options['map_settings'];
+          var data = options['data'];
 
-          // Set the map_data[mapid] settings.
-          Drupal.geoFieldMap.map_data[mapid] = map_settings;
+          // Check if the Map container really exists and hasn't been yet initialized.
+          if ($('#' + mapid, context).length > 0 && !Drupal.geoFieldMap.map_data[mapid]) {
 
-          // Check if the element id matches the mapid.
-          if ($(element).attr('id') === mapid) {
+            // Set the map_data[mapid] settings.
+            Drupal.geoFieldMap.map_data[mapid] = map_settings;
+
             // Load before the Gmap Library, if needed.
             Drupal.geoFieldMap.loadGoogle(mapid, map_settings.gmap_api_key, function () {
               Drupal.geoFieldMap.map_initialize(mapid, map_settings, data);
@@ -98,7 +98,7 @@
       }
     },
 
-    place_feature: function(feature, icon_image, map, mapBounds) {
+    place_feature: function(feature, icon_image, mapid) {
       var self = this;
       var properties = feature.get('geojsonProperties');
 
@@ -122,15 +122,15 @@
         });
 
       }
-      feature.setMap(map);
+      feature.setMap(self.map_data[mapid].map);
       self.markers.push(feature);
 
       if (feature.getPosition) {
-        mapBounds.extend(feature.getPosition());
+        self.map_data[mapid].map_bounds.extend(feature.getPosition());
       } else {
         var path = feature.getPath();
         path.forEach(function(element) {
-          mapBounds.extend(element);
+          self.map_data[mapid].map_bounds.extend(element);
         });
       }
 
@@ -200,7 +200,23 @@
         self.map_data[mapid].map = map;
         self.map_data[mapid].map_center = new google.maps.LatLng(map_settings.map_center.lat, map_settings.map_center.lon);
 
-        var mapBounds = new google.maps.LatLngBounds();
+        // Define the MapBounds property.
+        self.map_data[mapid].map_bounds = new google.maps.LatLngBounds();
+
+        // Fix map issue in field_groups / details & vertical tabs
+        google.maps.event.addListenerOnce(map, "idle", function () {
+
+          // Show all map tiles when a map is shown in a vertical tab.
+          $('#' + mapid).closest('div.vertical-tabs').find('.vertical-tabs__menu-item a').click(function () {
+            self.map_refresh(mapid);
+          });
+
+          // Show all map tiles when a map is shown in a collapsible detail/ single tab.
+          $('#' + mapid).closest('.field-group-details, .field-group-tab').find('summary').click(function () {
+              self.map_refresh(mapid);
+            }
+          );
+        });
 
         // Parse the Geojson data into Google Maps Locations.
         var features = data.features && data.features.length > 0 ? GeoJSON(data) : null;
@@ -215,15 +231,15 @@
           var icon_image = map_settings.map_marker_and_infowindow.icon_image_path.length > 0 ? map_settings.map_marker_and_infowindow.icon_image_path : null;
 
           if (features.setMap) {
-            self.place_feature(features, icon_image, map, mapBounds);
+            self.place_feature(features, icon_image, mapid);
           } else {
             for (var i in features) {
               if (features[i].setMap) {
-                self.place_feature(features[i], icon_image, map, mapBounds);
+                self.place_feature(features, icon_image, mapid);
               } else {
                 for (var j in features[i]) {
                   if (features[i][j].setMap) {
-                    self.place_feature(features[i][j], icon_image, map, mapBounds);
+                    self.place_feature(features, icon_image, mapid);
                   }
                 }
               }
@@ -245,7 +261,7 @@
         }
 
         if(!mapBounds.isEmpty()) {
-          map.fitBounds(mapBounds);
+          map.fitBounds(self.map_data[mapid].map_bounds);
           google.maps.event.addListenerOnce(map, 'idle', function() {
             // Just once the fitBounds completes we can check to override it
             // https://stackoverflow.com/questions/10835496/is-there-a-callback-after-map-fitbounds
