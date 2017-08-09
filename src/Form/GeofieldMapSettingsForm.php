@@ -63,7 +63,8 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
           'attributes' => ['target' => 'blank'],
         ])),
       ]),
-      '#description' => $this->t('Geofield Module require a Google requires a valid Google API key for his main features based on Google & Google Maps APIs.'),
+      '#description' => $this->t('Geofield Map requires a valid Google API key for his main features based on Google & Google Maps APIs.'),
+      '#placeholder' => $this->t('Input a valid Gmap API Key'),
     ];
 
     return parent::buildForm($form, $form_state);
