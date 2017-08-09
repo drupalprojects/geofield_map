@@ -38,7 +38,7 @@
 
       // Error callback for getCurrentPosition
       function errorUpdateLocation(position) {
-        console.log('didn\'t fin any HTML5 position');
+        console.log('didn\'t find any HTML5 position');
       }
 
     }

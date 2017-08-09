@@ -1,5 +1,5 @@
 name: 'Geofield Map'
-description: 'Map Widget, Formatter and Views for Geofield.'
+description: 'Map Widget, Formatter and Views integration for Geofields.'
 package: Field types
 dependencies:
   - geofield

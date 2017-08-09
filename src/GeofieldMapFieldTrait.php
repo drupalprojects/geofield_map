@@ -288,7 +288,7 @@ trait GeofieldMapFieldTrait {
       ],
       'min' => [
         '#type' => 'number',
-        '#min' => $default_settings['map_zoom_and_pan']['default']['zoom']['min'],
+        '#min' => isset($default_settings['map_zoom_and_pan']['default']) ? $default_settings['map_zoom_and_pan']['default']['zoom']['min'] : $default_settings['map_zoom_and_pan']['zoom']['min'],
         '#max' => $settings['map_zoom_and_pan']['zoom']['max'],
         '#title' => $this->t('Min Zoom Level'),
         '#default_value' => $settings['map_zoom_and_pan']['zoom']['min'],
@@ -297,7 +297,7 @@ trait GeofieldMapFieldTrait {
       'max' => [
         '#type' => 'number',
         '#min' => $settings['map_zoom_and_pan']['zoom']['min'],
-        '#max' => $default_settings['map_zoom_and_pan']['default']['zoom']['max'],
+        '#max' => isset($default_settings['map_zoom_and_pan']['default']) ? $default_settings['map_zoom_and_pan']['default']['zoom']['max'] : $default_settings['map_zoom_and_pan']['zoom']['max'],
         '#title' => $this->t('Max Zoom Level'),
         '#default_value' => $settings['map_zoom_and_pan']['zoom']['max'],
         '#description' => $this->t('The Maximum Zoom level for the Map.'),
