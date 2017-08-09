@@ -255,42 +255,46 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
         '#tag' => 'div',
         '#value' => $this->t('Disable Default UI: @state', ['@state' => $settings['map_controls']['disable_default_ui'] ? $this->t('Yes') : $this->t('No')]),
       ],
-      'zoom_control' => [
-        '#type' => 'html_tag',
-        '#tag' => 'div',
-        '#value' => $this->t('Zoom Control: @state', ['@state' => $settings['map_controls']['zoom_control'] ? $this->t('Yes') : $this->t('No')]),
-      ],
       'map_type_id' => [
         '#type' => 'html_tag',
         '#tag' => 'div',
         '#value' => $this->t('Default Map Type: @state', ['@state' => $settings['map_controls']['map_type_id']]),
       ],
-      'map_type_control' => [
+    ];
+
+    if (!$settings['map_controls']['disable_default_ui']) {
+      $map_controls['zoom_control'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Zoom Control: @state', ['@state' => $settings['map_controls']['zoom_control'] ? $this->t('Yes') : $this->t('No')]),
+      ];
+      $map_controls['map_type_control'] = [
         '#type' => 'html_tag',
         '#tag' => 'div',
         '#value' => $this->t('Map Type Control: @state', ['@state' => $settings['map_controls']['map_type_control'] ? $this->t('Yes') : $this->t('No')]),
-      ],
-      'map_type_control_options_type_ids' => [
+      ];
+
+      $map_controls['map_type_control_options_type_ids'] = [
         '#type' => 'html_tag',
         '#tag' => 'div',
         '#value' => $settings['map_controls']['map_type_control'] ? $this->t('Enabled Map Types: @state', ['@state' => implode(', ', array_keys($map_type_control_options_type_ids))]) : '',
-      ],
-      'scale_control' => [
+      ];
+      $map_controls['scale_control'] = [
         '#type' => 'html_tag',
         '#tag' => 'div',
         '#value' => $this->t('Scale Control: @state', ['@state' => $settings['map_controls']['scale_control'] ? $this->t('Yes') : $this->t('No')]),
-      ],
-      'street_view_control' => [
+      ];
+      $map_controls['street_view_control'] = [
         '#type' => 'html_tag',
         '#tag' => 'div',
         '#value' => $this->t('Streetview Control: @state', ['@state' => $settings['map_controls']['street_view_control'] ? $this->t('Yes') : $this->t('No')]),
-      ],
-      'fullscreen_control' => [
+      ];
+      $map_controls['fullscreen_control'] = [
         '#type' => 'html_tag',
         '#tag' => 'div',
         '#value' => $this->t('Fullscreen Control: @state', ['@state' => $settings['map_controls']['fullscreen_control'] ? $this->t('Yes') : $this->t('No')]),
-      ],
-    ];
+      ];
+    }
 
     $map_marker_and_infowindow = [
       '#type' => 'html_tag',

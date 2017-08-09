@@ -1,4 +1,4 @@
 /* line 1, ../sass/geofield_map_general.scss */
-.geofield-map-apikey-missing {
+.geofield-map-apikey-missing, .geofield-source-missing {
   color: red;
 }

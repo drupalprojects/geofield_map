@@ -225,10 +225,20 @@ class GeofieldGoogleMapViewStyle extends StylePluginBase implements ContainerFac
     }
 
     // Check whether we have a geo data field we can work with.
-    if (!count($fields_geo_data)) {
-      $form['error'] = array(
-        '#markup' => $this->t('Please add at least one geofield to the view.'),
-      );
+    if (empty($fields_geo_data)) {
+      $form['error'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Please add at least one geofield to the view.'),
+        '#attributes' => [
+          'class' => ['geofield-source-missing'],
+        ],
+        '#attached' => [
+          'library' => [
+            'geofield_map/geofield_map_general',
+          ],
+        ],
+      ];
       return;
     }
 
@@ -279,7 +289,6 @@ class GeofieldGoogleMapViewStyle extends StylePluginBase implements ContainerFac
     }
 
     $form = $form + $this->generateGmapSettingsForm($form, $form_state, $this->options, $default_settings);
-
 
   }
 

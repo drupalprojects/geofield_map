@@ -32,7 +32,6 @@
   Drupal.geoFieldMap = {
 
     map_data: {},
-    markers: [],
 
     // Google Maps are loaded lazily. In some situations load_google() is called twice, which results in
     // "You have included the Google Maps API multiple times on this page. This may cause unexpected errors." errors.
@@ -124,9 +123,10 @@
         });
 
       }
-      feature.setMap(self.map_data[mapid].map);
+
       var map = self.map_data[mapid].map;
-      self.markers.push(feature);
+      feature.setMap(map);
+      self.map_data[mapid].markers.push(feature);
 
       if (feature.getPosition) {
         self.map_data[mapid].map_bounds.extend(feature.getPosition());
@@ -167,18 +167,22 @@
           maxZoom: map_settings.map_zoom_and_pan.zoom.max ? parseInt(map_settings.map_zoom_and_pan.zoom.max) : 20,
           scrollwheel: !!map_settings.map_zoom_and_pan.scrollwheel,
           draggable: !!map_settings.map_zoom_and_pan.draggable,
-          disableDefaultUI: !!map_settings.map_controls.disable_default_ui,
-          zoomControl: !!map_settings.map_controls.zoom_control,
           mapTypeId: map_settings.map_controls.map_type_id ? map_settings.map_controls.map_type_id : 'roadmap',
-          mapTypeControl: !!map_settings.map_controls.map_type_control,
-          mapTypeControlOptions: {
-            mapTypeIds: map_settings.map_controls.map_type_control_options_type_ids ? map_settings.map_controls.map_type_control_options_type_ids : ['roadmap', 'satellite', 'hybrid'],
-            position: google.maps.ControlPosition.TOP_LEFT,
-          },
-          scaleControl: !!map_settings.map_controls.scale_control,
-          streetViewControl: !!map_settings.map_controls.street_view_control,
-          fullscreenControl: !!map_settings.map_controls.fullscreen_control,
         };
+
+        if(!!map_settings.map_controls.disable_default_ui) {
+          mapOptions.disableDefaultUI = map_settings.map_controls.disable_default_ui;
+            } else {
+          mapOptions.zoomControl = !!map_settings.map_controls.zoom_control;
+          mapOptions.mapTypeControl = !!map_settings.map_controls.map_type_control;
+          mapOptions.mapTypeControlOptions = {
+            mapTypeIds: map_settings.map_controls.map_type_control_options_type_ids ? map_settings.map_controls.map_type_control_options_type_ids : ['roadmap', 'satellite', 'hybrid'],
+              position: google.maps.ControlPosition.TOP_LEFT,
+          };
+          mapOptions.scaleControl = !!map_settings.map_controls.scale_control;
+          mapOptions.streetViewControl = !!map_settings.map_controls.street_view_control;
+          mapOptions.fullscreenControl = !!map_settings.map_controls.fullscreen_control;
+        }
 
         var additionalOptions = map_settings.map_additional_options.length > 0 ? JSON.parse(map_settings.map_additional_options) : {};
         // Transforms additionalOptions "true", "false" values into true & false.
@@ -199,9 +203,10 @@
         // Define the Geofield Google Map.
         var map = new google.maps.Map(document.getElementById(mapid), mapOptions);
 
-        // Define a map self property, so other code can interact with it.
+        // Define a mapid self property, so other code can interact with it.
         self.map_data[mapid].map = map;
         self.map_data[mapid].map_center = new google.maps.LatLng(map_settings.map_center.lat, map_settings.map_center.lon);
+        self.map_data[mapid].markers = [];
 
         // Define the MapBounds property.
         self.map_data[mapid].map_bounds = new google.maps.LatLngBounds();
@@ -259,11 +264,11 @@
           Object.assign(markeclusterOption, markeclusterAdditionalOptions);
 
           if (typeof MarkerClusterer !== 'undefined' && map_settings.map_markercluster.markercluster_control) {
-            var markerCluster = new MarkerClusterer(map, self.markers, markeclusterOption);
+            var markerCluster = new MarkerClusterer(map, self.map_data[mapid].markers, markeclusterOption);
           }
         }
 
-        if(!self.map_data[mapid].map_bounds.isEmpty()) {
+        if(!self.map_data[mapid].map_bounds.isEmpty() && self.map_data[mapid].markers.length > 1) {
           map.fitBounds(self.map_data[mapid].map_bounds);
           google.maps.event.addListenerOnce(map, 'idle', function() {
             // Just once the fitBounds completes we can check to override it
@@ -275,6 +280,10 @@
               map.setZoom(mapOptions.zoom);
             }
           });
+        }
+        else if (self.map_data[mapid].markers.length === 1 && !centerForce) {
+          map.setCenter(self.map_data[mapid].markers[0].getPosition());
+          map.setZoom(mapOptions.zoom);
         }
       }
     }

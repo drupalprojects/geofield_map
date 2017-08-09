@@ -130,8 +130,7 @@ trait GeofieldMapFieldTrait {
    *   Default settings.
    *
    * @return array
-   *   The GMap Settings Form
-   */
+   *   The GMap Settings Form*/
   public function generateGmapSettingsForm($form, FormStateInterface $form_state, $settings, $default_settings) {
 
     /* @var \Drupal\Core\Utility\LinkGeneratorInterface $link */
@@ -283,13 +282,13 @@ trait GeofieldMapFieldTrait {
       'force' => [
         '#type' => 'checkbox',
         '#title' => $this->t('Force the Start Zoom'),
-        '#description' => $this->t('The Map will generally focus zoom on the input Geofields bounds.<br>This option will instead force the Map Zoom notwithstanding the Geofield Values'),
+        '#description' => $this->t('In case of multiple GeoMarkers, the Map will naturally focus zoom on the input Geofields bounds.<br>This option will instead force the Map Zoom on the input Start Zoom value'),
         '#default_value' => $settings['map_zoom_and_pan']['zoom']['force'],
         '#return_value' => 1,
       ],
       'min' => [
         '#type' => 'number',
-        '#min' => $default_settings['map_zoom_and_pan']['zoom']['min'],
+        '#min' => $default_settings['map_zoom_and_pan']['default']['zoom']['min'],
         '#max' => $settings['map_zoom_and_pan']['zoom']['max'],
         '#title' => $this->t('Min Zoom Level'),
         '#default_value' => $settings['map_zoom_and_pan']['zoom']['min'],
@@ -298,7 +297,7 @@ trait GeofieldMapFieldTrait {
       'max' => [
         '#type' => 'number',
         '#min' => $settings['map_zoom_and_pan']['zoom']['min'],
-        '#max' => $default_settings['map_zoom_and_pan']['zoom']['max'],
+        '#max' => $default_settings['map_zoom_and_pan']['default']['zoom']['max'],
         '#title' => $this->t('Max Zoom Level'),
         '#default_value' => $settings['map_zoom_and_pan']['zoom']['max'],
         '#description' => $this->t('The Maximum Zoom level for the Map.'),
@@ -320,6 +319,13 @@ trait GeofieldMapFieldTrait {
       '#return_value' => 1,
     ];
 
+    if (isset($fieldDefinition)) {
+      $disable_default_ui_selector = ':input[name="fields[' . $fieldDefinition->getName() . '][settings_edit_form][settings][map_controls][disable_default_ui]"]';
+    }
+    else {
+      $disable_default_ui_selector = ':input[name="style_options[map_controls][disable_default_ui]"]';
+    }
+
     $elements['map_controls'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Map Controls'),
@@ -327,7 +333,7 @@ trait GeofieldMapFieldTrait {
     $elements['map_controls']['disable_default_ui'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Disable Default UI'),
-      '#description' => $this->t('This property disables any automatic UI behavior from the Google Maps JavaScript API'),
+      '#description' => $this->t('This property disables any automatic UI behavior and Control from the Google Map'),
       '#default_value' => $settings['map_controls']['disable_default_ui'],
       '#return_value' => 1,
     ];
@@ -337,6 +343,11 @@ trait GeofieldMapFieldTrait {
       '#description' => $this->t('The enabled/disabled state of the Zoom control.'),
       '#default_value' => $settings['map_controls']['zoom_control'],
       '#return_value' => 1,
+      '#states' => [
+        'visible' => [
+          $disable_default_ui_selector => ['checked' => FALSE],
+        ],
+      ],
     ];
     $elements['map_controls']['map_type_id'] = [
       '#type' => 'select',
@@ -350,6 +361,11 @@ trait GeofieldMapFieldTrait {
       '#description' => $this->t('The initial enabled/disabled state of the Map type control.'),
       '#default_value' => $settings['map_controls']['map_type_control'],
       '#return_value' => 1,
+      '#states' => [
+        'visible' => [
+          $disable_default_ui_selector => ['checked' => FALSE],
+        ],
+      ],
     ];
     $elements['map_controls']['map_type_control_options_type_ids'] = [
       '#type' => 'checkboxes',
@@ -365,12 +381,19 @@ trait GeofieldMapFieldTrait {
         'visible' => [
           ':input[name="fields[' . $fieldDefinition->getName() . '][settings_edit_form][settings][map_controls][map_type_control]"]' => ['checked' => TRUE],
         ],
+        'invisible' => [
+          $disable_default_ui_selector => ['checked' => TRUE],
+        ],
       ];
     }
     else {
       $elements['map_controls']['map_type_control_options_type_ids']['#states'] = [
         'visible' => [
           ':input[name="style_options[map_controls][map_type_control]"]' => ['checked' => TRUE],
+        ],
+        'invisible' => [
+          $disable_default_ui_selector => ['checked' => TRUE],
+
         ],
       ];
     }
@@ -381,6 +404,11 @@ trait GeofieldMapFieldTrait {
       '#description' => $this->t('Show map scale'),
       '#default_value' => $settings['map_controls']['scale_control'],
       '#return_value' => 1,
+      '#states' => [
+        'visible' => [
+          $disable_default_ui_selector => ['checked' => FALSE],
+        ],
+      ]
     ];
     $elements['map_controls']['street_view_control'] = [
       '#type' => 'checkbox',
@@ -388,6 +416,11 @@ trait GeofieldMapFieldTrait {
       '#description' => $this->t('Enable the Street View functionality on the Map.'),
       '#default_value' => $settings['map_controls']['street_view_control'],
       '#return_value' => 1,
+      '#states' => [
+        'visible' => [
+          $disable_default_ui_selector => ['checked' => FALSE],
+        ],
+      ],
     ];
     $elements['map_controls']['fullscreen_control'] = [
       '#type' => 'checkbox',
@@ -395,6 +428,11 @@ trait GeofieldMapFieldTrait {
       '#description' => $this->t('Enable the Fullscreen View of the Map.'),
       '#default_value' => $settings['map_controls']['fullscreen_control'],
       '#return_value' => 1,
+      '#states' => [
+        'visible' => [
+          $disable_default_ui_selector => ['checked' => FALSE],
+        ],
+      ],
     ];
 
     $elements['map_marker_and_infowindow'] = [
