@@ -419,7 +419,9 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#default_value' => $this->getSetting('geoaddress_field')['hidden'],
       '#states' => [
         'invisible' => [
-          ':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][geoaddress_field][field]"]' => ['value' => 'title'],
+          [':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][geoaddress_field][field]"]' => ['value' => 'title']],
+          'or',
+          [':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][geoaddress_field][field]"]' => ['value' => '0']],
         ],
       ],
     );
@@ -430,7 +432,9 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#default_value' => $this->getSetting('geoaddress_field')['disabled'],
       '#states' => [
         'invisible' => [
-          ':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][geoaddress_field][hidden]"]' => ['checked' => TRUE],
+          [':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][geoaddress_field][hidden]"]' => ['checked' => TRUE]],
+          'or',
+          [':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][geoaddress_field][field]"]' => ['value' => '0']],
         ],
       ],
     );

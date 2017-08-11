@@ -140,7 +140,7 @@
       if (properties && properties.description) {
         var bounds = feature.get('bounds');
         google.maps.event.addListener(feature, 'click', function() {
-          map.infowindow.setContent("<div style='max-width:200px; text-align: center;'>" + properties.description + "</div>");
+          map.infowindow.setContent(properties.description);
           map.infowindow.setOptions({pixelOffset: new google.maps.Size(0,-30)});
           map.infowindow.setPosition(bounds.getCenter());
           map.infowindow.open(map);
