@@ -635,7 +635,6 @@ trait GeofieldMapFieldTrait {
   }
 
   /**
-   *
    * Transform Geofield data into Geojson features.
    *
    * @param array $items
