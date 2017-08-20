@@ -419,7 +419,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
         'features' => $data,
       ];
     }
-    $element = geofield_map_googlemap_render($js_settings);
+    $element = [geofield_map_googlemap_render($js_settings)];
     return $element;
   }
 
