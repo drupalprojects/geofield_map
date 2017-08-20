@@ -252,7 +252,7 @@ class GeofieldGoogleMapViewStyle extends StylePluginBase implements ContainerFac
       '#required' => TRUE,
     );
 
-    $desc_options = array_merge(array('0' => $this->t('- Any - No Infowindow')), $fields);
+    $desc_options = array_merge(['0' => $this->t('- Any - No Infowindow')], $fields);
     // Add an option to render the entire entity using a view mode.
     if ($this->entityType) {
       $desc_options += array(

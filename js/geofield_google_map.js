@@ -172,12 +172,12 @@
 
         if(!!map_settings.map_controls.disable_default_ui) {
           mapOptions.disableDefaultUI = map_settings.map_controls.disable_default_ui;
-            } else {
+        } else {
           mapOptions.zoomControl = !!map_settings.map_controls.zoom_control;
           mapOptions.mapTypeControl = !!map_settings.map_controls.map_type_control;
           mapOptions.mapTypeControlOptions = {
             mapTypeIds: map_settings.map_controls.map_type_control_options_type_ids ? map_settings.map_controls.map_type_control_options_type_ids : ['roadmap', 'satellite', 'hybrid'],
-              position: google.maps.ControlPosition.TOP_LEFT,
+            position: google.maps.ControlPosition.TOP_LEFT,
           };
           mapOptions.scaleControl = !!map_settings.map_controls.scale_control;
           mapOptions.streetViewControl = !!map_settings.map_controls.street_view_control;
@@ -254,16 +254,18 @@
             }
           }
 
-          // Implement Markeclustering.
-          var markeclusterOption = {
-            imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'
-          };
+          // Implement Markeclustering, if more than 1 marker on the map,
+          // and the markercluster option is set to true.
+          if(self.map_data[mapid].markers.length > 1 && typeof MarkerClusterer !== 'undefined' && map_settings.map_markercluster.markercluster_control) {
 
-          var markeclusterAdditionalOptions = map_settings.map_markercluster.markercluster_additional_options.length > 0 ? JSON.parse(map_settings.map_markercluster.markercluster_additional_options) : {};
-          // Merge markeclusterOption with markeclusterAdditionalOptions.
-          Object.assign(markeclusterOption, markeclusterAdditionalOptions);
+            var markeclusterOption = {
+              imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'
+            };
 
-          if (typeof MarkerClusterer !== 'undefined' && map_settings.map_markercluster.markercluster_control) {
+            var markeclusterAdditionalOptions = map_settings.map_markercluster.markercluster_additional_options.length > 0 ? JSON.parse(map_settings.map_markercluster.markercluster_additional_options) : {};
+            // Merge markeclusterOption with markeclusterAdditionalOptions.
+            Object.assign(markeclusterOption, markeclusterAdditionalOptions);
+
             var markerCluster = new MarkerClusterer(map, self.map_data[mapid].markers, markeclusterOption);
           }
         }

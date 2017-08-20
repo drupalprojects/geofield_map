@@ -408,7 +408,7 @@ trait GeofieldMapFieldTrait {
         'visible' => [
           $disable_default_ui_selector => ['checked' => FALSE],
         ],
-      ]
+      ],
     ];
     $elements['map_controls']['street_view_control'] = [
       '#type' => 'checkbox',
@@ -474,16 +474,28 @@ trait GeofieldMapFieldTrait {
 
     }
     else {
-      $info_window_source_options = $settings['infowindow_content_options'];
+      $info_window_source_options = isset($settings['infowindow_content_options']) ? $settings['infowindow_content_options'] : [];
     }
 
-    $elements['map_marker_and_infowindow']['infowindow_field'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Marker Infowindow Content from'),
-      '#description' => $this->t('Choose an existing string type field from which populate the Marker Infowindow'),
-      '#options' => $info_window_source_options,
-      '#default_value' => $settings['map_marker_and_infowindow']['infowindow_field'],
-    ];
+    if (!empty($info_window_source_options)) {
+      $elements['map_marker_and_infowindow']['infowindow_field'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Marker Infowindow Content from'),
+        '#description' => $this->t('Choose an existing string type field from which populate the Marker Infowindow'),
+        '#options' => $info_window_source_options,
+        '#default_value' => $settings['map_marker_and_infowindow']['infowindow_field'],
+      ];
+    }
+    else {
+      $elements['map_marker_and_infowindow']['infowindow_field'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Marker Infowindow Content from Field'),
+        '#default_value' => $settings['map_marker_and_infowindow']['infowindow_field'],
+        '#size' => 25,
+        '#maxlength' => 25,
+        '#description' => $this->t("Input the machine name of the field you want the Infowindow be filled from. Input 'title', for the Content Title.<br><b>Note: This is actually working only with string type fields (not lists, entity references, etc.)</b>"),
+      ];
+    }
 
     $elements['map_additional_options'] = [
       '#type' => 'textarea',
@@ -637,7 +649,7 @@ trait GeofieldMapFieldTrait {
   /**
    * Transform Geofield data into Geojson features.
    *
-   * @param array $items
+   * @param mixed $items
    *   The Geofield Data Values.
    * @param string $description
    *   The description value.

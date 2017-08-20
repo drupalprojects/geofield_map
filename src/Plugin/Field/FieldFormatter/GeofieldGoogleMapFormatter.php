@@ -4,7 +4,6 @@ namespace Drupal\geofield_map\Plugin\Field\FieldFormatter;
 
 use Drupal\geofield_map\GeofieldMapFieldTrait;
 use Drupal\Component\Utility\Html;
-use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Url;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
@@ -134,6 +133,17 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
    */
   public static function defaultSettings() {
     return self::getDefaultSettings() + parent::defaultSettings();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSettings() {
+    // Merge defaults before returning the array.
+    if (!$this->defaultSettingsMerged) {
+      $this->mergeDefaults();
+    }
+    return $this->settings;
   }
 
   /**
@@ -398,7 +408,8 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
 
     $description = NULL;
     if (!empty($map_settings['map_marker_and_infowindow']['infowindow_field'])) {
-      $description = $map_settings['map_marker_and_infowindow']['infowindow_field'] != 'title' ? $entity->$map_settings['map_marker_and_infowindow']['infowindow_field']->value : $entity->label();
+      $description_field_name = strtolower($map_settings['map_marker_and_infowindow']['infowindow_field']);
+      $description = $map_settings['map_marker_and_infowindow']['infowindow_field'] != 'title' ? $entity->$description_field_name->value : $entity->label();
     }
 
     $data = $this->getGeoJsonData($items, $description);
