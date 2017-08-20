@@ -330,7 +330,11 @@ class GeofieldGoogleMapViewStyle extends StylePluginBase implements ContainerFac
           // rendered results.
           $geofield_value = $this->rendered_fields[$id][$geofield_name];
         }
+
         if (!empty($geofield_value)) {
+
+          // If it is a single value field, transform into an array.
+          $geofield_value = is_array($geofield_value) ? $geofield_value : [$geofield_value];
 
           $description_field = $map_settings['map_marker_and_infowindow']['infowindow_field'];
           $description = NULL;
