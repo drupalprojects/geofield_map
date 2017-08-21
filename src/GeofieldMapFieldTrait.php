@@ -493,7 +493,7 @@ trait GeofieldMapFieldTrait {
         '#default_value' => $settings['map_marker_and_infowindow']['infowindow_field'],
         '#size' => 25,
         '#maxlength' => 25,
-        '#description' => $this->t("Input the machine name of the field you want the Infowindow be filled from. Input 'title', for the Content Title.<br><b>Note: This is actually working only with string type fields (not lists, entity references, etc.)</b>"),
+        '#description' => $this->t("Input the machine name of the field you want the Infowindow be filled from. Input 'title', for the Content Title.<br><b>Note: This is actually working only with string type fields (not lists, entity references, etc.). In case of multivalue field, only its first value will be rendered.</b>"),
       ];
     }
 
