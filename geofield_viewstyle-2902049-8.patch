@@ -1,0 +1,90 @@
+diff --git a/src/Plugin/Field/FieldFormatter/GeofieldGoogleMapFormatter.php b/src/Plugin/Field/FieldFormatter/GeofieldGoogleMapFormatter.php
+index 09c5008..19162d8 100644
+--- a/src/Plugin/Field/FieldFormatter/GeofieldGoogleMapFormatter.php
++++ b/src/Plugin/Field/FieldFormatter/GeofieldGoogleMapFormatter.php
+@@ -144,8 +144,68 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
+     $default_settings = self::defaultSettings();
+     $settings = $this->getSettings();
+ 
++    if (!empty($form['#entity_type'])){
++      $entityType = $form['#entity_type'];
++      $bundles = (!empty($form['#bundle'])) ? [$form['#bundle']] : [];
++      unset($form['#entity_type']);  // Stops the main Gmap settings form from generating infowindow options
++    }
++    else if (property_exists(get_class($this), 'fieldDefinition')){
++      $entityType = $this->fieldDefinition->getTargetEntityTypeId();
++      $field_name = $this->fieldDefinition->getName();
++      $fields = \Drupal::service('entity_field.manager')->getFieldMapByFieldType($this->fieldDefinition->getType());
++      $bundles =  !empty($fields['node'][$field_name]['bundles']) ? $fields['node'][$field_name]['bundles'] : [];
++    }
++    if (!empty($entityType)) {
++      $desc_options = [
++        '0' => $this->t('- No Infowindow -'),
++        'title' => $this->t('Title'),
++      ];
++
++      $fields_list = array_merge_recursive(
++        \Drupal::service('entity_field.manager')->getFieldMapByFieldType('string_long'),
++        \Drupal::service('entity_field.manager')->getFieldMapByFieldType('string'),
++        \Drupal::service('entity_field.manager')->getFieldMapByFieldType('text'),
++        \Drupal::service('entity_field.manager')->getFieldMapByFieldType('text_long')      
++      );
++
++      foreach ($fields_list[$entityType] as $k => $field) {
++        if (!empty(array_intersect($field['bundles'], $bundles)) &&
++          !in_array($k, ['title', 'revision_log'])) {
++          $desc_options[$k] = $k;
++        }
++      }
++
++      $desc_options['#rendered_entity'] = $this->t('- Rendered @entity entity -', array('@entity' => $entityType));
++
++      $settings['infowindow_content_options'] = $desc_options;
++    }
++
+     $elements = $this->generateGMapSettingsForm($form, $form_state, $settings, $default_settings);
+ 
++    if (!empty($entityType)) {
++       // Get the human readable labels for the entity view modes.
++      $view_mode_options = array();
++      foreach (\Drupal::service('entity_display.repository')->getViewModes($entityType) as $key => $view_mode) {
++        $view_mode_options[$key] = $view_mode['label'];
++      }
++      // The View Mode drop-down is visible conditional on "#rendered_entity"
++      // being selected in the Description drop-down above.
++      $elements['map_marker_and_infowindow']['view_mode'] = array(
++        '#type' => 'select',
++        '#title' => $this->t('View mode'),
++        '#description' => $this->t('View mode the entity will be displayed in the Infowindow.'),
++        '#options' => $view_mode_options,
++        '#default_value' => !empty($settings['view_mode']) ? $settings['view_mode'] : 'full',
++        '#states' => array(
++          'visible' => array(
++            ':input[name$="[settings][map_marker_and_infowindow][infowindow_field]"]' => array(
++              'value' => '#rendered_entity',
++            ),
++          ),
++        ),
++      );
++    }
++
+     return $elements + parent::settingsForm($form, $form_state);
+   }
+ 
+@@ -396,8 +456,15 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
+       'data' => [],
+     ];
+ 
++    $description_field = $map_settings['map_marker_and_infowindow']['infowindow_field'];
+     $description = NULL;
+-    if (!empty($map_settings['map_marker_and_infowindow']['infowindow_field'])) {
++    // Render the entity with the selected view mode.
++    if ($description_field === '#rendered_entity' && is_object($entity)) {
++      $build = entity_view($entity, $map_settings['map_marker_and_infowindow']['view_mode']);
++      $description = render($build);
++    }
++    // Normal rendering via fields.
++    elseif ($description_field) {
+       $description = $map_settings['map_marker_and_infowindow']['infowindow_field'] != 'title' ? $entity->$map_settings['map_marker_and_infowindow']['infowindow_field']->value : $entity->label();
+     }
+ 
