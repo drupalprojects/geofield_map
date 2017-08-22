@@ -1,0 +1,57 @@
+diff --git a/src/GeofieldMapFieldTrait.php b/src/GeofieldMapFieldTrait.php
+index df2d271..e5f5664 100644
+--- a/src/GeofieldMapFieldTrait.php
++++ b/src/GeofieldMapFieldTrait.php
+@@ -449,22 +449,35 @@ trait GeofieldMapFieldTrait {
+       '#element_validate' => [[get_class($this), 'urlValidate']],
+     ];
+ 
+-    // In case it is a Field Formatter.
++    // Check if a Field Formatter is being managed and define its possible
++    // Entity Type and Bundles.
+     if (isset($form['#entity_type'])) {
++      $entityType = $form['#entity_type'];
++      $bundles = (!empty($form['#bundle'])) ? [$form['#bundle']] : [];
++    }
++    elseif (property_exists(get_class($this), 'fieldDefinition')) {
++      $entityType = $this->fieldDefinition->getTargetEntityTypeId();
++      $field_name = $this->fieldDefinition->getName();
++      $fields = $this->entityFieldManager->getFieldMapByFieldType($this->fieldDefinition->getType());
++      $bundles = !empty($fields['node'][$field_name]['bundles']) ? $fields['node'][$field_name]['bundles'] : [];
++    }
+ 
+-      $fields_list = array_merge_recursive(
+-        $entityFieldManager->getFieldMapByFieldType('string_long'),
+-        $entityFieldManager->getFieldMapByFieldType('string')
+-      );
+-
++    // In case it is a Field Formatter.
++    if (isset($entityType)) {
+       $string_fields_options = [
+         '0' => $this->t('- Any - No Infowindow'),
+         'title' => $this->t('- Title -'),
+       ];
+ 
+-      foreach ($fields_list[$form['#entity_type']] as $k => $field) {
+-        if (in_array(
+-            $form['#bundle'], $field['bundles']) &&
++      $fields_list = array_merge_recursive(
++        $this->entityFieldManager->getFieldMapByFieldType('string_long'),
++        $this->entityFieldManager->getFieldMapByFieldType('string'),
++        $this->entityFieldManager->getFieldMapByFieldType('text'),
++        $this->entityFieldManager->getFieldMapByFieldType('text_long')
++      );
++
++      foreach ($fields_list[$entityType] as $k => $field) {
++        if (isset($bundles) && !empty(array_intersect($field['bundles'], $bundles)) &&
+           !in_array($k, ['title', 'revision_log'])) {
+           $string_fields_options[$k] = $k;
+         }
+@@ -473,6 +486,7 @@ trait GeofieldMapFieldTrait {
+       $info_window_source_options = $string_fields_options;
+ 
+     }
++    // Else it is a Geofield View Style Format Settings.
+     else {
+       $info_window_source_options = isset($settings['infowindow_content_options']) ? $settings['infowindow_content_options'] : [];
+     }
