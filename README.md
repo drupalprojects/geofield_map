@@ -26,12 +26,12 @@ or in a "string type" field (among the content's ones).
 ####Geofield Map Formatter
 An highly customizable Google Map formatter, by which render and expose the contents Geofields / Geolocations, throughout:
 - a wide set of Map options fully compliant with [Google Maps Js v3 APIs](https://developers.google.com/maps/documentation/javascript/);
-- the possibility to personalize the Map Marker Icon and its Infowindow content;
+- the possibility to fully personalize the Map Marker Icon and its Infowindow content;
 - the integration of [Markecluster Google Maps Library](https://github.com/googlemaps/js-marker-clusterer) functionalities and its personalizations
 
 ####Views Integration
 A dedicated Geofield Map View style plugin able to render a Views result on a higly customizable Google Map, 
-with Marker and Infowindow specfications and Markers Clustering capabilities.
+with Marker and Infowindow specifications and Markers Clustering capabilities.
 
 ###Installation and Use
 
