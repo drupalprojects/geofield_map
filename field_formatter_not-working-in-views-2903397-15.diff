@@ -1,5 +1,5 @@
 diff --git a/src/GeofieldMapFieldTrait.php b/src/GeofieldMapFieldTrait.php
-index df2d271..6dabcce 100644
+index df2d271..ee78952 100644
 --- a/src/GeofieldMapFieldTrait.php
 +++ b/src/GeofieldMapFieldTrait.php
 @@ -449,30 +449,46 @@ trait GeofieldMapFieldTrait {
@@ -61,7 +61,7 @@ index df2d271..6dabcce 100644
      else {
        $info_window_source_options = isset($settings['infowindow_content_options']) ? $settings['infowindow_content_options'] : [];
      }
-@@ -486,15 +502,32 @@ trait GeofieldMapFieldTrait {
+@@ -486,15 +502,29 @@ trait GeofieldMapFieldTrait {
          '#default_value' => $settings['map_marker_and_infowindow']['infowindow_field'],
        ];
      }
@@ -78,18 +78,15 @@ index df2d271..6dabcce 100644
 +    if (isset($entityType)) {
 +      // Get the human readable labels for the entity view modes.
 +      $view_mode_options = array();
-+      $thisViewMode = in_array($this->viewMode, ['default', 'full']) ? ['default', 'full'] : [$this->viewMode];
 +      foreach ($this->entityDisplayRepository->getViewModes($entityType) as $key => $view_mode) {
-+        if (!in_array($key, $thisViewMode)) {
 +          $view_mode_options[$key] = $view_mode['label'];
-+        }
 +      }
 +      // The View Mode drop-down is visible conditional on "#rendered_entity"
 +      // being selected in the Description drop-down above.
 +      $elements['map_marker_and_infowindow']['view_mode'] = array(
 +        '#type' => 'select',
 +        '#title' => $this->t('View mode'),
-+        '#description' => $this->t('View mode the entity will be displayed in the Infowindow.<br><div style="color: red;"><b>Warning:</b> Incorrect use of this may cause infinite loops / application crash (i.e: View mode that holds a Geofield Map Formatter with an Infowindow already rendering This View mode ...)'),
++        '#description' => $this->t('View mode the entity will be displayed in the Infowindow.'),
 +        '#options' => $view_mode_options,
 +        '#default_value' => !empty($settings['map_marker_and_infowindow']['view_mode']) ? $settings['map_marker_and_infowindow']['view_mode'] : NULL,
 +        '#states' => array(
@@ -104,7 +101,7 @@ index df2d271..6dabcce 100644
  
      $elements['map_additional_options'] = [
 diff --git a/src/Plugin/Field/FieldFormatter/GeofieldGoogleMapFormatter.php b/src/Plugin/Field/FieldFormatter/GeofieldGoogleMapFormatter.php
-index 944e8fa..b57a3f2 100644
+index 944e8fa..540eb23 100644
 --- a/src/Plugin/Field/FieldFormatter/GeofieldGoogleMapFormatter.php
 +++ b/src/Plugin/Field/FieldFormatter/GeofieldGoogleMapFormatter.php
 @@ -14,6 +14,8 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
@@ -190,8 +187,18 @@ index 944e8fa..b57a3f2 100644
      if (!empty($settings['map_additional_options'])) {
        $map_additional_options = [
          '#type' => 'html_tag',
-@@ -390,7 +425,8 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
+@@ -388,9 +423,18 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
+    */
+   public function viewElements(FieldItemListInterface $items, $langcode) {
  
++    // This avoids the infinite loop by stopping the display
++    // of any map embedded in an infowindow.
++    $view_in_progress = &drupal_static(__FUNCTION__);
++    if ($view_in_progress) {
++      return [];
++    }
++    $view_in_progress = TRUE;
++
      /* @var \Drupal\Core\Entity\EntityInterface $entity */
      $entity = $items->getEntity();
 -    $entity_type = $entity->bundle();
@@ -200,7 +207,7 @@ index 944e8fa..b57a3f2 100644
      $entity_id = $entity->id();
      /* @var \Drupal\Core\Field\FieldDefinitionInterface $field */
      $field = $items->getFieldDefinition();
-@@ -401,13 +437,20 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
+@@ -401,13 +445,20 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
      $this->preProcessMapSettings($map_settings);
  
      $js_settings = [
@@ -223,3 +230,14 @@ index 944e8fa..b57a3f2 100644
        $description_field_name = strtolower($map_settings['map_marker_and_infowindow']['infowindow_field']);
        $description = $map_settings['map_marker_and_infowindow']['infowindow_field'] != 'title' ? $entity->$description_field_name->value : $entity->label();
      }
+@@ -431,6 +482,10 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
+       ];
+     }
+     $element = [geofield_map_googlemap_render($js_settings)];
++
++    // Part of infinite loop stopping strategy.
++    $view_in_progress = FALSE;
++
+     return $element;
+   }
+ 
