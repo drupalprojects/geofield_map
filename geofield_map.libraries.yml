@@ -25,6 +25,7 @@ geofield_map_widget:
   js:
     js/geofield_map.js: {}
   dependencies:
+      - core/underscore
       - core/jquery
       - core/jquery.once
       - core/drupal
@@ -44,6 +45,7 @@ geofield_gmap:
   js:
     js/geofield_google_map.js: {}
   dependencies:
+      - core/underscore
       - core/jquery
       - core/jquery.once
       - core/drupal
