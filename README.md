@@ -7,6 +7,7 @@ It represents the perfect solution to:
 - geolocate (with one or more Locations / Geofields) any fieldable Drupal entity throughout an Interactive Geofield Map widget;
 - render each Content's Locations throughout a fully customizable Interactive Geofield Map Formatter;
 - expose and query Contents throughout fully customizable Map Views Integration;
+- implement front-end Google Maps with Marker Icon & Infowindow advanced customizations, and Marker Clustering capabilities;
 
 ####Technical Functionalities and specifications
 
