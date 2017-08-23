@@ -1,5 +1,5 @@
 diff --git a/src/GeofieldMapFieldTrait.php b/src/GeofieldMapFieldTrait.php
-index df2d271..e5f5664 100644
+index df2d271..3ce9531 100644
 --- a/src/GeofieldMapFieldTrait.php
 +++ b/src/GeofieldMapFieldTrait.php
 @@ -449,22 +449,35 @@ trait GeofieldMapFieldTrait {
@@ -55,3 +55,20 @@ index df2d271..e5f5664 100644
      else {
        $info_window_source_options = isset($settings['infowindow_content_options']) ? $settings['infowindow_content_options'] : [];
      }
+@@ -486,16 +500,6 @@ trait GeofieldMapFieldTrait {
+         '#default_value' => $settings['map_marker_and_infowindow']['infowindow_field'],
+       ];
+     }
+-    else {
+-      $elements['map_marker_and_infowindow']['infowindow_field'] = [
+-        '#type' => 'textfield',
+-        '#title' => $this->t('Marker Infowindow Content from Field'),
+-        '#default_value' => $settings['map_marker_and_infowindow']['infowindow_field'],
+-        '#size' => 25,
+-        '#maxlength' => 25,
+-        '#description' => $this->t("Input the machine name of the field you want the Infowindow be filled from. Input 'title', for the Content Title.<br><b>Note: This is actually working only with string type fields (not lists, entity references, etc.)</b>"),
+-      ];
+-    }
+ 
+     $elements['map_additional_options'] = [
+       '#type' => 'textarea',
