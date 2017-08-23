@@ -449,30 +449,46 @@ trait GeofieldMapFieldTrait {
       '#element_validate' => [[get_class($this), 'urlValidate']],
     ];
 
-    // In case it is a Field Formatter.
+    // Check if a Field Formatter is being managed and define its possible
+    // Entity Type and Bundles.
     if (isset($form['#entity_type'])) {
+      $entityType = $form['#entity_type'];
+      $bundles = (!empty($form['#bundle'])) ? [$form['#bundle']] : [];
+    }
+    elseif (property_exists(get_class($this), 'fieldDefinition')) {
+      $entityType = $this->fieldDefinition->getTargetEntityTypeId();
+      $field_name = $this->fieldDefinition->getName();
+      $fields = $this->entityFieldManager->getFieldMapByFieldType($this->fieldDefinition->getType());
+      $bundles = !empty($fields['node'][$field_name]['bundles']) ? $fields['node'][$field_name]['bundles'] : [];
+    }
 
-      $fields_list = array_merge_recursive(
-        $entityFieldManager->getFieldMapByFieldType('string_long'),
-        $entityFieldManager->getFieldMapByFieldType('string')
-      );
-
-      $string_fields_options = [
+    // In case it is a Field Formatter.
+    if (isset($entityType)) {
+      $desc_options = [
         '0' => $this->t('- Any - No Infowindow'),
         'title' => $this->t('- Title -'),
       ];
 
-      foreach ($fields_list[$form['#entity_type']] as $k => $field) {
-        if (in_array(
-            $form['#bundle'], $field['bundles']) &&
+      $fields_list = array_merge_recursive(
+        $this->entityFieldManager->getFieldMapByFieldType('string_long'),
+        $this->entityFieldManager->getFieldMapByFieldType('string'),
+        $this->entityFieldManager->getFieldMapByFieldType('text'),
+        $this->entityFieldManager->getFieldMapByFieldType('text_long')
+      );
+
+      foreach ($fields_list[$entityType] as $k => $field) {
+        if (isset($bundles) && !empty(array_intersect($field['bundles'], $bundles)) &&
           !in_array($k, ['title', 'revision_log'])) {
-          $string_fields_options[$k] = $k;
+          $desc_options[$k] = $k;
         }
       }
 
-      $info_window_source_options = $string_fields_options;
+      $desc_options['#rendered_entity'] = $this->t('- Rendered @entity entity -', array('@entity' => $entityType));
+
+      $info_window_source_options = $desc_options;
 
     }
+    // Else it is a Geofield View Style Format Settings.
     else {
       $info_window_source_options = isset($settings['infowindow_content_options']) ? $settings['infowindow_content_options'] : [];
     }
@@ -486,15 +502,29 @@ trait GeofieldMapFieldTrait {
         '#default_value' => $settings['map_marker_and_infowindow']['infowindow_field'],
       ];
     }
-    else {
-      $elements['map_marker_and_infowindow']['infowindow_field'] = [
-        '#type' => 'textfield',
-        '#title' => $this->t('Marker Infowindow Content from Field'),
-        '#default_value' => $settings['map_marker_and_infowindow']['infowindow_field'],
-        '#size' => 25,
-        '#maxlength' => 25,
-        '#description' => $this->t("Input the machine name of the field you want the Infowindow be filled from. Input 'title', for the Content Title.<br><b>Note: This is actually working only with string type fields (not lists, entity references, etc.)</b>"),
-      ];
+
+    if (isset($entityType)) {
+      // Get the human readable labels for the entity view modes.
+      $view_mode_options = array();
+      foreach ($this->entityDisplayRepository->getViewModes($entityType) as $key => $view_mode) {
+          $view_mode_options[$key] = $view_mode['label'];
+      }
+      // The View Mode drop-down is visible conditional on "#rendered_entity"
+      // being selected in the Description drop-down above.
+      $elements['map_marker_and_infowindow']['view_mode'] = array(
+        '#type' => 'select',
+        '#title' => $this->t('View mode'),
+        '#description' => $this->t('View mode the entity will be displayed in the Infowindow.'),
+        '#options' => $view_mode_options,
+        '#default_value' => !empty($settings['map_marker_and_infowindow']['view_mode']) ? $settings['map_marker_and_infowindow']['view_mode'] : NULL,
+        '#states' => array(
+          'visible' => array(
+            ':input[name$="[settings][map_marker_and_infowindow][infowindow_field]"]' => array(
+              'value' => '#rendered_entity',
+            ),
+          ),
+        ),
+      );
     }
 
     $elements['map_additional_options'] = [

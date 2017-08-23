@@ -14,6 +14,8 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\geofield\GeoPHP\GeoPHPInterface;
 
@@ -51,6 +53,21 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
   protected $config;
 
   /**
+   * Entity manager service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
+   * Entity display repository.
+   *
+   * @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface
+   */
+  protected $entityDisplayRepository;
+
+
+  /**
    * The Link generator Service.
    *
    * @var \Drupal\Core\Utility\LinkGeneratorInterface
@@ -82,6 +99,10 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
    *   The Translation service.
    * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
    *   The Link Generator service.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   Entity type manager service.
+   * @param \Drupal\Core\Entity\EntityDisplayRepositoryInterface $entity_display_repository
+   *   Entity display repository service.
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
    *   The Entity Field Manager.
    * @param \Drupal\geofield\GeoPHP\GeoPHPInterface $geophp_wrapper
@@ -98,12 +119,16 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     ConfigFactoryInterface $config_factory,
     TranslationInterface $string_translation,
     LinkGeneratorInterface $link_generator,
+    EntityTypeManagerInterface $entity_type_manager,
+    EntityDisplayRepositoryInterface $entity_display_repository,
     EntityFieldManagerInterface $entity_field_manager,
     GeoPHPInterface $geophp_wrapper
   ) {
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $label, $view_mode, $third_party_settings);
     $this->config = $config_factory;
     $this->link = $link_generator;
+    $this->entityTypeManager = $entity_type_manager;
+    $this->entityDisplayRepository = $entity_display_repository;
     $this->entityFieldManager = $entity_field_manager;
     $this->GeoPHPWrapper = $geophp_wrapper;
   }
@@ -123,6 +148,8 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       $container->get('config.factory'),
       $container->get('string_translation'),
       $container->get('link_generator'),
+      $container->get('entity_type.manager'),
+      $container->get('entity_display.repository'),
       $container->get('entity_field.manager'),
       $container->get('geofield.geophp')
     );
@@ -322,6 +349,14 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       ],
     ];
 
+    if ($settings['map_marker_and_infowindow']['infowindow_field'] == '#rendered_entity') {
+      $map_marker_and_infowindow['view_mode'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('View Mode: @state', ['@state' => $settings['map_marker_and_infowindow']['view_mode']]),
+      ];
+    }
+
     if (!empty($settings['map_additional_options'])) {
       $map_additional_options = [
         '#type' => 'html_tag',
@@ -388,9 +423,18 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
    */
   public function viewElements(FieldItemListInterface $items, $langcode) {
 
+    // This avoids the infinite loop by stopping the display
+    // of any map embedded in an infowindow.
+    $view_in_progress = &drupal_static(__FUNCTION__);
+    if ($view_in_progress) {
+      return [];
+    }
+    $view_in_progress = TRUE;
+
     /* @var \Drupal\Core\Entity\EntityInterface $entity */
     $entity = $items->getEntity();
-    $entity_type = $entity->bundle();
+    $entity_type = $entity->getEntityTypeId();
+    $bundle = $entity->bundle();
     $entity_id = $entity->id();
     /* @var \Drupal\Core\Field\FieldDefinitionInterface $field */
     $field = $items->getFieldDefinition();
@@ -401,13 +445,20 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     $this->preProcessMapSettings($map_settings);
 
     $js_settings = [
-      'mapid' => Html::getUniqueId("geofield_map_entity_{$entity_type}_{$entity_id}_{$field->getName()}"),
+      'mapid' => Html::getUniqueId("geofield_map_entity_{$bundle}_{$entity_id}_{$field->getName()}"),
       'map_settings' => $map_settings,
       'data' => [],
     ];
 
+    $description_field = $map_settings['map_marker_and_infowindow']['infowindow_field'];
     $description = NULL;
-    if (!empty($map_settings['map_marker_and_infowindow']['infowindow_field'])) {
+    // Render the entity with the selected view mode.
+    if ($description_field === '#rendered_entity' && is_object($entity)) {
+      $build = $this->entityTypeManager->getViewBuilder($entity_type)->view($entity, $map_settings['map_marker_and_infowindow']['view_mode']);
+      $description = render($build);
+    }
+    // Normal rendering via fields.
+    elseif ($description_field) {
       $description_field_name = strtolower($map_settings['map_marker_and_infowindow']['infowindow_field']);
       $description = $map_settings['map_marker_and_infowindow']['infowindow_field'] != 'title' ? $entity->$description_field_name->value : $entity->label();
     }
@@ -431,6 +482,10 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       ];
     }
     $element = [geofield_map_googlemap_render($js_settings)];
+
+    // Part of infinite loop stopping strategy.
+    $view_in_progress = FALSE;
+
     return $element;
   }
 
