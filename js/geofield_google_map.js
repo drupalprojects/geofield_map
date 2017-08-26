@@ -203,6 +203,13 @@
         // Define the Geofield Google Map.
         var map = new google.maps.Map(document.getElementById(mapid), mapOptions);
 
+        // Ensure map marker stays center on window resize
+        google.maps.event.addDomListener(window, "resize", function() {
+            var center = map.getCenter();
+            google.maps.event.trigger(map, "resize");
+            map.setCenter(center);
+        });
+
         // Define a mapid self property, so other code can interact with it.
         self.map_data[mapid].map = map;
         self.map_data[mapid].map_center = new google.maps.LatLng(map_settings.map_center.lat, map_settings.map_center.lon);
