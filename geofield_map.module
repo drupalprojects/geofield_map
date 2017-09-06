@@ -31,13 +31,20 @@ function geofield_map_help($route_name, RouteMatchInterface $route_match) {
  */
 function geofield_map_theme($existing, $type, $theme, $path) {
   return array(
-    'geofield_google_map' => array(
-      'variables' => array(
+    'geofield_map_widget' => [
+      'variables' => [
         'mapid' => NULL,
-        'height' => '400px',
         'width' => '100%',
-      ),
-    ),
+        'height' => '450px',
+      ],
+    ],
+    'geofield_google_map' => [
+      'variables' => [
+        'mapid' => NULL,
+        'width' => '100%',
+        'height' => '450px',
+      ],
+    ],
   );
 }
 

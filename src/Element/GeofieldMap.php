@@ -96,13 +96,10 @@ class GeofieldMap extends GeofieldElementBase {
     }
 
     $element['map']['geofield_map'] = array(
-      '#type' => 'html_tag',
-      '#tag' => 'div',
-      '#value' => '',
-      '#attributes' => [
-        'id' => $mapid,
-        'class' => ['geofield-map-cnt'],
-      ],
+      '#theme' => 'geofield_google_map',
+      '#mapid' => $mapid,
+      '#width' => isset($element['#map_dimensions']['width']) ? $element['#map_dimensions']['width'] : '100%',
+      '#height' => isset($element['#map_dimensions']['height']) ? $element['#map_dimensions']['height'] : '450px',
     );
 
     $element['map']['actions'] = [

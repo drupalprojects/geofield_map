@@ -205,6 +205,10 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     return array(
       'map_library' => 'gmap',
       'map_google_api_key' => '',
+      'map_dimensions' => [
+        'width' => '100%',
+        'height' => '450px',
+      ],
       'map_type_google' => 'ROADMAP',
       'map_type_leaflet' => 'OpenStreetMap_Mapnik',
       'map_type_selector' => TRUE,
@@ -321,6 +325,29 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#title' => $this->t('Provide a Map type Selector on the Map'),
       '#description' => $this->t('If checked, the user will be able to change Map Type throughout the selector.'),
       '#default_value' => $this->getSetting('map_type_selector'),
+    ];
+
+    $elements['map_dimensions'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Map Dimensions'),
+    ];
+    $elements['map_dimensions']['width'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Map width'),
+      '#default_value' => $this->getSetting('map_dimensions')['width'],
+      '#size' => 25,
+      '#maxlength' => 25,
+      '#description' => $this->t('The default width of a Google map, as a CSS length or percentage. Examples: <em>50px</em>, <em>5em</em>, <em>2.5in</em>, <em>95%</em>'),
+      '#required' => TRUE,
+    ];
+    $elements['map_dimensions']['height'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Map height'),
+      '#default_value' => $this->getSetting('map_dimensions')['height'],
+      '#size' => 25,
+      '#maxlength' => 25,
+      '#description' => $this->t('The default height of a Google map, as a CSS length or percentage. Examples: <em>50px</em>, <em>5em</em>, <em>2.5in</em>, <em>95%</em>'),
+      '#required' => TRUE,
     ];
 
     $elements['zoom'] = array(
@@ -479,6 +506,13 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#markup' => $this->t('Map Type Selector: @state', array('@state' => $this->getSetting('map_type_selector') ? $this->t('enabled') : $this->t('disabled'))),
     ];
 
+    $map_dimensions = [
+      '#markup' => $this->t('Map Dimensions -'),
+    ];
+
+    $map_dimensions['#markup'] .= ' ' . $this->t('Width: @state;', array('@state' => $this->getSetting('map_dimensions')['width']));
+    $map_dimensions['#markup'] .= ' ' . $this->t('Height: @state;', array('@state' => $this->getSetting('map_dimensions')['height']));
+
     $map_zoom_levels = [
       '#markup' => $this->t('Zoom Levels -'),
     ];
@@ -517,6 +551,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       'map_type' => $map_type,
       'map_gmap_api_key' => $map_gmap_api_key,
       'map_type_selector' => $map_type_selector,
+      'map_dimensions' => $map_dimensions,
       'map_zoom_levels' => $map_zoom_levels,
       'html5' => $html5,
       'map_center' => $map_center,
@@ -563,6 +598,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#map_type_selector' => $this->getSetting('map_type_selector'),
       '#map_types_google' => $this->gMapTypesOptions,
       '#map_types_leaflet' => $this->leafletTileLayers,
+      '#map_dimensions' => $this->getSetting('map_dimensions'),
       '#zoom' => $this->getSetting('zoom'),
       '#click_to_find_marker' => $this->getSetting('click_to_find_marker'),
       '#click_to_place_marker' => $this->getSetting('click_to_place_marker'),
@@ -571,7 +607,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#gmap_api_key' => $gmap_api_key,
     );
 
-    return array('value' => $element);
+    return ['value' => $element];
   }
 
   /**
