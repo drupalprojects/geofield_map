@@ -31,6 +31,11 @@
 
   Drupal.geoFieldMap = {
 
+    map_start: {
+      center: {lat: 41.85, lng: -87.65},
+      zoom: 18,
+    },
+
     map_data: {},
 
     // Google Maps are loaded lazily. In some situations load_google() is called twice, which results in
@@ -203,16 +208,27 @@
         // Define the Geofield Google Map.
         var map = new google.maps.Map(document.getElementById(mapid), mapOptions);
 
+        // Add the Map Reset Control, if set.
+        if (map_settings.map_zoom_and_pan.map_reset) {
+          var mapResetControlPosition = 'TOP_RIGHT';
+
+          // Create the DIV to hold the control and call the mapResetControl()
+          // constructor passing in this DIV.
+          var mapResetControlDiv = document.createElement('div');
+          var mapResetControl = new self.map_reset_control(mapResetControlDiv, mapid);
+          mapResetControlDiv.index = 1;
+          map.controls[google.maps.ControlPosition[mapResetControlPosition]].push(mapResetControlDiv);
+        }
+
         // Ensure map marker stays center on window resize
         google.maps.event.addDomListener(window, "resize", function() {
-            var center = map.getCenter();
-            google.maps.event.trigger(map, "resize");
-            map.setCenter(center);
+          var center = map.getCenter();
+          google.maps.event.trigger(map, "resize");
+          map.setCenter(center);
         });
 
         // Define a mapid self property, so other code can interact with it.
         self.map_data[mapid].map = map;
-        self.map_data[mapid].map_center = new google.maps.LatLng(map_settings.map_center.lat, map_settings.map_center.lon);
         self.map_data[mapid].markers = [];
 
         // Define the MapBounds property.
@@ -263,7 +279,7 @@
 
           // Implement Markeclustering, if more than 1 marker on the map,
           // and the markercluster option is set to true.
-          if(self.map_data[mapid].markers.length > 1 && typeof MarkerClusterer !== 'undefined' && map_settings.map_markercluster.markercluster_control) {
+          if (self.map_data[mapid].markers.length > 1 && typeof MarkerClusterer !== 'undefined' && map_settings.map_markercluster.markercluster_control) {
 
             var markeclusterOption = {
               imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'
@@ -277,7 +293,8 @@
           }
         }
 
-        if(!self.map_data[mapid].map_bounds.isEmpty() && self.map_data[mapid].markers.length > 1) {
+        // If the Map Initial State is defined by MapBounds.
+        if (!self.map_data[mapid].map_bounds.isEmpty() && self.map_data[mapid].markers.length > 1) {
           map.fitBounds(self.map_data[mapid].map_bounds);
           google.maps.event.addListenerOnce(map, 'idle', function() {
             // Just once the fitBounds completes we can check to override it
@@ -288,14 +305,52 @@
             if (zoomForce) {
               map.setZoom(mapOptions.zoom);
             }
+            // Update the map initial state.
+            self.map_data[mapid].map_center = map.getCenter();
+            self.map_data[mapid].map_zoom = map.getZoom();
           });
         }
+        // else if the Map Initial State is defined by just one marker.
         else if (self.map_data[mapid].markers.length === 1 && !centerForce) {
           map.setCenter(self.map_data[mapid].markers[0].getPosition());
           map.setZoom(mapOptions.zoom);
         }
+
+        // Define the map initial state.
+        self.map_data[mapid].map_center = self.map_data[mapid].markers[0].getPosition();
+        self.map_data[mapid].map_zoom = mapOptions.zoom;
       }
+    },
+    map_reset_control: function (controlDiv, mapid) {
+      // Set CSS for the control border.
+      var controlUI = document.createElement('div');
+      controlUI.style.backgroundColor = '#fff';
+      controlUI.style.border = '2px solid #fff';
+      controlUI.style.borderRadius = '3px';
+      controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
+      controlUI.style.cursor = 'pointer';
+      controlUI.style.margin = '6px';
+      controlUI.style.textAlign = 'center';
+      controlUI.title = Drupal.t('Click to reset the map to its initial state');
+      controlDiv.appendChild(controlUI);
+
+      // Set CSS for the control interior.
+      var controlText = document.createElement('div');
+      controlText.style.color = 'rgb(25,25,25)';
+      controlText.style.fontSize = '1.1em';
+      controlText.style.lineHeight = '28px';
+      controlText.style.paddingLeft = '5px';
+      controlText.style.paddingRight = '5px';
+      controlText.innerHTML = Drupal.t('Reset Map');
+      controlUI.appendChild(controlText);
+
+      // Setup the click event listeners: simply set the map to Chicago.
+      controlUI.addEventListener('click', function() {
+        Drupal.geoFieldMap.map_data[mapid].map.setCenter(Drupal.geoFieldMap.map_data[mapid].map_center);
+        Drupal.geoFieldMap.map_data[mapid].map.setZoom(Drupal.geoFieldMap.map_data[mapid].map_zoom);
+      });
     }
+
   };
 
 })(jQuery, Drupal, drupalSettings);

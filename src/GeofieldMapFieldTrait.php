@@ -88,6 +88,7 @@ trait GeofieldMapFieldTrait {
         ],
         'scrollwheel' => 1,
         'draggable' => 1,
+        'map_reset' => 0,
       ],
       'map_controls' => [
         'disable_default_ui' => 0,
@@ -316,6 +317,14 @@ trait GeofieldMapFieldTrait {
       '#title' => $this->t('Draggable'),
       '#description' => $this->t('Enable dragging/panning on the map'),
       '#default_value' => $settings['map_zoom_and_pan']['draggable'],
+      '#return_value' => 1,
+    ];
+
+    $elements['map_zoom_and_pan']['map_reset'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable Map Reset Control'),
+      '#description' => $this->t('This will show a "Reset Map" button to reset the Map to its initial center & zoom state'),
+      '#default_value' => isset($settings['map_zoom_and_pan']['map_reset']) ? $settings['map_zoom_and_pan']['map_reset'] : FALSE,
       '#return_value' => 1,
     ];
 

@@ -275,6 +275,11 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
         '#tag' => 'div',
         '#value' => $this->t('Draggable: @state', ['@state' => $settings['map_zoom_and_pan']['draggable'] ? $this->t('Yes') : $this->t('No')]),
       ],
+      'map_reset' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Map Reset Control: @state', ['@state' => !empty($settings['map_zoom_and_pan']['map_reset']) ? $this->t('Yes') : $this->t('No')]),
+      ]
     ];
 
     // Remove the unselected array keys
