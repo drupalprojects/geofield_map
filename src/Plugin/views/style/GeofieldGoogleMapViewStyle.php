@@ -4,8 +4,6 @@ namespace Drupal\geofield_map\Plugin\views\style;
 
 use Drupal\geofield_map\GeofieldMapFieldTrait;
 use Drupal\Component\Utility\Html;
-use Drupal\Component\Utility\UrlHelper;
-use Drupal\Core\Url;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\Plugin\views\style\StylePluginBase;

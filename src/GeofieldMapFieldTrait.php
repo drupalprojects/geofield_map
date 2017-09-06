@@ -6,7 +6,6 @@ use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Url;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\geofield\GeoPHP\GeoPHPInterface;
 
 /**
  * Class GeofieldMapFieldTrait.
