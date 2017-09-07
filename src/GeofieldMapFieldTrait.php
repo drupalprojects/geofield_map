@@ -628,13 +628,9 @@ trait GeofieldMapFieldTrait {
    * Form element json format validation handler.
    */
   public static function jsonValidate($element, FormStateInterface &$form_state) {
-    $element_values_array = JSON::decode($element['#value']);
     // Check the jsonValue.
-    if (!empty($element['#value']) && $element_values_array == NULL) {
+    if (!empty($element['#value']) && JSON::decode($element['#value']) == NULL) {
       $form_state->setError($element, t('The @field field is not valid Json Format.', ['@field' => $element['#title']]));
-    }
-    else {
-      $form_state->setValueForElement($element, JSON::encode($element_values_array));
     }
   }
 
