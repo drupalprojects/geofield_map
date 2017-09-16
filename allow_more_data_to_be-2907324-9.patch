@@ -1,0 +1,71 @@
+diff --git a/js/geofield_google_map.js b/js/geofield_google_map.js
+index 7ec7e81..f15060f 100644
+--- a/js/geofield_google_map.js
++++ b/js/geofield_google_map.js
+@@ -14,7 +14,7 @@
+           if (drupalSettings['geofield_google_map'][mapid] && !Drupal.geoFieldMap.map_data[mapid]) {
+ 
+             var map_settings = drupalSettings['geofield_google_map'][mapid]['map_settings'];
+-            var data = drupalSettings['geofield_google_map'][mapid]['data'];
++            var data = drupalSettings['geofield_google_map'][mapid].data;
+ 
+             // Set the map_data[mapid] settings.
+             Drupal.geoFieldMap.map_data[mapid] = map_settings;
+@@ -229,6 +229,7 @@
+ 
+         // Define a mapid self property, so other code can interact with it.
+         self.map_data[mapid].map = map;
++        self.map_data[mapid].features = data.features;
+         self.map_data[mapid].markers = [];
+ 
+         // Define the MapBounds property.
+diff --git a/src/GeofieldMapFieldTrait.php b/src/GeofieldMapFieldTrait.php
+index 7f31abb..571760c 100644
+--- a/src/GeofieldMapFieldTrait.php
++++ b/src/GeofieldMapFieldTrait.php
+@@ -695,8 +695,15 @@ trait GeofieldMapFieldTrait {
+    *   The Geofield Data Values.
+    * @param string $description
+    *   The description value.
++   * @param mixed $additional_data
++   *   Additional data to be added to the feature properties, i.e.
++   *   GeofieldGoogleMapViewStyle will add row fields (already rendered).
++   *
++   * @return array
++   *   The data array for the current feature, including Geojson and additional
++   *   data.
+    */
+-  protected function getGeoJsonData($items, $description = NULL) {
++  protected function getGeoJsonData($items, $description = NULL, $additional_data = NULL) {
+     $data = [];
+     foreach ($items as $delta => $item) {
+ 
+@@ -709,6 +716,7 @@ trait GeofieldMapFieldTrait {
+         ];
+         $datum['properties'] = [
+           'description' => isset($description) ? $description : NULL,
++          'data' => $additional_data,
+         ];
+         $data[] = $datum;
+       }
+diff --git a/src/Plugin/views/style/GeofieldGoogleMapViewStyle.php b/src/Plugin/views/style/GeofieldGoogleMapViewStyle.php
+index df4f89d..60985dc 100644
+--- a/src/Plugin/views/style/GeofieldGoogleMapViewStyle.php
++++ b/src/Plugin/views/style/GeofieldGoogleMapViewStyle.php
+@@ -347,7 +347,15 @@ class GeofieldGoogleMapViewStyle extends StylePluginBase implements ContainerFac
+             $description = $this->rendered_fields[$id][$description_field];
+           }
+ 
+-          $data = array_merge($data, $this->getGeoJsonData($geofield_value, $description));
++          // Add Views fields to the Json output as additional_data property.
++          $view_data = [];
++          foreach ($this->rendered_fields[$id] as $field_name => $rendered_field) {
++            if (!empty($rendered_field)) {
++              /* @var \Drupal\Core\Render\Markup $rendered_field */
++              $view_data[$field_name] = $rendered_field->__toString();
++            }
++          }
++          $data = array_merge($data, $this->getGeoJsonData($geofield_value, $description, $view_data));
+         }
+       }
+     }
