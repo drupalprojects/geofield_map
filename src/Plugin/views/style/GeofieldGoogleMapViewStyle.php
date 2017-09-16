@@ -47,7 +47,7 @@ class GeofieldGoogleMapViewStyle extends StylePluginBase implements ContainerFac
   /**
    * The Entity type property.
    *
-   * @var string
+   *    @var string
    */
   private $entityType;
 
@@ -347,7 +347,15 @@ class GeofieldGoogleMapViewStyle extends StylePluginBase implements ContainerFac
             $description = $this->rendered_fields[$id][$description_field];
           }
 
-          $data = array_merge($data, $this->getGeoJsonData($geofield_value, $description));
+          // Add Views fields to the Json output as additional_data property.
+          $view_data = [];
+          foreach ($this->rendered_fields[$id] as $field_name => $rendered_field) {
+            if (!empty($rendered_field)) {
+              /* @var \Drupal\Core\Render\Markup $rendered_field */
+              $view_data[$field_name] = $rendered_field->__toString();
+            }
+          }
+          $data = array_merge($data, $this->getGeoJsonData($geofield_value, $description, $view_data));
         }
       }
     }

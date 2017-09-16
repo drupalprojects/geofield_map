@@ -14,7 +14,7 @@
           if (drupalSettings['geofield_google_map'][mapid] && !Drupal.geoFieldMap.map_data[mapid]) {
 
             var map_settings = drupalSettings['geofield_google_map'][mapid]['map_settings'];
-            var data = drupalSettings['geofield_google_map'][mapid]['data'];
+            var data = drupalSettings['geofield_google_map'][mapid].data;
 
             // Set the map_data[mapid] settings.
             Drupal.geoFieldMap.map_data[mapid] = map_settings;
@@ -229,6 +229,7 @@
 
         // Define a mapid self property, so other code can interact with it.
         self.map_data[mapid].map = map;
+        self.map_data[mapid].features = data.features;
         self.map_data[mapid].markers = [];
 
         // Define the MapBounds property.
