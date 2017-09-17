@@ -738,15 +738,8 @@ trait GeofieldMapFieldTrait {
    *   The Geofield Data Values.
    * @param string $description
    *   The description value.
-   * @param mixed $additional_data
-   *   Additional data to be added to the feature properties, i.e.
-   *   GeofieldGoogleMapViewStyle will add row fields (already rendered).
-   *
-   * @return array
-   *   The data array for the current feature, including Geojson and additional
-   *   data.
    */
-  protected function getGeoJsonData($items, $description = NULL, $additional_data = NULL) {
+  protected function getGeoJsonData($items, $description = NULL) {
     $data = [];
     foreach ($items as $delta => $item) {
 
@@ -759,7 +752,6 @@ trait GeofieldMapFieldTrait {
         ];
         $datum['properties'] = [
           'description' => isset($description) ? $description : NULL,
-          'data' => $additional_data,
         ];
         $data[] = $datum;
       }
