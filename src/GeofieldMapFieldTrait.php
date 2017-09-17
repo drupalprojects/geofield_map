@@ -548,6 +548,49 @@ trait GeofieldMapFieldTrait {
       '#element_validate' => [[get_class($this), 'jsonValidate']],
     ];
 
+    $elements['custom_style_map'] = array(
+      '#type' => 'fieldset',
+      '#title' => $this->t('Custom Styled Map'),
+    );
+    $elements['custom_style_map']['markup'] = [
+      '#markup' => $this->t('Define a specific @custom_google_map_style_link.', [
+        '@custom_google_map_style_link' => $link->generate(t('Custom Google Styled Map'), Url::fromUri('https://developers.google.com/maps/documentation/javascript/examples/maptype-styled-simple', [
+          'absolute' => TRUE,
+          'attributes' => ['target' => 'blank'],
+        ])),
+      ]),
+    ];
+    $elements['custom_style_map']['style_options'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Style Options'),
+      '#default_value' => $settings['map_markercluster']['markercluster_control'],
+      '#return_value' => 1,
+    ];
+    $elements['map_markercluster']['style_options'] = [
+      '#type' => 'textarea',
+      '#rows' => 5,
+      '#title' => $this->t('Style Options'),
+      '#description' => $this->t('An object literal of additional marker cluster options, that comply with the Marker Clusterer Google Maps JavaScript Library. The syntax should respect the javascript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.'),
+      '#default_value' => $settings['map_markercluster']['markercluster_additional_options'],
+      '#placeholder' => $this->t('{"maxZoom": 12, "gridSize": 25, "imagePath": "modules/custom/geofield_map/images/m"}'),
+      '#element_validate' => [[get_class($this), 'jsonValidate']],
+    ];
+
+    if (isset($fieldDefinition)) {
+      $elements['map_markercluster']['markercluster_additional_options']['#states'] = [
+        'visible' => [
+          ':input[name="fields[' . $fieldDefinition->getName() . '][settings_edit_form][settings][map_markercluster][markercluster_control]"]' => ['checked' => TRUE],
+        ],
+      ];
+    }
+    else {
+      $elements['map_markercluster']['markercluster_additional_options']['#states'] = [
+        'visible' => [
+          ':input[name="style_options[map_markercluster][markercluster_control]"]' => ['checked' => TRUE],
+        ],
+      ];
+    }
+
     $elements['map_markercluster'] = array(
       '#type' => 'fieldset',
       '#title' => $this->t('Marker Clustering'),
