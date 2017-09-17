@@ -229,6 +229,7 @@
 
         // Define a mapid self property, so other code can interact with it.
         self.map_data[mapid].map = map;
+        self.map_data[mapid].features = data.features;
         self.map_data[mapid].markers = [];
 
         // Define the MapBounds property.
