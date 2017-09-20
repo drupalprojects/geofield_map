@@ -203,7 +203,7 @@
         }
 
         // Merge mapOptions with additionalOptions.
-        Object.assign(mapOptions, additionalOptions);
+        $.extend(mapOptions, additionalOptions);
 
         // Define the Geofield Google Map.
         var map = new google.maps.Map(document.getElementById(mapid), mapOptions);
@@ -288,7 +288,7 @@
 
             var markeclusterAdditionalOptions = map_settings.map_markercluster.markercluster_additional_options.length > 0 ? JSON.parse(map_settings.map_markercluster.markercluster_additional_options) : {};
             // Merge markeclusterOption with markeclusterAdditionalOptions.
-            Object.assign(markeclusterOption, markeclusterAdditionalOptions);
+            $.extend(markeclusterOption, markeclusterAdditionalOptions);
 
             var markerCluster = new MarkerClusterer(map, self.map_data[mapid].markers, markeclusterOption);
           }
