@@ -178,6 +178,15 @@
         if(!!map_settings.map_controls.disable_default_ui) {
           mapOptions.disableDefaultUI = map_settings.map_controls.disable_default_ui;
         } else {
+
+          // Implement Custom Style Map, if Set.
+          if (map_settings.custom_style_map && map_settings.custom_style_map.custom_style_control && map_settings.custom_style_map.custom_style_name.length > 0 && map_settings.custom_style_map.custom_style_options.length > 0) {
+            var customMapStyleName = map_settings.custom_style_map.custom_style_name;
+            var customMapStyle = JSON.parse(map_settings.custom_style_map.custom_style_options);
+            var styledMapType = new google.maps.StyledMapType(customMapStyle, {name: customMapStyleName});
+            map_settings.map_controls.map_type_control_options_type_ids.push('custom_styled_map');
+          }
+
           mapOptions.zoomControl = !!map_settings.map_controls.zoom_control;
           mapOptions.mapTypeControl = !!map_settings.map_controls.map_type_control;
           mapOptions.mapTypeControlOptions = {
@@ -220,6 +229,15 @@
           var mapResetControl = new self.map_reset_control(mapResetControlDiv, mapid);
           mapResetControlDiv.index = 1;
           map.controls[google.maps.ControlPosition[mapResetControlPosition]].push(mapResetControlDiv);
+        }
+
+        // If defined a Custom Map Style, associate the styled map with custom_styled_map MapTypeId and set it to display.
+        if (styledMapType) {
+          map.mapTypes.set('custom_styled_map', styledMapType);
+          // Set Custom Map Style to Default, if requested.
+          if (map_settings.custom_style_map && map_settings.custom_style_map.custom_style_default) {
+            map.setMapTypeId('custom_styled_map');
+          }
         }
 
         // Ensure map marker stays center on window resize

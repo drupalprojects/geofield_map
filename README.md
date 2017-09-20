@@ -11,7 +11,7 @@ It **lets you manage the Geofield with an interactive Map both in back-end and i
 
 ####Technical Functionalities and specifications
 
-The actual module release implements the following components:
+The actual module release implements the following components and functionalities:
 
 ####Geofield Map widget
 An higly customizable Map widget, 
@@ -33,6 +33,11 @@ An highly customizable Google Map formatter, by which render and expose the cont
 ####Views Integration
 A dedicated Geofield Map View style plugin able to render a Views result on a higly customizable Google Map, 
 with Marker and Infowindow specifications and Markers Clustering capabilities.
+
+###Advanced Google Map and Markeclustering Features for the front-end maps
+Both in Geofield Map Formatter and in the Geofield Map View style it is possible:
+- to add additional Map and Markecluster Options, as Object Literal in valid Json format;
+- define and manage a [Google Custom Map Style](https://developers.google.com/maps/documentation/javascript/examples/maptype-styled-simple);
 
 ###Installation and Use
 

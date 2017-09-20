@@ -108,6 +108,13 @@ trait GeofieldMapFieldTrait {
         'icon_image_path' => '',
         'infowindow_field' => 'title',
       ],
+      'map_additional_options' => '',
+      'custom_style_map' => [
+        'custom_style_control' => 0,
+        'custom_style_name' => '',
+        'custom_style_options' => '',
+        'custom_style_default' => 0,
+      ],
       'map_markercluster' => [
         'markercluster_control' => 0,
         'markercluster_additional_options' => '',
@@ -539,12 +546,12 @@ trait GeofieldMapFieldTrait {
       '#type' => 'textarea',
       '#rows' => 5,
       '#title' => $this->t('Map Additional Options'),
-      '#description' => $this->t('<strong>These will override the above settings</strong><br>An object literal of additional map options, that comply with the Google Maps JavaScript API. The syntax should respect the javascript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.<br>It is even possible to input Map Control Positions. For this use the numeric values of the google.maps.ControlPosition, otherwise the option will be passed as incomprehensible string to Google Maps API.'),
+      '#description' => $this->t('<strong>These will override the above settings</strong><br>An object literal of additional map options, that comply with the Google Maps JavaScript API.<br>The syntax should respect the javascript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.<br>It is even possible to input Map Control Positions. For this use the numeric values of the google.maps.ControlPosition, otherwise the option will be passed as incomprehensible string to Google Maps API.'),
       '#default_value' => $settings['map_additional_options'],
-      '#placeholder' => $this->t('{"disableDoubleClickZoom": "cooperative",
+      '#placeholder' => '{"disableDoubleClickZoom": "cooperative",
 "gestureHandling": "none",
 "streetViewControlOptions": {"position": 5}
-}'),
+}',
       '#element_validate' => [[get_class($this), 'jsonValidate']],
     ];
 
@@ -552,44 +559,72 @@ trait GeofieldMapFieldTrait {
       '#type' => 'fieldset',
       '#title' => $this->t('Custom Styled Map'),
     );
-    $elements['custom_style_map']['markup'] = [
-      '#markup' => $this->t('Define a specific @custom_google_map_style_link.', [
-        '@custom_google_map_style_link' => $link->generate(t('Custom Google Styled Map'), Url::fromUri('https://developers.google.com/maps/documentation/javascript/examples/maptype-styled-simple', [
+    $elements['custom_style_map']['custom_style_control'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Create a @custom_google_map_style_link.', [
+        '@custom_google_map_style_link' => $link->generate(t('Custom Google Map Style'), Url::fromUri('https://developers.google.com/maps/documentation/javascript/examples/maptype-styled-simple', [
           'absolute' => TRUE,
           'attributes' => ['target' => 'blank'],
         ])),
       ]),
-    ];
-    $elements['custom_style_map']['style_options'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Style Options'),
-      '#default_value' => $settings['map_markercluster']['markercluster_control'],
+      '#description' => $this->t('This option allows to create a new map type, which the user can select from the map type control. The map type includes custom styles.'),
+      '#default_value' => $settings['custom_style_map']['custom_style_control'],
       '#return_value' => 1,
     ];
-    $elements['map_markercluster']['style_options'] = [
+    $elements['custom_style_map']['custom_style_name'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Custom Map Style Name'),
+      '#description' => $this->t('Input the Name of the Custom Map Style you want to create.'),
+      '#default_value' => $settings['custom_style_map']['custom_style_name'],
+      '#placeholder' => $this->t('My Custom Map Style'),
+      '#element_validate' => [[get_class($this), 'customMapStyleValidate']],
+    ];
+    $elements['custom_style_map']['custom_style_options'] = [
       '#type' => 'textarea',
       '#rows' => 5,
-      '#title' => $this->t('Style Options'),
-      '#description' => $this->t('An object literal of additional marker cluster options, that comply with the Marker Clusterer Google Maps JavaScript Library. The syntax should respect the javascript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.'),
-      '#default_value' => $settings['map_markercluster']['markercluster_additional_options'],
-      '#placeholder' => $this->t('{"maxZoom": 12, "gridSize": 25, "imagePath": "modules/custom/geofield_map/images/m"}'),
-      '#element_validate' => [[get_class($this), 'jsonValidate']],
+      '#title' => $this->t('Custom Map Style Options'),
+      '#description' => $this->t('An object literal of map style options, that comply with the Google Maps JavaScript API.<br>The syntax should respect the javascript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.'),
+      '#default_value' => $settings['custom_style_map']['custom_style_options'],
+      '#placeholder' => '[{"elementType": "geometry", "stylers": [{"color": "#ebe3cd"}]},
+{"elementType": "labels.text.stroke", "stylers": [{"color": "#523735"}]},
+{"elementType": "labels.text.fill", "stylers": [{"color": "#f5f1e6"}]},
+{"featureType": "administrative",
+"elementType": "geometry.stroke",
+"stylers": [{"color": "#c9b2a6"}]}]',
+      '#element_validate' => [[get_class($this), 'jsonValidate'], [get_class($this), 'customMapStyleValidate']],
+    ];
+    $elements['custom_style_map']['custom_style_default'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Force the Custom Map Style as Default'),
+      '#description' => $this->t('The Custom Map Style will be the Default starting one.'),
+      '#default_value' => $settings['custom_style_map']['custom_style_default'],
+      '#return_value' => 1,
     ];
 
     if (isset($fieldDefinition)) {
-      $elements['map_markercluster']['markercluster_additional_options']['#states'] = [
-        'visible' => [
-          ':input[name="fields[' . $fieldDefinition->getName() . '][settings_edit_form][settings][map_markercluster][markercluster_control]"]' => ['checked' => TRUE],
-        ],
-      ];
+      $custom_style_map_control_selector = ':input[name="fields[' . $fieldDefinition->getName() . '][settings_edit_form][settings][custom_style_map][custom_style_control]"]';
     }
     else {
-      $elements['map_markercluster']['markercluster_additional_options']['#states'] = [
-        'visible' => [
-          ':input[name="style_options[map_markercluster][markercluster_control]"]' => ['checked' => TRUE],
-        ],
-      ];
+      $custom_style_map_control_selector = ':input[name="style_options[custom_style_map][custom_style_control]"]';
     }
+    $elements['custom_style_map']['custom_style_name']['#states'] = [
+      'visible' => [
+        $custom_style_map_control_selector => ['checked' => TRUE],
+      ],
+      'required' => [
+        $custom_style_map_control_selector => ['checked' => TRUE],
+      ],
+    ];
+    $elements['custom_style_map']['custom_style_options']['#states'] = [
+      'visible' => [
+        $custom_style_map_control_selector => ['checked' => TRUE],
+      ],
+    ];
+    $elements['custom_style_map']['custom_style_default']['#states'] = [
+      'visible' => [
+        $custom_style_map_control_selector => ['checked' => TRUE],
+      ],
+    ];
 
     $elements['map_markercluster'] = array(
       '#type' => 'fieldset',
@@ -613,9 +648,9 @@ trait GeofieldMapFieldTrait {
       '#type' => 'textarea',
       '#rows' => 5,
       '#title' => $this->t('Marker Cluster Additional Options'),
-      '#description' => $this->t('An object literal of additional marker cluster options, that comply with the Marker Clusterer Google Maps JavaScript Library. The syntax should respect the javascript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.'),
+      '#description' => $this->t('An object literal of additional marker cluster options, that comply with the Marker Clusterer Google Maps JavaScript Library.<br>The syntax should respect the javascript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.'),
       '#default_value' => $settings['map_markercluster']['markercluster_additional_options'],
-      '#placeholder' => $this->t('{"maxZoom": 12, "gridSize": 25, "imagePath": "modules/custom/geofield_map/images/m"}'),
+      '#placeholder' => '{"maxZoom": 12, "gridSize": 25, "imagePath": "modules/custom/geofield_map/images/m"}',
       '#element_validate' => [[get_class($this), 'jsonValidate']],
     ];
 
@@ -676,6 +711,21 @@ trait GeofieldMapFieldTrait {
   }
 
   /**
+   * Form element validation handler for a Custom Map Style Name Required.
+   */
+  public static function customMapStyleValidate($element, FormStateInterface &$form_state) {
+    // Get to the actual values in a form tree.
+    $parents = $element['#parents'];
+    $values = $form_state->getValues();
+    for ($i = 0; $i < count($parents) - 1; $i++) {
+      $values = $values[$parents[$i]];
+    }
+    if ($values['custom_style_control'] && empty($element['#value'])) {
+      $form_state->setError($element, t('The @field cannot be empty.', ['@field' => $element['#title']]));
+    }
+  }
+
+  /**
    * Form element json format validation handler.
    */
   public static function jsonValidate($element, FormStateInterface &$form_state) {
@@ -714,7 +764,7 @@ trait GeofieldMapFieldTrait {
    * @param array $map_settings
    *   The map settings.
    */
-  protected function preProcessMapSettings(&$map_settings) {
+  protected function preProcessMapSettings(array &$map_settings) {
     // Set the gmap_api_key as map settings.
     $map_settings['gmap_api_key'] = $this->getGmapApiKey();
 

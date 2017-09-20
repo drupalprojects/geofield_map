@@ -279,7 +279,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
         '#type' => 'html_tag',
         '#tag' => 'div',
         '#value' => $this->t('Map Reset Control: @state', ['@state' => !empty($settings['map_zoom_and_pan']['map_reset']) ? $this->t('Yes') : $this->t('No')]),
-      ]
+      ],
     ];
 
     // Remove the unselected array keys
@@ -375,6 +375,25 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       ];
     }
 
+    $custom_style_map = [
+      '#type' => 'html_tag',
+      '#tag' => 'div',
+      '#value' => $this->t('Custom Style Map: @state', ['@state' => $settings['custom_style_map']['custom_style_control'] ? $this->t('Yes') : $this->t('No')]),
+    ];
+
+    if ($settings['custom_style_map']['custom_style_control']) {
+      $custom_style_map['custom_style_name'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Custom Style Name: @state', ['@state' => $settings['custom_style_map']['custom_style_name']]),
+      ];
+      $custom_style_map['custom_style_default'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Custom Map Style as Default: @state', ['@state' => $settings['custom_style_map']['custom_style_default'] ? $this->t('Yes') : $this->t('No')]),
+      ];
+    }
+
     $map_markercluster = [
       '#type' => 'html_tag',
       '#tag' => 'div',
@@ -408,6 +427,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       'map_controls' => $map_controls,
       'map_marker_and_infowindow' => $map_marker_and_infowindow,
       'map_additional_options' => isset($map_additional_options) ? $map_additional_options : NULL,
+      'custom_style_map' => $custom_style_map,
       'map_markercluster' => $map_markercluster,
     ];
 
