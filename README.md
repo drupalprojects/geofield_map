@@ -44,7 +44,10 @@ and select "Geofield Map" as Geofield Widget. Specify the Widget further setting
 - Geofield Map Views: In a View Display select the Geofield Google Map Format, and be sure to add a Geofield type field in the fields list. Specify the View Format settings for specific personalization;
 
 
+####Hints for Advanced Use: 
+- The Geofield Map View style plugin will pass to the client js (as drupalSettings.geofield_google_map[mapid] & Drupal.geoFieldMap[mapid] variables) the un-hidden fields values of the View, as markers/features' properties data;
+
 ####Notes & Warnings: 
 - The Geofield Map module depends on the [Geofield](https://www.drupal.org/project/geofield) module;
 - A valid <u>Gmap Api Key</u> is needed** for Google Maps rendering, and for any Geocoding and Reverse Geocoding functionalities, as actually based on the Google Geocoder;
-- Although in mind, there is no <u>Leaflet Map library</u> support at the moment for the Geofield Map Formatter and the  Map Views Plugin. Please refer to the [Leaflet](https://www.drupal.org/project/leaflet) and the [Leaflet Markercluster](https://www.drupal.org/project/leaflet_markercluster) modules for Leaflet front-end mapping of Drupal 8 Geofields;
+- Although in mind, there is no <u>Leaflet Map library</u> support at the moment for the Geofield Map Formatter and the  Map Views asPlugin. Please refer to the [Leaflet](https://www.drupal.org/project/leaflet) and the [Leaflet Markercluster](https://www.drupal.org/project/leaflet_markercluster) modules for Leaflet front-end mapping of Drupal 8 Geofields;

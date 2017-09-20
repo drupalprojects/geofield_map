@@ -189,21 +189,23 @@
           mapOptions.fullscreenControl = !!map_settings.map_controls.fullscreen_control;
         }
 
-        var additionalOptions = map_settings.map_additional_options.length > 0 ? JSON.parse(map_settings.map_additional_options) : {};
-        // Transforms additionalOptions "true", "false" values into true & false.
-        for (var prop in additionalOptions) {
-          if (additionalOptions.hasOwnProperty(prop)) {
-            if (additionalOptions[prop] === 'true') {
-              additionalOptions[prop] = true;
-            }
-            if (additionalOptions[prop] === 'false') {
-              additionalOptions[prop] = false;
+        // Add map_additional_options if any.
+        if (map_settings.map_additional_options.length > 0) {
+          var additionalOptions = JSON.parse(map_settings.map_additional_options) ;
+          // Transforms additionalOptions "true", "false" values into true & false.
+          for (var prop in additionalOptions) {
+            if (additionalOptions.hasOwnProperty(prop)) {
+              if (additionalOptions[prop] === 'true') {
+                additionalOptions[prop] = true;
+              }
+              if (additionalOptions[prop] === 'false') {
+                additionalOptions[prop] = false;
+              }
             }
           }
+          // Merge mapOptions with additionalOptions.
+          $.extend(mapOptions, additionalOptions);
         }
-
-        // Merge mapOptions with additionalOptions.
-        Object.assign(mapOptions, additionalOptions);
 
         // Define the Geofield Google Map.
         var map = new google.maps.Map(document.getElementById(mapid), mapOptions);
@@ -229,6 +231,7 @@
 
         // Define a mapid self property, so other code can interact with it.
         self.map_data[mapid].map = map;
+        self.map_data[mapid].features = data.features;
         self.map_data[mapid].markers = [];
 
         // Define the MapBounds property.
@@ -285,9 +288,12 @@
               imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'
             };
 
-            var markeclusterAdditionalOptions = map_settings.map_markercluster.markercluster_additional_options.length > 0 ? JSON.parse(map_settings.map_markercluster.markercluster_additional_options) : {};
-            // Merge markeclusterOption with markeclusterAdditionalOptions.
-            Object.assign(markeclusterOption, markeclusterAdditionalOptions);
+            // Add markercluster_additional_options if any.
+            if(map_settings.map_markercluster.markercluster_additional_options.length > 0) {
+              var markeclusterAdditionalOptions = JSON.parse(map_settings.map_markercluster.markercluster_additional_options);
+              // Merge markeclusterOption with markeclusterAdditionalOptions.
+              $.extend(markeclusterOption, markeclusterAdditionalOptions);
+            }
 
             var markerCluster = new MarkerClusterer(map, self.map_data[mapid].markers, markeclusterOption);
           }
