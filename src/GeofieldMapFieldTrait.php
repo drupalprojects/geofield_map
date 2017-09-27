@@ -583,7 +583,12 @@ trait GeofieldMapFieldTrait {
       '#type' => 'textarea',
       '#rows' => 5,
       '#title' => $this->t('Custom Map Style Options'),
-      '#description' => $this->t('An object literal of map style options, that comply with the Google Maps JavaScript API.<br>The syntax should respect the javascript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.'),
+      '#description' => $this->t('An object literal of map style options, that comply with the Google Maps JavaScript API.<br>The syntax should respect the javascript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.<br>(As a useful reference consider using @snappy_maps).', [
+        '@snappy_maps' => $link->generate(t('Snappy Maps'), Url::fromUri('https://snazzymaps.com', [
+          'absolute' => TRUE,
+          'attributes' => ['target' => 'blank'],
+        ])),
+      ]),
       '#default_value' => $settings['custom_style_map']['custom_style_options'],
       '#placeholder' => '[{"elementType": "geometry", "stylers": [{"color": "#ebe3cd"}]},
 {"elementType": "labels.text.stroke", "stylers": [{"color": "#523735"}]},
