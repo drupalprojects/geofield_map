@@ -458,9 +458,9 @@ trait GeofieldMapFieldTrait {
       '#type' => 'textfield',
       '#title' => $this->t('Icon Image'),
       '#size' => '120',
-      '#description' => $this->t('Input the Specific Icon Image path (absolute or relative to the Drupal site root). If not set, the Default Google Marker will be used.'),
+      '#description' => $this->t('Input the Specific Icon Image path (absolute path, or relative to the Drupal site root). If not set, or not found/loadable, the Default Google Marker will be used.'),
       '#default_value' => $settings['map_marker_and_infowindow']['icon_image_path'],
-      '#placeholder' => 'https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png',
+      '#placeholder' => 'modules/custom/geofield_map/images/beachflag.png',
       '#element_validate' => [[get_class($this), 'urlValidate']],
     ];
 
