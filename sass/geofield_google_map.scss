@@ -5,6 +5,7 @@
   max-width: none;
 }
 
+
 // Map Infowindow Styling
 .gm-style-iw {
   max-width: 220px;
@@ -29,5 +30,8 @@
   }
   p:first-child, div:first-child, .field:first-child {
     padding: 2px 0;
+  }
+  .geofield-google-map {
+    display: none;
   }
 }
