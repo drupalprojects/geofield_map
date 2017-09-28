@@ -114,18 +114,33 @@
 
       // Set the personalized Icon Image, if set.
       if (feature.setIcon && icon_image && icon_image.length > 0) {
-        $.ajax({
-          url: icon_image,
-          type:'HEAD',
-          error: function()
-          {
+
+        function checkImage(imageSrc, setIcon, logError) {
+          var img = new Image();
+          img.src = imageSrc;
+          img.onload = setIcon;
+          img.onerror = logError;
+        }
+
+        checkImage(icon_image, function(){
+          feature.setIcon(icon_image);
+        },
+          function(){
             console.log('Geofield Gmap: The Icon Image doesn\'t exist at the set path');
-          },
-          success: function()
-          {
-            feature.setIcon(icon_image);
-          }
-        });
+          });
+
+        /**
+         *
+         * @param url
+         * @returns {boolean}
+         * @constructor
+         */
+        function UrlExists(url) {
+          var http = new XMLHttpRequest();
+          http.open('HEAD', url, false);
+          http.send();
+          return http.status !== 404;
+        }
 
       }
 

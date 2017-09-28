@@ -655,7 +655,7 @@ trait GeofieldMapFieldTrait {
       '#title' => $this->t('Marker Cluster Additional Options'),
       '#description' => $this->t('An object literal of additional marker cluster options, that comply with the Marker Clusterer Google Maps JavaScript Library.<br>The syntax should respect the javascript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.'),
       '#default_value' => $settings['map_markercluster']['markercluster_additional_options'],
-      '#placeholder' => '{"maxZoom": 12, "gridSize": 25, "imagePath": "modules/custom/geofield_map/images/m"}',
+      '#placeholder' => '{"maxZoom": 12, "gridSize": 25, "imagePath": "https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png"}',
       '#element_validate' => [[get_class($this), 'jsonValidate']],
     ];
 
