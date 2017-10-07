@@ -56,6 +56,8 @@ geojson:
   js:
     js/geojson.js: {}
 
+
+# External Marker Clusterer
 marker_cluster:
   remote: https://github.com/googlemaps/js-marker-clusterer
   version: 1.0.0
@@ -64,4 +66,4 @@ marker_cluster:
     url: https://github.com/googlemaps/js-marker-clusterer/blob/gh-pages/LICENSE
     gpl-compatible: true
   js:
-    https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js: {}
+    https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js: { type: external }
