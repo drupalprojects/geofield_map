@@ -49,8 +49,8 @@ and select "Geofield Map" as Geofield Widget. Specify the Widget further setting
 - Geofield Google Map Formatter: In a Content Type including a Geofield Field, go to "Manage display" and select "Geofield Google Map" as Geofield field Formatter.  Specify the Formatter further settings for specific personalization;
 - Geofield Map Views: In a View Display select the Geofield Google Map Format, and be sure to add a Geofield type field in the fields list. Specify the View Format settings for specific personalization;
 
-
 ####Hints for Advanced Use: 
+- As default (configurable) option, eventual overlapping markers will be Spiderfied, with the support of the [Overlapping Marker Spiderfier Library (for Google Maps)](https://github.com/jawj/OverlappingMarkerSpiderfier#overlapping-marker-spiderfier-for-google-maps-api-v3)
 - The Geofield Map View style plugin will pass to the client js (as drupalSettings.geofield_google_map[mapid] & Drupal.geoFieldMap[mapid] variables) the un-hidden fields values of the View, as markers/features' properties data;
 
 ####Notes & Warnings: 

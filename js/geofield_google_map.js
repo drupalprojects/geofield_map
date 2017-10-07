@@ -303,13 +303,14 @@
           /**
            * Implement  OverlappingMarkerSpiderfier if its control set true.
            */
-          if (map_settings.map_marker_and_infowindow && map_settings.map_marker_and_infowindow.map_oms_control && OverlappingMarkerSpiderfier) {
-            self.map_data[mapid].oms = new OverlappingMarkerSpiderfier(map, {
+          if (map_settings.map_oms && map_settings.map_oms.map_oms_control && OverlappingMarkerSpiderfier) {
+            var omsOptions = map_settings.map_oms.map_oms_options.length > 0 ? JSON.parse(map_settings.map_oms.map_oms_options) : {
               markersWontMove: true,
               markersWontHide: true,
               basicFormatEvents: true,
               keepSpiderfied: true
-            });
+            };
+            self.map_data[mapid].oms = new OverlappingMarkerSpiderfier(map, omsOptions);
           }
 
           map.infowindow = new google.maps.InfoWindow({

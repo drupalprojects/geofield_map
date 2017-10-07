@@ -107,7 +107,10 @@ trait GeofieldMapFieldTrait {
       'map_marker_and_infowindow' => [
         'icon_image_path' => '',
         'infowindow_field' => 'title',
+      ],
+      'map_oms' => [
         'map_oms_control' => 1,
+        'map_oms_options' => '{"markersWontMove": "true", "markersWontHide": "true", "basicFormatEvents": "true"}',
       ],
       'map_additional_options' => '',
       'custom_style_map' => [
@@ -517,26 +520,6 @@ trait GeofieldMapFieldTrait {
       ];
     }
 
-    $elements['map_marker_and_infowindow']['map_oms_control'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Spiderfy overlapping markers'),
-      '#description' => $this->t('Use the standard setup of the @overlapping_marker_spiderfier to manage Overlapping Markers located in the exact same position.', [
-        '@overlapping_marker_spiderfier' => $link->generate(t('Overlapping Marker Spiderfier Library (for Google Maps)'), Url::fromUri('https://github.com/jawj/OverlappingMarkerSpiderfier#overlapping-marker-spiderfier-for-google-maps-api-v3', [
-          'absolute' => TRUE,
-          'attributes' => ['target' => 'blank'],
-        ])),
-      ]),
-      '#default_value' => isset($settings['map_marker_and_infowindow']['map_oms_control']) ? $settings['map_marker_and_infowindow']['map_oms_control'] : $default_settings['map_marker_and_infowindow']['map_oms_control'],
-      '#return_value' => 1,
-      '#states' => array(
-        'invisible' => array(
-          ':input[name$="[settings][map_marker_and_infowindow][infowindow_field]"]' => array(
-            'value' => '0',
-          ),
-        ),
-      ),
-    ];
-
     if (isset($entityType)) {
       // Get the human readable labels for the entity view modes.
       $view_mode_options = array();
@@ -573,6 +556,49 @@ trait GeofieldMapFieldTrait {
 }',
       '#element_validate' => [[get_class($this), 'jsonValidate']],
     ];
+
+    $elements['map_oms'] = array(
+      '#type' => 'fieldset',
+      '#title' => $this->t('Overlapping Markers'),
+      '#description' => $this->t('In case of markers\' identical geo positions, this option "spiderfy" their selection to make it possible the inspection of their infowindows & descriptions.'),
+      '#description_display' => 'before',
+    );
+    $elements['map_oms']['map_oms_control'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Spiderfy overlapping markers'),
+      '#description' => $this->t('Use the standard setup of the @overlapping_marker_spiderfier to manage Overlapping Markers located in the exact same position.<br> To make this working in conjunction with the Markercluster Option (see below) a "maxZoom" property should be set in the Marker Cluster Additional Options.', [
+        '@overlapping_marker_spiderfier' => $link->generate(t('Overlapping Marker Spiderfier Library (for Google Maps)'), Url::fromUri('https://github.com/jawj/OverlappingMarkerSpiderfier#overlapping-marker-spiderfier-for-google-maps-api-v3', [
+          'absolute' => TRUE,
+          'attributes' => ['target' => 'blank'],
+        ])),
+      ]),
+      '#default_value' => isset($settings['map_oms']['map_oms_control']) ? $settings['map_oms']['map_oms_control'] : $default_settings['map_oms']['map_oms_control'],
+      '#return_value' => 1,
+    ];
+    $elements['map_oms']['map_oms_options'] = [
+      '#type' => 'textarea',
+      '#rows' => 2,
+      '#title' => $this->t('Markers Spiderfy Options'),
+      '#description' => $this->t('An object literal of Spiderfy options, that comply with the Overlapping Marker Spiderfier Library (see link above).<br><b>Note: The three default options set here are the ones suggested from the library to save some memory and CPU in the simplest/standard implementations.</b><br>The syntax should respect the javascript object notation (json) format.<br>Always use double quotes (") both for the indexes and the string values.'),
+      '#default_value' => isset($settings['map_oms']['map_oms_options']) ? $settings['map_oms']['map_oms_options'] : $default_settings['map_oms']['map_oms_options'],
+      '#placeholder' => '{"markersWontMove": "true", "markersWontHide": "true", "basicFormatEvents": "true"}',
+      '#element_validate' => [[get_class($this), 'jsonValidate']],
+    ];
+
+    if (isset($fieldDefinition)) {
+      $elements['map_oms']['map_oms_options']['#states'] = [
+        'visible' => [
+          ':input[name="fields[' . $fieldDefinition->getName() . '][settings_edit_form][settings][map_oms][map_oms_control]"]' => ['checked' => TRUE],
+        ],
+      ];
+    }
+    else {
+      $elements['map_oms']['map_oms_options']['#states'] = [
+        'visible' => [
+          ':input[name="style_options[map_oms][map_oms_control]"]' => ['checked' => TRUE],
+        ],
+      ];
+    }
 
     $elements['custom_style_map'] = array(
       '#type' => 'fieldset',
