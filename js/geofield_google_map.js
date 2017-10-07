@@ -108,6 +108,9 @@
       var self = this;
       var properties = feature.get('geojsonProperties');
 
+      // Define the OverlappingMarkerSpiderfier flag.
+      var oms = self.map_data[mapid].oms ? self.map_data[mapid].oms : null;
+
       if (feature.setTitle && properties && properties.title) {
         feature.setTitle(properties.title);
       }
@@ -123,8 +126,8 @@
         }
 
         checkImage(icon_image, function(){
-          feature.setIcon(icon_image);
-        },
+            feature.setIcon(icon_image);
+          },
           function(){
             console.log('Geofield Gmap: The Icon Image doesn\'t exist at the set path');
           });
@@ -145,7 +148,12 @@
       }
 
       var map = self.map_data[mapid].map;
-      feature.setMap(map);
+      if (oms) {
+        self.map_data[mapid].oms.addMarker(feature);
+      }
+      else {
+        feature.setMap(map);
+      }
       self.map_data[mapid].markers.push(feature);
 
       if (feature.getPosition) {
@@ -159,7 +167,9 @@
 
       if (properties && properties.description) {
         var bounds = feature.get('bounds');
-        google.maps.event.addListener(feature, 'click', function() {
+        // Check for eventual simple or OverlappingMarkerSpiderfier click Listener
+        var clickListener = oms ? 'spider_click' : 'click';
+        google.maps.event.addListener(feature, clickListener, function() {
           map.infowindow.setContent(properties.description);
           map.infowindow.setOptions({pixelOffset: new google.maps.Size(0,-30)});
           map.infowindow.setPosition(bounds.getCenter());
@@ -289,6 +299,18 @@
         var features = data.features && data.features.length > 0 ? GeoJSON(data) : null;
 
         if (features && (!features.type || features.type !== 'Error')) {
+
+          /**
+           * Implement  OverlappingMarkerSpiderfier if its control set true.
+           */
+          if (map_settings.map_marker_and_infowindow && map_settings.map_marker_and_infowindow.map_oms_control && OverlappingMarkerSpiderfier) {
+            self.map_data[mapid].oms = new OverlappingMarkerSpiderfier(map, {
+              markersWontMove: true,
+              markersWontHide: true,
+              basicFormatEvents: true,
+              keepSpiderfied: true
+            });
+          }
 
           map.infowindow = new google.maps.InfoWindow({
             content: ''

@@ -67,3 +67,14 @@ marker_cluster:
     gpl-compatible: true
   js:
     https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js: { type: external }
+
+# External OverlappingMarkerSpiderfier
+overlappingmarkerspiderfier:
+  remote: https://github.com/jawj/OverlappingMarkerSpiderfier
+  version: 1.x
+  license:
+    name: MIT licence
+    url: http://www.opensource.org/licenses/mit-license.php
+    gpl-compatible: true
+  js:
+    https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier/1.0.3/oms.min.js: { type: external }

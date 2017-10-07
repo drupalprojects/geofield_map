@@ -107,6 +107,7 @@ trait GeofieldMapFieldTrait {
       'map_marker_and_infowindow' => [
         'icon_image_path' => '',
         'infowindow_field' => 'title',
+        'map_oms_control' => 1,
       ],
       'map_additional_options' => '',
       'custom_style_map' => [
@@ -119,8 +120,6 @@ trait GeofieldMapFieldTrait {
         'markercluster_control' => 0,
         'markercluster_additional_options' => '',
       ],
-      'map_additional_options' => '',
-
     ];
   }
 
@@ -517,6 +516,26 @@ trait GeofieldMapFieldTrait {
         '#default_value' => $settings['map_marker_and_infowindow']['infowindow_field'],
       ];
     }
+
+    $elements['map_marker_and_infowindow']['map_oms_control'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Spiderfy overlapping markers'),
+      '#description' => $this->t('Use the standard setup of the @overlapping_marker_spiderfier to manage Overlapping Markers located in the exact same position.', [
+        '@overlapping_marker_spiderfier' => $link->generate(t('Overlapping Marker Spiderfier Library (for Google Maps)'), Url::fromUri('https://github.com/jawj/OverlappingMarkerSpiderfier#overlapping-marker-spiderfier-for-google-maps-api-v3', [
+          'absolute' => TRUE,
+          'attributes' => ['target' => 'blank'],
+        ])),
+      ]),
+      '#default_value' => isset($settings['map_marker_and_infowindow']['map_oms_control']) ? $settings['map_marker_and_infowindow']['map_oms_control'] : $default_settings['map_marker_and_infowindow']['map_oms_control'],
+      '#return_value' => 1,
+      '#states' => array(
+        'invisible' => array(
+          ':input[name$="[settings][map_marker_and_infowindow][infowindow_field]"]' => array(
+            'value' => '0',
+          ),
+        ),
+      ),
+    ];
 
     if (isset($entityType)) {
       // Get the human readable labels for the entity view modes.
