@@ -1,13 +1,13 @@
 ###General Information
 
 **Geofield** Map module represents an advanced, complete and easy-to-use Geo Mapping solution for Drupal 8,
-based (on) and fully compatible with the [Geofield](https://www.drupal.org/project/geofield) Module.
+based on and fully compatible with the [Geofield](https://www.drupal.org/project/geofield) Module.
 
 It **lets you manage the Geofield with an interactive Map both in back-end and in the front-end**, as indeed represents the perfect solution to::
 - geolocate (with one or more Locations / Geofields) any fieldable Drupal entity throughout an Interactive Geofield Map widget;
 - render each Content's Locations throughout a fully customizable Interactive Geofield Map Formatter;
 - expose and query Contents throughout fully customizable Map Views Integration;
-- implement front-end Google Maps with Marker Icon & Infowindow advanced customizations, and Marker Clustering capabilities;
+- implement advanced front-end Google Maps with Marker Icon & Infowindow advanced customizations, custom Google Map Styles and Marker Clustering capabilities;
 
 ####Technical Functionalities and specifications
 
@@ -16,6 +16,7 @@ The actual module release implements the following components and functionalitie
 ####Geofield Map widget
 An higly customizable Map widget, 
 providing an interactive and very intuitive map on which to perform localization and input of geographic coordinates throughout:
+- MULTIPOINTS Geofield mapping support;
 - Google places autocomplete and geocoding APIs;
 - Google Map or Leaflet Map JS libraries and interfaces;
 - Map click and marker dragging, with instant reverse geocoding;
