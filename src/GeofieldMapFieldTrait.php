@@ -704,10 +704,35 @@ trait GeofieldMapFieldTrait {
       '#element_validate' => [[get_class($this), 'jsonValidate']],
     ];
 
+    $elements['map_markercluster']['markercluster_warning'] = [
+      '#type' => 'container',
+      'warning' => [
+        '#type' => 'html_tag',
+        '#tag' => 'span',
+        '#value' => $this->t('WARNING:') . " ",
+        '#attributes' => [
+          'class' => ['markercluster-warning'],
+        ],
+      ],
+      'warning_text' => [
+        '#type' => 'html_tag',
+        '#tag' => 'span',
+        '#value' => $this->t('Markers Spiderfy is Active ! | If not, a "maxZoom" property should be set in the Marker Cluster Additional Options to be able to output the Spederfy effect.'),
+      ],
+    ];
+
     if (isset($fieldDefinition)) {
       $elements['map_markercluster']['markercluster_additional_options']['#states'] = [
         'visible' => [
           ':input[name="fields[' . $fieldDefinition->getName() . '][settings_edit_form][settings][map_markercluster][markercluster_control]"]' => ['checked' => TRUE],
+        ],
+      ];
+      $elements['map_markercluster']['markercluster_warning']['#states'] = [
+        'visible' => [
+          ':input[name="fields[' . $fieldDefinition->getName() . '][settings_edit_form][settings][map_oms][map_oms_control]"]' => ['checked' => TRUE],
+        ],
+        'invisible' => [
+          ':input[name="fields[' . $fieldDefinition->getName() . '][settings_edit_form][settings][map_markercluster][markercluster_control]"]' => ['checked' => FALSE],
         ],
       ];
     }
@@ -715,6 +740,14 @@ trait GeofieldMapFieldTrait {
       $elements['map_markercluster']['markercluster_additional_options']['#states'] = [
         'visible' => [
           ':input[name="style_options[map_markercluster][markercluster_control]"]' => ['checked' => TRUE],
+        ],
+      ];
+      $elements['map_markercluster']['markercluster_warning']['#states'] = [
+        'visible' => [
+          ':input[name="style_options[map_oms][map_oms_control]"]' => ['checked' => TRUE],
+        ],
+        'invisible' => [
+          ':input[name="style_options[map_markercluster][markercluster_control]"]' => ['checked' => FALSE],
         ],
       ];
     }
