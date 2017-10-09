@@ -17,6 +17,6 @@
   "license": "GPL-2.0+",
   "minimum-stability": "dev",
   "require": {
-    "drupal/geofield": "dev-master"
+    "drupal/geofield": "8.*"
   }
 }
