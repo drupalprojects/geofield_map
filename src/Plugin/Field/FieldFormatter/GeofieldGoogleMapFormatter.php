@@ -503,6 +503,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     $data = $this->getGeoJsonData($items, $description);
 
     if (empty($data) && $map_settings['map_empty']['empty_behaviour'] !== '2') {
+      $view_in_progress = FALSE;
       return [
         '#type' => 'html_tag',
         '#tag' => 'div',
