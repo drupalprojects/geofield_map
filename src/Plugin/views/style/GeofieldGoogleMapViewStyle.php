@@ -6,7 +6,7 @@ use Drupal\geofield_map\GeofieldMapFieldTrait;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
-use Drupal\views\Plugin\views\style\StylePluginBase;
+use Drupal\views\Plugin\views\style\DefaultStyle;
 use Drupal\views\ViewExecutable;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -33,7 +33,7 @@ use Drupal\geofield\GeoPHP\GeoPHPInterface;
  *   theme = "geofield-google-map"
  * )
  */
-class GeofieldGoogleMapViewStyle extends StylePluginBase implements ContainerFactoryPluginInterface {
+class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactoryPluginInterface {
 
   use GeofieldMapFieldTrait;
 
@@ -110,17 +110,21 @@ class GeofieldGoogleMapViewStyle extends StylePluginBase implements ContainerFac
   /**
    * Constructs a GeofieldGoogleMapView style instance.
    *
-   * {@inheritdoc}
-   *
+   * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin_id for the plugin instance.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   A config factory for retrieving required config objects.
-   * @param EntityTypeManagerInterface $entity_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_manager
    *   The entity manager.
-   * @param EntityFieldManagerInterface $entity_field_manager
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
    *   The entity field manager.
-   * @param EntityDisplayRepositoryInterface $entity_display
+   * @param \Drupal\Core\Entity\EntityDisplayRepositoryInterface $entity_display
    *   The entity display manager.
-   * @param RendererInterface $renderer
+   * @param \Drupal\Core\Render\RendererInterface $renderer
    *   The renderer.
    * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
    *   The Link Generator service.
@@ -291,14 +295,6 @@ class GeofieldGoogleMapViewStyle extends StylePluginBase implements ContainerFac
   }
 
   /**
-   * Validates the options form.
-   */
-  public function validateOptionsForm(&$form, FormStateInterface $form_state) {
-    parent::validateOptionsForm($form, $form_state);
-
-  }
-
-  /**
    * Renders the View.
    */
   public function render() {
@@ -316,7 +312,7 @@ class GeofieldGoogleMapViewStyle extends StylePluginBase implements ContainerFac
 
     $data = [];
     $geofield_name = $map_settings['data_source'];
-    if ($map_settings['data_source']) {
+    if (!empty($this->view->result) && $map_settings['data_source']) {
       $this->renderFields($this->view->result);
       /* @var \Drupal\views\ResultRow  $result */
       foreach ($this->view->result as $id => $result) {
@@ -358,15 +354,18 @@ class GeofieldGoogleMapViewStyle extends StylePluginBase implements ContainerFac
           $data = array_merge($data, $this->getGeoJsonData($geofield_value, $description, $view_data));
         }
       }
+
+      $js_settings['data'] = [
+        'type' => 'FeatureCollection',
+        'features' => $data,
+      ];
+
+      $element = geofield_map_googlemap_render($js_settings);
+      return $element;
     }
 
-    $js_settings['data'] = [
-      'type' => 'FeatureCollection',
-      'features' => $data,
-    ];
+    return [];
 
-    $element = geofield_map_googlemap_render($js_settings);
-    return $element;
   }
 
   /**
