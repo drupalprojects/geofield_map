@@ -149,8 +149,6 @@ trait GeofieldMapFieldTrait {
     /* @var \Drupal\Core\Field\FieldDefinitionInterface|NULL $fieldDefinition */
     $fieldDefinition = property_exists(get_class($this), 'fieldDefinition') ? $this->fieldDefinition : NULL;
 
-    /* @var \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager */
-    $entityFieldManager = $this->entityFieldManager;
     $elements = [];
 
     // Attach Geofield Map Library.
@@ -227,12 +225,13 @@ trait GeofieldMapFieldTrait {
       ]),
     ];
 
+    $elements['map_empty'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Which behaviour for the empty map?'),
+      '#description' => $this->t('If there are no entries on the map, what should be the output of field?'),
+    ];
+
     if (isset($fieldDefinition)) {
-      $elements['map_empty'] = [
-        '#type' => 'fieldset',
-        '#title' => $this->t('Which behaviour for the empty map?'),
-        '#description' => $this->t('If there are no entries on the map, what should be the output of field?'),
-      ];
       $elements['map_empty']['empty_behaviour'] = [
         '#type' => 'select',
         '#title' => $this->t('Behaviour'),
@@ -253,8 +252,10 @@ trait GeofieldMapFieldTrait {
     }
     else {
       $elements['map_empty']['empty_behaviour'] = [
-        '#type' => 'value',
-        '#value' => '1',
+        '#type' => 'select',
+        '#title' => $this->t('Behaviour'),
+        '#default_value' => $settings['map_empty']['empty_behaviour'],
+        '#options' => $this->emptyMapOptions,
       ];
     }
 

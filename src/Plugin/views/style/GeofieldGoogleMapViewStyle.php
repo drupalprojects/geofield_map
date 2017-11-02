@@ -38,6 +38,16 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
   use GeofieldMapFieldTrait;
 
   /**
+   * Empty Map Options.
+   *
+   * @var array
+   */
+  protected $emptyMapOptions = [
+    '0' => 'View No Results Behaviour',
+    '1' => 'Empty Map Centered at the Default Center',
+  ];
+
+  /**
    * The config factory service.
    *
    * @var \Drupal\Core\Config\ConfigFactoryInterface
@@ -300,6 +310,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
   public function render() {
 
     $map_settings = $this->options;
+    $element = [];
 
     // Performs some preprocess on the maps settings before sending to js.
     $this->preProcessMapSettings($map_settings);
@@ -312,7 +323,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
 
     $data = [];
     $geofield_name = $map_settings['data_source'];
-    if (!empty($this->view->result) && $map_settings['data_source']) {
+    if ($map_settings['data_source'] && (!empty($this->view->result) || $map_settings['map_empty']['empty_behaviour'] == '1')) {
       $this->renderFields($this->view->result);
       /* @var \Drupal\views\ResultRow  $result */
       foreach ($this->view->result as $id => $result) {
@@ -361,11 +372,9 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
       ];
 
       $element = geofield_map_googlemap_render($js_settings);
-      return $element;
+
     }
-
-    return [];
-
+    return $element;
   }
 
   /**
