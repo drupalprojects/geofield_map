@@ -367,9 +367,6 @@
             if (zoomForce) {
               map.setZoom(mapOptions.zoom);
             }
-            // Update the map initial state.
-            self.map_data[mapid].map_center = map.getCenter();
-            self.map_data[mapid].map_zoom = map.getZoom();
           });
         }
         // else if the Map Initial State is defined by just one marker.
@@ -378,9 +375,11 @@
           map.setZoom(mapOptions.zoom);
         }
 
-        // Define the map initial state.
-        self.map_data[mapid].map_center = self.map_data[mapid].markers[0].getPosition();
-        self.map_data[mapid].map_zoom = mapOptions.zoom;
+        // Update map initial state after everything is settled.
+        google.maps.event.addListenerOnce(map, 'idle', function() {
+          self.map_data[mapid].map_center = map.getCenter();
+          self.map_data[mapid].map_zoom = map.getZoom();
+        });
       }
     },
     map_reset_control: function (controlDiv, mapid) {
