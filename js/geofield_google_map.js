@@ -265,13 +265,6 @@
           }
         }
 
-        // Ensure map marker stays center on window resize
-        google.maps.event.addDomListener(window, "resize", function() {
-          var center = map.getCenter();
-          google.maps.event.trigger(map, "resize");
-          map.setCenter(center);
-        });
-
         // Define a mapid self property, so other code can interact with it.
         self.map_data[mapid].map = map;
         self.map_data[mapid].features = data.features;
@@ -363,24 +356,45 @@
             // https://stackoverflow.com/questions/10835496/is-there-a-callback-after-map-fitbounds
             if (centerForce) {
               map.setCenter(mapOptions.center);
+              // Set the map start state.
             }
             if (zoomForce) {
               map.setZoom(mapOptions.zoom);
             }
+            // Set the map start state.
+            self.map_set_start_state(mapid, map.getCenter(), map.getZoom());
           });
         }
         // else if the Map Initial State is defined by just one marker.
         else if (self.map_data[mapid].markers.length === 1 && !centerForce) {
           map.setCenter(self.map_data[mapid].markers[0].getPosition());
           map.setZoom(mapOptions.zoom);
+          // Set the map start state.
+          self.map_set_start_state(mapid, mapOptions.center, mapOptions.zoom);
         }
 
         // Update map initial state after everything is settled.
-        google.maps.event.addListenerOnce(map, 'idle', function() {
+        google.maps.event.addListener(map, 'idle', function() {
           self.map_data[mapid].map_center = map.getCenter();
           self.map_data[mapid].map_zoom = map.getZoom();
         });
+
+        // Triggers Map resize listener on Window resize
+        google.maps.event.addDomListener(window, "resize", function() {
+          google.maps.event.trigger(map, "resize");
+        });
+
+        // Ensure map marker stays center on map resize
+        google.maps.event.addDomListener(map, "resize", function() {
+          map.setCenter(self.map_data[mapid].map_center);
+        });
+
       }
+    },
+    map_set_start_state: function (mapid, center, zoom) {
+      var self = this;
+      self.map_data[mapid].map_start_center = center;
+      self.map_data[mapid].map_start_zoom = zoom;
     },
     map_reset_control: function (controlDiv, mapid) {
       // Set CSS for the control border.
@@ -407,8 +421,8 @@
 
       // Setup the click event listeners: simply set the map to Chicago.
       controlUI.addEventListener('click', function() {
-        Drupal.geoFieldMap.map_data[mapid].map.setCenter(Drupal.geoFieldMap.map_data[mapid].map_center);
-        Drupal.geoFieldMap.map_data[mapid].map.setZoom(Drupal.geoFieldMap.map_data[mapid].map_zoom);
+        Drupal.geoFieldMap.map_data[mapid].map.setCenter(Drupal.geoFieldMap.map_data[mapid].map_start_center);
+        Drupal.geoFieldMap.map_data[mapid].map.setZoom(Drupal.geoFieldMap.map_data[mapid].map_start_zoom);
       });
     }
 
