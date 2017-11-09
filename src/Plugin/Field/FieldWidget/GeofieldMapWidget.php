@@ -203,13 +203,17 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
    */
   public static function defaultSettings() {
     return array(
+      'default_value' => [
+        'lat' => '0',
+        'lon' => '0',
+      ],
       'map_library' => 'gmap',
       'map_google_api_key' => '',
       'map_dimensions' => [
         'width' => '100%',
         'height' => '450px',
       ],
-      'map_type_google' => 'ROADMAP',
+      'map_type_google' => 'roadmap',
       'map_type_leaflet' => 'OpenStreetMap_Mapnik',
       'map_type_selector' => TRUE,
       'zoom_level' => 5,
@@ -245,6 +249,17 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     ];
 
     $elements['#tree'] = TRUE;
+
+    $elements['default_value'] = [
+      'lat' => [
+        '#type' => 'value',
+        '#value' => $this->getSetting('default_value')['lat'],
+      ],
+      'lon' => [
+        '#type' => 'value',
+        '#value' => $this->getSetting('default_value')['lon'],
+      ],
+    ];
 
     $gmap_api_key = $this->getGmapApiKey();
 
@@ -582,10 +597,10 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
 
     $gmap_api_key = $this->getGmapApiKey();
 
-    $latlon_value = array();
+    $latlon_value = [];
 
     foreach ($this->components as $component) {
-      $latlon_value[$component] = isset($items[$delta]->{$component}) ? floatval($items[$delta]->{$component}) : '';
+      $latlon_value[$component] = isset($items[$delta]->{$component}) ? floatval($items[$delta]->{$component}) : $this->getSetting('default_value')[$component];
     }
 
     $element += array(
