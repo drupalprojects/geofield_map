@@ -166,9 +166,9 @@ class GeofieldMap extends GeofieldElementBase {
     $element['#attached']['library'][] = 'geofield_map/geofield_map_widget';
 
     // The Node Form.
-    /* @var \Drupal\node\NodeForm $nodeForm */
-    $nodeForm = $form_state->getBuildInfo()['callback_object'];
-    $entity_operation = $nodeForm->getOperation();
+    /* @var \Drupal\Core\Entity\ContentEntityFormInterface $entityForm */
+    $entityForm = $form_state->getBuildInfo()['callback_object'];
+    $entity_operation = method_exists($entityForm, 'getOperation') ? $entityForm->getOperation() : 'any';
 
     $settings = [
       $mapid => [
