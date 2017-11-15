@@ -377,7 +377,7 @@
 
         // Show all map tiles when a map is shown in a collapsible detail/ single tab.
         $('#' + params.mapid).closest('.field-group-details, .field-group-tab').find('summary').click(function () {
-           self.map_refresh(params.mapid);
+            self.map_refresh(params.mapid);
           }
         );
       });
@@ -441,16 +441,14 @@
               var input = self.map_data[params.mapid].search.val();
               // Execute the geocoder
               self.geocoder.geocode({address: input}, function (results, status) {
-                if (status === google.maps.GeocoderStatus.OK) {
-                  if (results[0]) {
-                    // Set the position
-                    var position = self.getLatLng(params.mapid, results[0].geometry.location.lat(), results[0].geometry.location.lng());
-                    self.setMarkerPosition(params.mapid, position);
-                    self.mapSetCenter(params.mapid, position);
-                    self.setZoomToFocus(params.mapid);
-                    self.setLatLngValues(params.mapid, position);
-                    self.setGeoaddressField(params.mapid, self.map_data[params.mapid].search.val());
-                  }
+                if (status === google.maps.GeocoderStatus.OK && results[0]) {
+                  // Set the position
+                  var position = self.getLatLng(params.mapid, results[0].geometry.location.lat(), results[0].geometry.location.lng());
+                  self.setMarkerPosition(params.mapid, position);
+                  self.mapSetCenter(params.mapid, position);
+                  self.setZoomToFocus(params.mapid);
+                  self.setLatLngValues(params.mapid, position);
+                  self.setGeoaddressField(params.mapid, self.map_data[params.mapid].search.val());
                 }
               });
             }
