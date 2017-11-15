@@ -407,6 +407,7 @@
 
         // If it is defined the Geocode address Search field (dependant on the Gmaps API key)
         if (self.map_data[params.mapid].search) {
+          // Apply the Jquery Autocomplete widget, enabled by core/drupal.autocomplete
           self.map_data[params.mapid].search.autocomplete({
             // This bit uses the geocoder to fetch address values.
             source: function (request, response) {
