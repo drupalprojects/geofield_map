@@ -185,6 +185,16 @@
       return status;
     },
 
+    // Triggers the Geocode on the Geofield Map Widget
+    trigger_geocode: function(mapid, position) {
+      var self = this;
+      self.setMarkerPosition(mapid, position);
+      self.mapSetCenter(mapid, position);
+      self.setZoomToFocus(mapid);
+      self.setLatLngValues(mapid, position);
+      self.setGeoaddressField(mapid, self.map_data[mapid].search.val());
+    },
+
     // Define a Geographical point, from coordinates.
     getLatLng: function (mapid, lat, lng) {
       var self = this;
@@ -424,13 +434,9 @@
             },
             // This bit is executed upon selection of an address.
             select: function (event, ui) {
+              // Triggers the Geocode on the Geofield Map Widget
               var position = self.getLatLng(params.mapid, ui.item.latitude, ui.item.longitude);
-              // Set the position
-              self.setMarkerPosition(params.mapid, position);
-              self.mapSetCenter(params.mapid, position);
-              self.setZoomToFocus(params.mapid);
-              self.setLatLngValues(params.mapid, position);
-              self.setGeoaddressField(params.mapid, ui.item.value);
+              self.trigger_geocode(params.mapid, position);
             }
           });
 
@@ -442,13 +448,9 @@
               // Execute the geocoder
               self.geocoder.geocode({address: input}, function (results, status) {
                 if (status === google.maps.GeocoderStatus.OK && results[0]) {
-                  // Set the position
+                  // Triggers the Geocode on the Geofield Map Widget
                   var position = self.getLatLng(params.mapid, results[0].geometry.location.lat(), results[0].geometry.location.lng());
-                  self.setMarkerPosition(params.mapid, position);
-                  self.mapSetCenter(params.mapid, position);
-                  self.setZoomToFocus(params.mapid);
-                  self.setLatLngValues(params.mapid, position);
-                  self.setGeoaddressField(params.mapid, self.map_data[params.mapid].search.val());
+                  self.trigger_geocode(params.mapid, position);
                 }
               });
             }
