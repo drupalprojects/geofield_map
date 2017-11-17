@@ -456,7 +456,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     );
     $elements['geoaddress_field']['hidden'] = array(
       '#type' => 'checkbox',
-      '#title' => $this->t('<strong>Hide</strong> this field in the Content Edit Form ?'),
+      '#title' => $this->t('<strong>Hide</strong> this field in the Content Edit Form'),
       '#description' => $this->t('If checked, the selected Geoaddress Field will be Hidden to the user in the edit form, </br>and totally managed by the Geofield Reverse Geocode'),
       '#default_value' => $this->getSetting('geoaddress_field')['hidden'],
       '#states' => [
@@ -469,7 +469,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     );
     $elements['geoaddress_field']['disabled'] = array(
       '#type' => 'checkbox',
-      '#title' => $this->t('<strong>Disable</strong> this field in the Content Edit Form ?'),
+      '#title' => $this->t('<strong>Disable</strong> this field in the Content Edit Form'),
       '#description' => $this->t('If checked, the selected Geoaddress Field will be Disabled to the user in the edit form, </br>and totally managed by the Geofield Reverse Geocode'),
       '#default_value' => $this->getSetting('geoaddress_field')['disabled'],
       '#states' => [
