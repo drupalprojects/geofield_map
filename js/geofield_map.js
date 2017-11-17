@@ -434,6 +434,8 @@
             },
             // This bit is executed upon selection of an address.
             select: function (event, ui) {
+              // Update the Geocode address Search field value.
+              self.map_data[params.mapid].search.val(ui.item.label);
               // Triggers the Geocode on the Geofield Map Widget
               var position = self.getLatLng(params.mapid, ui.item.latitude, ui.item.longitude);
               self.trigger_geocode(params.mapid, position);
