@@ -75,7 +75,7 @@ class GeofieldMap extends GeofieldElementBase {
       $element['map']['geocode'] = array(
         '#prefix' => '<label>' . t("Geocode address") . '</label>',
         '#type' => 'textfield',
-        '#description' => t("Use this to geocode you search location"),
+        '#description' => t("Use this to geocode your search location"),
         '#size' => 60,
         '#maxlength' => 128,
         '#attributes' => [
