@@ -424,7 +424,7 @@
               self.geocoder.geocode({address: request.term}, function (results, status) {
                 response($.map(results, function (item) {
                   return {
-                    label: item.formatted_address,
+                    // the value property is needed to be passed to the select.
                     value: item.formatted_address,
                     latitude: item.geometry.location.lat(),
                     longitude: item.geometry.location.lng()
@@ -434,8 +434,9 @@
             },
             // This bit is executed upon selection of an address.
             select: function (event, ui) {
-              // Update the Geocode address Search field value.
-              self.map_data[params.mapid].search.val(ui.item.label);
+              // Update the Geocode address Search field value with the value (or label)
+              // property that is passed as the selected autocomplete text
+              self.map_data[params.mapid].search.val(ui.item.value);
               // Triggers the Geocode on the Geofield Map Widget
               var position = self.getLatLng(params.mapid, ui.item.latitude, ui.item.longitude);
               self.trigger_geocode(params.mapid, position);
