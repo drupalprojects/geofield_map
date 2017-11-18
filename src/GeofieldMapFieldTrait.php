@@ -142,9 +142,6 @@ trait GeofieldMapFieldTrait {
    *   The GMap Settings Form*/
   public function generateGmapSettingsForm($form, FormStateInterface $form_state, $settings, $default_settings) {
 
-    /* @var \Drupal\Core\Utility\LinkGeneratorInterface $link */
-    $link = $this->link;
-
     // If it is a Field Formatter, then get the field definition.
     /* @var \Drupal\Core\Field\FieldDefinitionInterface|NULL $fieldDefinition */
     $fieldDefinition = property_exists(get_class($this), 'fieldDefinition') ? $this->fieldDefinition : NULL;
@@ -161,7 +158,7 @@ trait GeofieldMapFieldTrait {
     // Define the Google Maps API Key value message markup.
     if (!empty($gmap_api_key)) {
       $map_google_api_key_value = $this->t('<strong>Gmap Api Key:</strong> @gmaps_api_key_link<br><div class="description">A valid Gmap Api Key is needed anyway for the Geocode Address and ReverseGeocode functionalities (based onto Google Map Geocoder)</div>', [
-        '@gmaps_api_key_link' => $link->generate($gmap_api_key, Url::fromRoute('geofield_map.settings', [], [
+        '@gmaps_api_key_link' => $this->link->generate($gmap_api_key, Url::fromRoute('geofield_map.settings', [], [
           'query' => [
             'destination' => Url::fromRoute('<current>')
               ->toString(),
@@ -170,8 +167,8 @@ trait GeofieldMapFieldTrait {
       ]);
     }
     else {
-      $map_google_api_key_value = t("Gmap Api Key missing | The Geocode Address and ReverseGeocode functionalities won't be available.<br>@settings_page_link", [
-        '@settings_page_link' => $link->generate(t('Set it in the Geofield Map Configuration Page'), Url::fromRoute('geofield_map.settings', [], [
+      $map_google_api_key_value = $this->t("Gmap Api Key missing | The Geocode Address and ReverseGeocode functionalities won't be available.<br>@settings_page_link", [
+        '@settings_page_link' => $this->link->generate($this->t('Set it in the Geofield Map Configuration Page'), Url::fromRoute('geofield_map.settings', [], [
           'query' => [
             'destination' => Url::fromRoute('<current>')
               ->toString(),
@@ -212,7 +209,7 @@ trait GeofieldMapFieldTrait {
 
     $elements['gmaps_api_link_markup'] = [
       '#markup' => $this->t('The following settings comply with the @gmaps_api_link.', [
-        '@gmaps_api_link' => $link->generate(t('Google Maps JavaScript API Library'), Url::fromUri('https://developers.google.com/maps/documentation/javascript', [
+        '@gmaps_api_link' => $this->link->generate($this->t('Google Maps JavaScript API Library'), Url::fromUri('https://developers.google.com/maps/documentation/javascript', [
           'absolute' => TRUE,
           'attributes' => ['target' => 'blank'],
         ])),
@@ -562,7 +559,7 @@ trait GeofieldMapFieldTrait {
       '#type' => 'checkbox',
       '#title' => $this->t('Spiderfy overlapping markers'),
       '#description' => $this->t('Use the standard setup of the @overlapping_marker_spiderfier to manage Overlapping Markers located in the exact same position.<br> To make this working in conjunction with the Markercluster Option (see below) a "maxZoom" property should be set in the Marker Cluster Additional Options.', [
-        '@overlapping_marker_spiderfier' => $link->generate(t('Overlapping Marker Spiderfier Library (for Google Maps)'), Url::fromUri('https://github.com/jawj/OverlappingMarkerSpiderfier#overlapping-marker-spiderfier-for-google-maps-api-v3', [
+        '@overlapping_marker_spiderfier' => $this->link->generate($this->t('Overlapping Marker Spiderfier Library (for Google Maps)'), Url::fromUri('https://github.com/jawj/OverlappingMarkerSpiderfier#overlapping-marker-spiderfier-for-google-maps-api-v3', [
           'absolute' => TRUE,
           'attributes' => ['target' => 'blank'],
         ])),
@@ -602,7 +599,7 @@ trait GeofieldMapFieldTrait {
     $elements['custom_style_map']['custom_style_control'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Create a @custom_google_map_style_link.', [
-        '@custom_google_map_style_link' => $link->generate(t('Custom Google Map Style'), Url::fromUri('https://developers.google.com/maps/documentation/javascript/examples/maptype-styled-simple', [
+        '@custom_google_map_style_link' => $this->link->generate($this->t('Custom Google Map Style'), Url::fromUri('https://developers.google.com/maps/documentation/javascript/examples/maptype-styled-simple', [
           'absolute' => TRUE,
           'attributes' => ['target' => 'blank'],
         ])),
@@ -624,7 +621,7 @@ trait GeofieldMapFieldTrait {
       '#rows' => 5,
       '#title' => $this->t('Custom Map Style Options'),
       '#description' => $this->t('An object literal of map style options, that comply with the Google Maps JavaScript API.<br>The syntax should respect the javascript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.<br>(As a useful reference consider using @snappy_maps).', [
-        '@snappy_maps' => $link->generate(t('Snappy Maps'), Url::fromUri('https://snazzymaps.com', [
+        '@snappy_maps' => $this->link->generate($this->t('Snappy Maps'), Url::fromUri('https://snazzymaps.com', [
           'absolute' => TRUE,
           'attributes' => ['target' => 'blank'],
         ])),
@@ -677,7 +674,7 @@ trait GeofieldMapFieldTrait {
     );
     $elements['map_markercluster']['markup'] = [
       '#markup' => $this->t('Enable the functionality of the @markeclusterer_api_link.', [
-        '@markeclusterer_api_link' => $link->generate(t('Marker Clusterer Google Maps JavaScript Library'), Url::fromUri('https://github.com/googlemaps/js-marker-clusterer', [
+        '@markeclusterer_api_link' => $this->link->generate($this->t('Marker Clusterer Google Maps JavaScript Library'), Url::fromUri('https://github.com/googlemaps/js-marker-clusterer', [
           'absolute' => TRUE,
           'attributes' => ['target' => 'blank'],
         ])),
@@ -753,6 +750,8 @@ trait GeofieldMapFieldTrait {
 
   /**
    * Form element validation handler for a Map Zoom level.
+   *
+   * {@inheritdoc}
    */
   public static function zoomLevelValidate($element, FormStateInterface &$form_state) {
     // Get to the actual values in a form tree.
@@ -772,6 +771,8 @@ trait GeofieldMapFieldTrait {
 
   /**
    * Form element validation handler for the Map Max Zoom level.
+   *
+   * {@inheritdoc}
    */
   public static function maxZoomLevelValidate($element, FormStateInterface &$form_state) {
     // Get to the actual values in a form tree.
@@ -790,6 +791,8 @@ trait GeofieldMapFieldTrait {
 
   /**
    * Form element validation handler for a Custom Map Style Name Required.
+   *
+   * {@inheritdoc}
    */
   public static function customMapStyleValidate($element, FormStateInterface &$form_state) {
     // Get to the actual values in a form tree.
@@ -805,6 +808,8 @@ trait GeofieldMapFieldTrait {
 
   /**
    * Form element json format validation handler.
+   *
+   * {@inheritdoc}
    */
   public static function jsonValidate($element, FormStateInterface &$form_state) {
     $element_values_array = JSON::decode($element['#value']);
@@ -819,6 +824,8 @@ trait GeofieldMapFieldTrait {
 
   /**
    * Form element url format validation handler.
+   *
+   * {@inheritdoc}
    */
   public static function urlValidate($element, FormStateInterface &$form_state) {
     $path = $element['#value'];
