@@ -18,6 +18,7 @@ use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\geofield\GeoPHP\GeoPHPInterface;
+use Drupal\Core\Session\AccountInterface;
 
 /**
  * Plugin implementation of the 'geofield_google_map' formatter.
@@ -89,6 +90,13 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
   protected $GeoPHPWrapper;
 
   /**
+   * The current user.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
+  protected $currentUser;
+
+  /**
    * GeofieldGoogleMapFormatter constructor.
    *
    * {@inheritdoc}
@@ -107,6 +115,8 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
    *   The Entity Field Manager.
    * @param \Drupal\geofield\GeoPHP\GeoPHPInterface $geophp_wrapper
    *   The The GeoPHPWrapper.
+   * @param \Drupal\Core\Session\AccountInterface $current_user
+   *   Current user.
    */
   public function __construct(
     $plugin_id,
@@ -122,7 +132,8 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     EntityTypeManagerInterface $entity_type_manager,
     EntityDisplayRepositoryInterface $entity_display_repository,
     EntityFieldManagerInterface $entity_field_manager,
-    GeoPHPInterface $geophp_wrapper
+    GeoPHPInterface $geophp_wrapper,
+    AccountInterface $current_user
   ) {
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $label, $view_mode, $third_party_settings);
     $this->config = $config_factory;
@@ -131,6 +142,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     $this->entityDisplayRepository = $entity_display_repository;
     $this->entityFieldManager = $entity_field_manager;
     $this->GeoPHPWrapper = $geophp_wrapper;
+    $this->currentUser = $current_user;
   }
 
   /**
@@ -151,7 +163,8 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       $container->get('entity_type.manager'),
       $container->get('entity_display.repository'),
       $container->get('entity_field.manager'),
-      $container->get('geofield.geophp')
+      $container->get('geofield.geophp'),
+      $container->get('current_user')
     );
   }
 
@@ -194,26 +207,36 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     $settings = $this->getSettings();
     $gmap_api_key = $this->getGmapApiKey();
 
-    $map_gmap_api_key = [
-      '#markup' => $this->t('Google Maps API Key: @state', [
-        '@state' => !empty($gmap_api_key) ? $this->link->generate($gmap_api_key, Url::fromRoute('geofield_map.settings', [], [
+    // Define the Google Maps API Key value message string.
+    if (!empty($gmap_api_key)) {
+      $state = $this->currentUser->hasPermission('configure geofield_map') ? $this->link->generate($gmap_api_key, Url::fromRoute('geofield_map.settings', [], [
+        'query' => [
+          'destination' => Url::fromRoute('<current>')
+            ->toString(),
+        ],
+      ])) : t('<strong>@gmap_api_key</strong>', ['@gmap_api_key' => $gmap_api_key]);
+    }
+    else {
+      $state = t("<span class='geofield-map-apikey-missing'>Gmap Api Key missing (Geocode functionalities not available).</span> @settings_page_link", [
+        '@settings_page_link' => $this->currentUser->hasPermission('configure geofield_map') ? $this->link->generate(t('Set it in the Geofield Map Configuration Page'), Url::fromRoute('geofield_map.settings', [], [
           'query' => [
             'destination' => Url::fromRoute('<current>')
               ->toString(),
           ],
-        ])) : t("<span class='geofield-map-apikey-missing'>Gmap Api Key missing (Geocode functionalities not available).</span> @settings_page_link", [
-          '@settings_page_link' => $this->link->generate(t('Set it in the Geofield Map Configuration Page'), Url::fromRoute('geofield_map.settings', [], [
-            'query' => [
-              'destination' => Url::fromRoute('<current>')
-                ->toString(),
-            ],
-          ])),
-        ]),
+        ])) : t('You need proper permissions to "Configure Geofield Map Settings"'),
+      ]);
+    }
+
+    $map_gmap_api_key = [
+      '#markup' => $this->t('Google Maps API Key: @state', [
+        '@state' => $state,
       ]),
     ];
+
     $map_dimensions = [
       '#markup' => $this->t('Map Dimensions: Width: @width - Height: @height', ['@width' => $settings['map_dimensions']['width'], '@height' => $settings['map_dimensions']['height']]),
     ];
+
     $map_empty = [
       '#type' => 'html_tag',
       '#tag' => 'div',

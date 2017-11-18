@@ -158,39 +158,33 @@ trait GeofieldMapFieldTrait {
 
     $gmap_api_key = $this->getGmapApiKey();
 
-    // If it is defined GMap API Key in the general configuration,
-    // force to use it, instead.
+    // Define the Google Maps API Key value message markup.
     if (!empty($gmap_api_key)) {
-      $elements['map_google_api_key'] = [
-        '#type' => 'html_tag',
-        '#tag' => 'div',
-        '#value' => $this->t('<strong>Gmap Api Key:</strong> @gmaps_api_key_link<br><div class="description">A valid Gmap Api Key is needed anyway for the Geocode Address and ReverseGeocode functionalities (based onto Google Map Geocoder)</div>', [
-          '@gmaps_api_key_link' => $link->generate($gmap_api_key, Url::fromRoute('geofield_map.settings', [], [
-            'query' => [
-              'destination' => Url::fromRoute('<current>')
-                ->toString(),
-            ],
-          ])),
-        ]),
-      ];
+      $map_google_api_key_value = $this->t('<strong>Gmap Api Key:</strong> @gmaps_api_key_link<br><div class="description">A valid Gmap Api Key is needed anyway for the Geocode Address and ReverseGeocode functionalities (based onto Google Map Geocoder)</div>', [
+        '@gmaps_api_key_link' => $link->generate($gmap_api_key, Url::fromRoute('geofield_map.settings', [], [
+          'query' => [
+            'destination' => Url::fromRoute('<current>')
+              ->toString(),
+          ],
+        ])),
+      ]);
     }
     else {
-      $elements['map_google_api_key_missing'] = [
-        '#type' => 'html_tag',
-        '#tag' => 'div',
-        '#value' => t("Gmap Api Key missing | The Geocode Address and ReverseGeocode functionalities won't be available.<br>@settings_page_link", [
-          '@settings_page_link' => $link->generate(t('Set it in the Geofield Map Configuration Page'), Url::fromRoute('geofield_map.settings', [], [
-            'query' => [
-              'destination' => Url::fromRoute('<current>')
-                ->toString(),
-            ],
-          ])),
-        ]),
-        '#attributes' => [
-          'class' => ['geofield-map-apikey-missing'],
-        ],
-      ];
+      $map_google_api_key_value = t("Gmap Api Key missing | The Geocode Address and ReverseGeocode functionalities won't be available.<br>@settings_page_link", [
+        '@settings_page_link' => $link->generate(t('Set it in the Geofield Map Configuration Page'), Url::fromRoute('geofield_map.settings', [], [
+          'query' => [
+            'destination' => Url::fromRoute('<current>')
+              ->toString(),
+          ],
+        ])),
+      ]);
     }
+
+    $elements['map_google_api_key'] = [
+      '#type' => 'html_tag',
+      '#tag' => 'div',
+      '#value' => $map_google_api_key_value,
+    ];
 
     $elements['map_dimensions'] = [
       '#type' => 'fieldset',

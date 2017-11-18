@@ -15,6 +15,7 @@ use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\Core\Session\AccountInterface;
 
 /**
  * Plugin implementation of the 'geofield_map' widget.
@@ -58,6 +59,14 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
    * @var \Drupal\Core\Entity\EntityFieldManagerInterface
    */
   protected $entityFieldManager;
+
+  /**
+   * The current user.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
+  protected $currentUser;
+
 
   /**
    * Lat Lon widget components.
@@ -155,6 +164,8 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
    *   The Entity Field Manager.
    * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
    *   The Link Generator service.
+   * @param \Drupal\Core\Session\AccountInterface $current_user
+   *   Current user.
    */
   public function __construct(
     $plugin_id,
@@ -166,13 +177,15 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     TranslationInterface $string_translation,
     RendererInterface $renderer,
     EntityFieldManagerInterface $entity_field_manager,
-    LinkGeneratorInterface $link_generator
+    LinkGeneratorInterface $link_generator,
+    AccountInterface $current_user
   ) {
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $third_party_settings);
     $this->config = $config_factory;
     $this->renderer = $renderer;
     $this->entityFieldManager = $entity_field_manager;
     $this->link = $link_generator;
+    $this->currentUser = $current_user;
 
     foreach ($this->leafletTileLayers as $k => $tileLayer) {
       $this->leafletTileLayersOptions[$k] = $tileLayer['label'];
@@ -194,7 +207,8 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       $container->get('string_translation'),
       $container->get('renderer'),
       $container->get('entity_field.manager'),
-      $container->get('link_generator')
+      $container->get('link_generator'),
+      $container->get('current_user')
     );
   }
 
@@ -499,21 +513,29 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#markup' => $this->t('Map Type: @state', array('@state' => 'leaflet' == $this->getSetting('map_library') ? $this->getSetting('map_type_leaflet') : $this->getSetting('map_type_google'))),
     ];
 
-    $map_gmap_api_key = [
-      '#markup' => $this->t('Google Maps API Key: @state', [
-        '@state' => !empty($gmap_api_key) ? $this->link->generate($gmap_api_key, Url::fromRoute('geofield_map.settings', [], [
+    // Define the Google Maps API Key value message string.
+    if (!empty($gmap_api_key)) {
+      $state = $this->currentUser->hasPermission('configure geofield_map') ? $this->link->generate($gmap_api_key, Url::fromRoute('geofield_map.settings', [], [
+        'query' => [
+          'destination' => Url::fromRoute('<current>')
+            ->toString(),
+        ],
+      ])) : t('<strong>@gmap_api_key</strong>', ['@gmap_api_key' => $gmap_api_key]);
+    }
+    else {
+      $state = t("<span class='geofield-map-apikey-missing'>Gmap Api Key missing (Geocode functionalities not available).</span> @settings_page_link", [
+        '@settings_page_link' => $this->currentUser->hasPermission('configure geofield_map') ? $this->link->generate(t('Set it in the Geofield Map Configuration Page'), Url::fromRoute('geofield_map.settings', [], [
           'query' => [
             'destination' => Url::fromRoute('<current>')
               ->toString(),
           ],
-        ])) : t("<span class='geofield-map-apikey-missing'>Gmap Api Key missing (Geocode functionalities not available).</span> @settings_page_link", [
-          '@settings_page_link' => $this->link->generate(t('Set it in the Geofield Map Configuration Page'), Url::fromRoute('geofield_map.settings', [], [
-            'query' => [
-              'destination' => Url::fromRoute('<current>')
-                ->toString(),
-            ],
-          ])),
-        ]),
+        ])) : t('You need proper permissions to "Configure Geofield Map Settings"'),
+      ]);
+    }
+
+    $map_gmap_api_key = [
+      '#markup' => $this->t('Google Maps API Key: @state', [
+        '@state' => $state,
       ]),
     ];
 
