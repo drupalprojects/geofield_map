@@ -1,4 +1,4 @@
 /* line 1, ../sass/geofield_map_general.scss */
-.geofield-map-apikey-missing, .geofield-source-missing, .markercluster-warning {
+.geofield-map-warning {
   color: red;
 }

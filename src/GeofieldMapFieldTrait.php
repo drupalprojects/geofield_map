@@ -703,7 +703,7 @@ trait GeofieldMapFieldTrait {
         '#tag' => 'span',
         '#value' => $this->t('WARNING:') . " ",
         '#attributes' => [
-          'class' => ['markercluster-warning'],
+          'class' => ['geofield-map-warning'],
         ],
       ],
       'warning_text' => [

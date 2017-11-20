@@ -90,7 +90,7 @@ class GeofieldMap extends GeofieldElementBase {
         '#tag' => 'div',
         '#value' => t('Gmap Api Key missing | The Geocode Address and ReverseGeocode functionality not available.'),
         '#attributes' => [
-          'class' => ['geofield-map-apikey-missing'],
+          'class' => ['geofield-map-warning'],
         ],
       );
     }

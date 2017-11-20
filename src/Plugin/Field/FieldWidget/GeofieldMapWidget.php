@@ -507,7 +507,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       ]));
     }
     else {
-      $state = t("<span class='geofield-map-apikey-missing'>Gmap Api Key missing (Geocode functionalities not available).</span> @settings_page_link", [
+      $state = t("<span class='geofield-map-warning'>Gmap Api Key missing (Geocode functionalities not available).</span> @settings_page_link", [
         '@settings_page_link' => $this->link->generate(t('Set it in the Geofield Map Configuration Page'), Url::fromRoute('geofield_map.settings', [], [
           'query' => [
             'destination' => Url::fromRoute('<current>')

@@ -17,6 +17,7 @@ use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\geofield\GeoPHP\GeoPHPInterface;
+use Drupal\Core\Session\AccountInterface;
 
 /**
  * Style plugin to render a View output as a Leaflet map.
@@ -59,14 +60,14 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
    *
    * @var string
    */
-  private $entityType;
+  protected $entityType;
 
   /**
    * The Entity Info service property.
    *
    * @var string
    */
-  private $entityInfo;
+  protected $entityInfo;
 
   /**
    * Does the style plugin for itself support to add fields to it's output.
@@ -118,6 +119,13 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
   protected $GeoPHPWrapper;
 
   /**
+   * Current user service.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
+  protected $currentUser;
+
+  /**
    * Constructs a GeofieldGoogleMapView style instance.
    *
    * @param array $configuration
@@ -140,6 +148,8 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
    *   The Link Generator service.
    * @param \Drupal\geofield\GeoPHP\GeoPHPInterface $geophp_wrapper
    *   The The GeoPHPWrapper.
+   * @param \Drupal\Core\Session\AccountInterface $current_user
+   *   Current user service.
    */
   public function __construct(
     array $configuration,
@@ -151,7 +161,8 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     EntityDisplayRepositoryInterface $entity_display,
     RendererInterface $renderer,
     LinkGeneratorInterface $link_generator,
-    GeoPHPInterface $geophp_wrapper
+    GeoPHPInterface $geophp_wrapper,
+    AccountInterface $current_user
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
@@ -162,7 +173,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     $this->renderer = $renderer;
     $this->link = $link_generator;
     $this->GeoPHPWrapper = $geophp_wrapper;
-
+    $this->currentUser = $current_user;
   }
 
   /**
@@ -179,7 +190,8 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
       $container->get('entity_display.repository'),
       $container->get('renderer'),
       $container->get('link_generator'),
-      $container->get('geofield.geophp')
+      $container->get('geofield.geophp'),
+      $container->get('current_user')
     );
   }
 
@@ -241,9 +253,9 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
       $form['error'] = [
         '#type' => 'html_tag',
         '#tag' => 'div',
-        '#value' => $this->t('Please add at least one geofield to the view.'),
+        '#value' => $this->t('Please add at least one Geofield to the View and come back here to set it as Data Source.'),
         '#attributes' => [
-          'class' => ['geofield-source-missing'],
+          'class' => ['geofield-map-warning'],
         ],
         '#attached' => [
           'library' => [
@@ -322,22 +334,38 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     ];
 
     $data = [];
+
+    // Get the Geofield field.
     $geofield_name = $map_settings['data_source'];
-    if ($map_settings['data_source'] && (!empty($this->view->result) || $map_settings['map_empty']['empty_behaviour'] == '1')) {
+
+    // If the Geofield field is null, output a warning
+    // to the Geofield Map administrator.
+    if (empty($geofield_name) && $this->currentUser->hasPermission('configure geofield_map')) {
+      $element = [
+        '#markup' => '<div class="geofield-map-warning">' . $this->t("The Geofield field hasn't not been correctly set for this View. <br>Add at least one Geofield to the View and set it as Data Source in the Geofield Google Map View Display Settings.") . "</div>",
+        '#attached' => [
+          'library' => ['geofield_map/geofield_map_general'],
+        ],
+      ];
+    }
+
+    // It the Geofield field is not null, and there are results or a not null
+    // empty behaviour has been set, render the results.
+    if (!empty($geofield_name) && (!empty($this->view->result) || $map_settings['map_empty']['empty_behaviour'] == '1')) {
       $this->renderFields($this->view->result);
       /* @var \Drupal\views\ResultRow  $result */
       foreach ($this->view->result as $id => $result) {
 
         $geofield_value = $this->getFieldValue($id, $geofield_name);
 
+        // In case the result is not among the raw results, get it from the
+        // rendered results.
         if (empty($geofield_value)) {
-          // In case the result is not among the raw results, get it from the
-          // rendered results.
           $geofield_value = $this->rendered_fields[$id][$geofield_name];
         }
 
+        // In case the result is not null.
         if (!empty($geofield_value)) {
-
           // If it is a single value field, transform into an array.
           $geofield_value = is_array($geofield_value) ? $geofield_value : [$geofield_value];
 
