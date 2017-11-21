@@ -39,11 +39,16 @@ with Marker and Infowindow specifications and Markers Clustering capabilities.
 Both in Geofield Map Formatter and in the Geofield Map View style it is possible:
 - to add additional Map and Markecluster Options, as Object Literal in valid Json format;
 - define and manage a [Google Custom Map Style](https://developers.google.com/maps/documentation/javascript/examples/maptype-styled-simple);
+- use the [Overlapping Marker Spiderfier Library (for Google Maps)](https://github.com/jawj/OverlappingMarkerSpiderfier#overlapping-marker-spiderfier-for-google-maps-api-v3) to manage overlapping markers;
 
 ###Installation and Use
 
-- Install the module the 
-[drupal way](http://drupal.org/documentation/install/modules-themes/modules-8)
+__Geofield Map module needs to be installed [using Composer to manage Drupal site dependencies](https://www.drupal.org/docs/develop/using-composer/using-composer-to-manage-drupal-site-dependencies)__, which will also download the required [Geofield Module](https://www.drupal.org/project/geofield) dependency and PHP libraries).
+It means simply running the following command from your project root (where the main composer.json file is sited):
+
+__$ composer require 'drupal/geofield_map'__
+
+Once done, you can setup the following:
 - Geofield Widget: In a Content Type including a Geofield Field, go to "Manage form display" 
 and select "Geofield Map" as Geofield Widget. Specify the Widget further settings for both Google or Leaflet Map types;
 - Geofield Google Map Formatter: In a Content Type including a Geofield Field, go to "Manage display" and select "Geofield Google Map" as Geofield field Formatter.  Specify the Formatter further settings for specific personalization;
