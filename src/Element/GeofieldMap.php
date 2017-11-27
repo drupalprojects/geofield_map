@@ -60,6 +60,7 @@ class GeofieldMap extends GeofieldElementBase {
    */
   public static function latLonProcess(array &$element, FormStateInterface $form_state, array &$complete_form) {
 
+    // Conditionally use the Leaflet library from the D8 Module, if enabled.
     if ($element['#map_library'] == 'leaflet') {
       $element['#attached']['library'][] = \Drupal::moduleHandler()->moduleExists('leaflet') ? 'leaflet/leaflet' : 'geofield_map/leaflet';
     }
@@ -88,7 +89,7 @@ class GeofieldMap extends GeofieldElementBase {
       $element['map']['geocode_missing'] = array(
         '#type' => 'html_tag',
         '#tag' => 'div',
-        '#value' => t('Gmap Api Key missing | The Geocode Address and ReverseGeocode functionality not available.'),
+        '#value' => t('Gmap Api Key missing | The Geocode Address and ReverseGeocode functionalities are not available.'),
         '#attributes' => [
           'class' => ['geofield-map-warning'],
         ],
@@ -162,7 +163,8 @@ class GeofieldMap extends GeofieldElementBase {
       }
     }
 
-    // Attach Geofield Map Library.
+    // Attach Geofield Map Libraries.
+    $element['#attached']['library'][] = 'geofield_map/geofield_map_general';
     $element['#attached']['library'][] = 'geofield_map/geofield_map_widget';
 
     // The Entity Form.

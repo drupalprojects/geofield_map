@@ -377,21 +377,6 @@
       // Define a map self property, so other code can interact with it.
       self.map_data[params.mapid].map = map;
 
-      // Fix map issue in field_groups / details & vertical tabs
-      google.maps.event.addListenerOnce(map, "idle", function () {
-
-        // Show all map tiles when a map is shown in a vertical tab.
-        $('#' + params.mapid).closest('div.vertical-tabs').find('.vertical-tabs__menu-item a').click(function () {
-          self.map_refresh(params.mapid);
-        });
-
-        // Show all map tiles when a map is shown in a collapsible detail/ single tab.
-        $('#' + params.mapid).closest('.field-group-details, .field-group-tab').find('summary').click(function () {
-            self.map_refresh(params.mapid);
-          }
-        );
-      });
-
       // Generate and Set/Place Marker Position.
       var marker = self.setMarker(params.mapid, position);
 
@@ -461,6 +446,22 @@
         }
 
         if (params.map_library === 'gmap') {
+
+          // Fix map issue in field_groups / details & vertical tabs
+          google.maps.event.addListenerOnce(map, "idle", function () {
+
+            // Show all map tiles when a map is shown in a vertical tab.
+            $('#' + params.mapid).closest('div.vertical-tabs').find('.vertical-tabs__menu-item a').click(function () {
+              self.map_refresh(params.mapid);
+            });
+
+            // Show all map tiles when a map is shown in a collapsible detail/ single tab.
+            $('#' + params.mapid).closest('.field-group-details, .field-group-tab').find('summary').click(function () {
+                self.map_refresh(params.mapid);
+              }
+            );
+          });
+
           // Add listener to marker for reverse geocoding.
           google.maps.event.addListener(marker, 'dragend', function () {
             self.geofields_update(params.mapid, marker.getPosition());
