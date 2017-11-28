@@ -20,6 +20,7 @@
 }
 
 /* line 18, ../sass/geofield_map_widget.scss */
-.gmap-apikey-missing {
+.gmap-apikey-missing.geofield-map-warning {
   margin: 4px 0;
+  color: lightgray;
 }
