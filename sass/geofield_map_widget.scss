@@ -15,7 +15,8 @@
   display: none;
 }
 
-.gmap-apikey-missing.geofield-map-warning {
+.gmap-apikey-missing.geofield-map-warning,
+.gmap-apikey-missing.geofield-map-warning a {
   margin: 4px 0;
   color: lightgray;
 }
