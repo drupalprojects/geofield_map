@@ -183,9 +183,6 @@
       var self = this;
       $.noConflict();
 
-      var zoomForce = !!map_settings.map_zoom_and_pan.zoom.force;
-      var centerForce = !!map_settings.map_center.center_force;
-
       // Checking to see if google variable exists. We need this b/c views breaks this sometimes. Probably
       // an AJAX/external javascript bug in core or something.
       if (typeof google !== 'undefined' && typeof google.maps.ZoomControlStyle !== 'undefined' && data !== undefined) {
@@ -267,11 +264,16 @@
 
         // Define a mapid self property, so other code can interact with it.
         self.map_data[mapid].map = map;
+        self.map_data[mapid].map_options = mapOptions;
         self.map_data[mapid].features = data.features;
         self.map_data[mapid].markers = [];
 
         // Define the MapBounds property.
         self.map_data[mapid].map_bounds = new google.maps.LatLngBounds();
+
+        // Set the zoom force and center property for the map.
+        self.map_data[mapid].zoom_force = !!map_settings.map_zoom_and_pan.zoom.force;
+        self.map_data[mapid].center_force = !!map_settings.map_center.center_force;
 
         // Fix map issue in field_groups / details & vertical tabs
         google.maps.event.addListenerOnce(map, "idle", function () {
@@ -351,27 +353,20 @@
         // If the Map Initial State is defined by MapBounds.
         if (!self.map_data[mapid].map_bounds.isEmpty() && self.map_data[mapid].markers.length > 1) {
           map.fitBounds(self.map_data[mapid].map_bounds);
-          google.maps.event.addListenerOnce(map, 'idle', function() {
-            // Just once the fitBounds completes we can check to override it
-            // https://stackoverflow.com/questions/10835496/is-there-a-callback-after-map-fitbounds
-            if (centerForce) {
-              map.setCenter(mapOptions.center);
-              // Set the map start state.
-            }
-            if (zoomForce) {
-              map.setZoom(mapOptions.zoom);
-            }
-            // Set the map start state.
-            self.map_set_start_state(mapid, map.getCenter(), map.getZoom());
-          });
         }
         // else if the Map Initial State is defined by just one marker.
-        else if (self.map_data[mapid].markers.length === 1 && !centerForce) {
+        else if (self.map_data[mapid].markers.length === 1) {
           map.setCenter(self.map_data[mapid].markers[0].getPosition());
           map.setZoom(mapOptions.zoom);
-          // Set the map start state.
-          self.map_set_start_state(mapid, mapOptions.center, mapOptions.zoom);
         }
+
+        // At the beginning (once) ...
+        google.maps.event.addListenerOnce(map, 'idle', function() {
+          // Check if the center and the zoom has to be forced.
+          self.map_check_force_state(mapid);
+          // Set the map start state.
+          self.map_set_start_state(mapid, map.getCenter(), map.getZoom());
+        });
 
         // Update map initial state after everything is settled.
         google.maps.event.addListener(map, 'idle', function() {
@@ -389,6 +384,15 @@
           map.setCenter(self.map_data[mapid].map_center);
         });
 
+      }
+    },
+    map_check_force_state: function (mapid) {
+      var self = this;
+      if (self.map_data[mapid].center_force) {
+        self.map_data[mapid].map.setCenter(self.map_data[mapid].map_options.center);
+      }
+      if (self.map_data[mapid].zoom_force) {
+        self.map_data[mapid].map.setZoom(self.map_data[mapid].map_options.zoom);
       }
     },
     map_set_start_state: function (mapid, center, zoom) {
