@@ -129,22 +129,8 @@
             feature.setIcon(icon_image);
           },
           function(){
-            console.log('Geofield Gmap: The Icon Image doesn\'t exist at the set path');
+            console.log("Geofield Gmap: The Icon Image doesn't exist at the set path");
           });
-
-        /**
-         *
-         * @param url
-         * @returns {boolean}
-         * @constructor
-         */
-        function UrlExists(url) {
-          var http = new XMLHttpRequest();
-          http.open('HEAD', url, false);
-          http.send();
-          return http.status !== 404;
-        }
-
       }
 
       var map = self.map_data[mapid].map;
@@ -170,10 +156,12 @@
         // Check for eventual simple or OverlappingMarkerSpiderfier click Listener
         var clickListener = oms ? 'spider_click' : 'click';
         google.maps.event.addListener(feature, clickListener, function() {
+          map.infowindow.close();
           map.infowindow.setContent(properties.description);
-          map.infowindow.setOptions({pixelOffset: new google.maps.Size(0,-30)});
-          map.infowindow.setPosition(bounds.getCenter());
-          map.infowindow.open(map);
+          setTimeout(function() {
+            map.infowindow.open(map, feature);
+          }, 200);
+
         });
       }
     },
