@@ -146,6 +146,9 @@ trait GeofieldMapFieldTrait {
     /* @var \Drupal\Core\Field\FieldDefinitionInterface|NULL $fieldDefinition */
     $fieldDefinition = property_exists(get_class($this), 'fieldDefinition') ? $this->fieldDefinition : NULL;
 
+    // Get the configurations of possible entity fields.
+    $fields_configurations = $this->entityFieldManager->getFieldStorageDefinitions('node');
+
     $elements = [];
 
     // Attach Geofield Map Library.
@@ -471,12 +474,18 @@ trait GeofieldMapFieldTrait {
       $bundles = !empty($fields['node'][$field_name]['bundles']) ? $fields['node'][$field_name]['bundles'] : [];
     }
 
+    $multivalue_fields_states = [];
+
     // In case it is a Field Formatter.
     if (isset($entityType)) {
       $desc_options = [
         '0' => $this->t('- Any - No Infowindow'),
         'title' => $this->t('- Title -'),
       ];
+
+
+      // Get the Cardinality set for the Formatter Field.
+      $field_cardinality = $this->fieldDefinition->getFieldStorageDefinition()->getCardinality();
 
       $fields_list = array_merge_recursive(
         $this->entityFieldManager->getFieldMapByFieldType('string_long'),
@@ -489,6 +498,10 @@ trait GeofieldMapFieldTrait {
         if (isset($bundles) && !empty(array_intersect($field['bundles'], $bundles)) &&
           !in_array($k, ['title', 'revision_log'])) {
           $desc_options[$k] = $k;
+          /* @var \\Drupal\Core\Field\BaseFieldDefinition $fields_configurations[$k] */
+          if ($field_cardinality !== 1 && $fields_configurations[$k]->getCardinality() !== 1) {
+            $multivalue_fields_states[] = ['value' => $k];
+          }
         }
       }
 
@@ -500,6 +513,14 @@ trait GeofieldMapFieldTrait {
     // Else it is a Geofield View Style Format Settings.
     else {
       $info_window_source_options = isset($settings['infowindow_content_options']) ? $settings['infowindow_content_options'] : [];
+
+      foreach ($info_window_source_options as $k => $field) {
+        /* @var \\Drupal\Core\Field\BaseFieldDefinition $fields_configurations[$k] */
+        if (array_key_exists($k, $fields_configurations) && $fields_configurations[$k]->getCardinality() !== 1) {
+          $multivalue_fields_states[] = ['value' => $k];
+        }
+      }
+
     }
 
     if (!empty($info_window_source_options)) {
@@ -509,6 +530,31 @@ trait GeofieldMapFieldTrait {
         '#description' => $this->t('Choose an existing string type field from which populate the Marker Infowindow'),
         '#options' => $info_window_source_options,
         '#default_value' => $settings['map_marker_and_infowindow']['infowindow_field'],
+      ];
+    }
+
+    $elements['map_marker_and_infowindow']['multivalue_split'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Multivalue Field Split (<u>A Multivalue Field as been selected for the Infowindow Content)</u>'),
+      '#description' => $this->t('If checked, each field value will be split into each matching infowindow, following the same progressive order<br>(the first value of the field will be used otherwise, or as fallback in case of no match)'),
+      '#default_value' => !empty($settings['map_marker_and_infowindow']['multivalue_split']) ? $settings['map_marker_and_infowindow']['multivalue_split'] : 0,
+      '#return_value' => 1,
+    ];
+
+    if (isset($fieldDefinition)) {
+      $elements['map_marker_and_infowindow']['multivalue_split']['#description'] = $this->t('If checked, each field value will be split into each matching infowindow / geofield, following the same progressive order<br>(the first value of the field will be used otherwise, or as fallback in case of no match)');
+      $elements['map_marker_and_infowindow']['multivalue_split']['#states'] = [
+        'visible' => [
+          ':input[name="fields[' . $fieldDefinition->getName() . '][settings_edit_form][settings][map_marker_and_infowindow][infowindow_field]"]' => $multivalue_fields_states,
+        ],
+      ];
+    }
+    else {
+      $elements['map_marker_and_infowindow']['multivalue_split']['#description'] = $this->t('If checked, each field value will be split into each matching infowindow /geofield , following the same progressive order<br>(The Multiple Field settings from the View Display will be used otherwise)');
+      $elements['map_marker_and_infowindow']['multivalue_split']['#states'] = [
+        'visible' => [
+          ':input[name="style_options[map_marker_and_infowindow][infowindow_field]"]' => $multivalue_fields_states,
+        ],
       ];
     }
 
@@ -893,7 +939,9 @@ trait GeofieldMapFieldTrait {
           "geometry" => json_decode($geometry->out('json')),
         ];
         $datum['properties'] = [
-          'description' => isset($description) ? $description : NULL,
+          // If a multivalue field value with the same index exist, use this,
+          // else use the first item as fallback.
+          'description' => isset($description[$delta]) ? $description[$delta] : (isset($description[0]) ? $description[0] : NULL),
           'data' => $additional_data,
         ];
         $data[] = $datum;

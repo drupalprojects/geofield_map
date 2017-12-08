@@ -510,16 +510,27 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     ];
 
     $description_field = $map_settings['map_marker_and_infowindow']['infowindow_field'];
-    $description = NULL;
+    $description = [];
     // Render the entity with the selected view mode.
     if ($description_field === '#rendered_entity' && is_object($entity)) {
       $build = $this->entityTypeManager->getViewBuilder($entity_type)->view($entity, $map_settings['map_marker_and_infowindow']['view_mode']);
-      $description = render($build);
+      $description[] = render($build);
     }
     // Normal rendering via fields.
     elseif ($description_field) {
       $description_field_name = strtolower($map_settings['map_marker_and_infowindow']['infowindow_field']);
-      $description = $map_settings['map_marker_and_infowindow']['infowindow_field'] != 'title' ? $entity->$description_field_name->value : $entity->label();
+
+      if ($map_settings['map_marker_and_infowindow']['infowindow_field'] === 'title') {
+        $description[] = $entity->label();
+      }
+      else {
+        foreach ($entity->$description_field_name->getValue() as $value) {
+          $description[] = $value['value'];
+          if ($map_settings['map_marker_and_infowindow']['multivalue_split'] == FALSE) {
+            break;
+          }
+        }
+      }
     }
 
     $data = $this->getGeoJsonData($items, $description);

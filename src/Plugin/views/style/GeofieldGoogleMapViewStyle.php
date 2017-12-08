@@ -370,16 +370,24 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
           $geofield_value = is_array($geofield_value) ? $geofield_value : [$geofield_value];
 
           $description_field = $map_settings['map_marker_and_infowindow']['infowindow_field'];
-          $description = NULL;
+          $description = [];
+          $entity = $result->_entity;
+
           // Render the entity with the selected view mode.
           if ($description_field === '#rendered_entity' && is_object($result)) {
-            $entity = $result->_entity;
             $build = $this->entityManager->getViewBuilder($entity->getEntityTypeId())->view($entity, $map_settings['view_mode'], $entity->language()->getId());
-            $description = $this->renderer->renderRoot($build);
+            $description[] = $this->renderer->renderRoot($build);
           }
           // Normal rendering via fields.
           elseif ($description_field) {
-            $description = $this->rendered_fields[$id][$description_field];
+            $description_field_name = strtolower($map_settings['map_marker_and_infowindow']['infowindow_field']);
+            foreach ($entity->$description_field_name->getValue() as $value) {
+              if ($map_settings['map_marker_and_infowindow']['multivalue_split'] == FALSE) {
+                $description[] = $this->rendered_fields[$id][$description_field];
+                break;
+              }
+              $description[] = $value['value'];
+            }
           }
 
           // Add Views fields to the Json output as additional_data property.
