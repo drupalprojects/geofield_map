@@ -107,6 +107,7 @@ trait GeofieldMapFieldTrait {
       'map_marker_and_infowindow' => [
         'icon_image_path' => '',
         'infowindow_field' => 'title',
+        'multivalue_split' => 0,
       ],
       'map_oms' => [
         'map_oms_control' => 1,
