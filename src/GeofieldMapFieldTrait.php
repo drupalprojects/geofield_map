@@ -108,6 +108,7 @@ trait GeofieldMapFieldTrait {
         'icon_image_path' => '',
         'infowindow_field' => 'title',
         'multivalue_split' => 0,
+        'force_open' => 0,
       ],
       'map_oms' => [
         'map_oms_control' => 1,
@@ -581,6 +582,16 @@ trait GeofieldMapFieldTrait {
           ),
         ),
       );
+    }
+
+    if (isset($fieldDefinition)) {
+      $elements['map_marker_and_infowindow']['force_open'] = [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Open Infowindow on Load'),
+        '#description' => $this->t('If checked the Infowindow will automatically open on page load.<br><b>Note:</b> in case of multivalue Geofield, the Infowindow will be opened (and the Map centered) on the first item.'),
+        '#default_value' => !empty($settings['map_marker_and_infowindow']['force_open']) ? $settings['map_marker_and_infowindow']['force_open'] : 0,
+        '#return_value' => 1,
+      ];
     }
 
     $elements['map_additional_options'] = [
