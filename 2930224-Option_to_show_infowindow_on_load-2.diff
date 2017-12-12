@@ -1,0 +1,139 @@
+diff --git a/js/geofield_google_map.js b/js/geofield_google_map.js
+index 120801c..95fd29d 100644
+--- a/js/geofield_google_map.js
++++ b/js/geofield_google_map.js
+@@ -106,15 +106,10 @@
+ 
+     place_feature: function(feature, icon_image, mapid) {
+       var self = this;
+-      var properties = feature.get('geojsonProperties');
+ 
+       // Define the OverlappingMarkerSpiderfier flag.
+       var oms = self.map_data[mapid].oms ? self.map_data[mapid].oms : null;
+ 
+-      if (feature.setTitle && properties && properties.title) {
+-        feature.setTitle(properties.title);
+-      }
+-
+       // Set the personalized Icon Image, if set.
+       if (feature.setIcon && icon_image && icon_image.length > 0) {
+ 
+@@ -149,21 +144,28 @@
+         path.forEach(function(element) {
+           self.map_data[mapid].map_bounds.extend(element);
+         });
+-      }
+ 
+-      if (properties && properties.description) {
+-        var bounds = feature.get('bounds');
+-        // Check for eventual simple or OverlappingMarkerSpiderfier click Listener
+-        var clickListener = oms ? 'spider_click' : 'click';
+-        google.maps.event.addListener(feature, clickListener, function() {
+-          map.infowindow.close();
+-          map.infowindow.setContent(properties.description);
+-          setTimeout(function() {
+-            map.infowindow.open(map, feature);
+-          }, 200);
++      }
++      // Check for eventual simple or OverlappingMarkerSpiderfier click Listener
++      var clickListener = oms ? 'spider_click' : 'click';
++      google.maps.event.addListener(feature, clickListener, function() {
++        self.infowindow_open(mapid, feature);
++      });
++    },
+ 
+-        });
++    // Closes and open the Map Infowindow at the input feature.
++    infowindow_open: function (mapid, feature) {
++      var self = this;
++      var map = self.map_data[mapid].map;
++      var properties = feature.get('geojsonProperties');
++      if (feature.setTitle && properties && properties.title) {
++        feature.setTitle(properties.title);
+       }
++      map.infowindow.close();
++      map.infowindow.setContent(properties.description);
++      setTimeout(function() {
++        map.infowindow.open(map, feature);
++      }, 200);
+     },
+ 
+     // Init Geofield Google Map and its functions.
+@@ -305,7 +307,8 @@
+ 
+           if (features.setMap) {
+             self.place_feature(features, icon_image, mapid);
+-          } else {
++          }
++          else {
+             for (var i in features) {
+               if (features[i].setMap) {
+                 self.place_feature(features[i], icon_image, mapid);
+@@ -342,7 +345,7 @@
+         if (!self.map_data[mapid].map_bounds.isEmpty() && self.map_data[mapid].markers.length > 1) {
+           map.fitBounds(self.map_data[mapid].map_bounds);
+         }
+-        // else if the Map Initial State is defined by just one marker.
++        // else if the Map Initial State is defined by just One marker.
+         else if (self.map_data[mapid].markers.length === 1) {
+           map.setCenter(self.map_data[mapid].markers[0].getPosition());
+           map.setZoom(mapOptions.zoom);
+@@ -350,6 +353,13 @@
+ 
+         // At the beginning (once) ...
+         google.maps.event.addListenerOnce(map, 'idle', function() {
++
++          // Open the Feature infowindow, is so set.
++          if (self.map_data[mapid].map_marker_and_infowindow.force_open && parseInt(self.map_data[mapid].map_marker_and_infowindow.force_open) === 1) {
++            map.setCenter(features[0].getPosition());
++            self.infowindow_open(mapid, features[0]);
++          }
++
+           // Check if the center and the zoom has to be forced.
+           self.map_check_force_state(mapid);
+           // Set the map start state.
+diff --git a/src/GeofieldMapFieldTrait.php b/src/GeofieldMapFieldTrait.php
+index 65e5ea9..2401b95 100644
+--- a/src/GeofieldMapFieldTrait.php
++++ b/src/GeofieldMapFieldTrait.php
+@@ -108,6 +108,7 @@ trait GeofieldMapFieldTrait {
+         'icon_image_path' => '',
+         'infowindow_field' => 'title',
+         'multivalue_split' => 0,
++        'force_open' => 0,
+       ],
+       'map_oms' => [
+         'map_oms_control' => 1,
+@@ -583,6 +584,16 @@ trait GeofieldMapFieldTrait {
+       );
+     }
+ 
++    if (isset($fieldDefinition)) {
++      $elements['map_marker_and_infowindow']['force_open'] = [
++        '#type' => 'checkbox',
++        '#title' => $this->t('Open Infowindow on Load'),
++        '#description' => $this->t('If checked the Infowindow will automatically open on page load.<br><b>Note:</b> in case of multivalue Geofield, the Infowindow will be opened (and the Map centered) on the first item.'),
++        '#default_value' => !empty($settings['map_marker_and_infowindow']['force_open']) ? $settings['map_marker_and_infowindow']['force_open'] : 0,
++        '#return_value' => 1,
++      ];
++    }
++
+     $elements['map_additional_options'] = [
+       '#type' => 'textarea',
+       '#rows' => 5,
+diff --git a/src/Plugin/Field/FieldFormatter/GeofieldGoogleMapFormatter.php b/src/Plugin/Field/FieldFormatter/GeofieldGoogleMapFormatter.php
+index 5789149..8c99f0c 100644
+--- a/src/Plugin/Field/FieldFormatter/GeofieldGoogleMapFormatter.php
++++ b/src/Plugin/Field/FieldFormatter/GeofieldGoogleMapFormatter.php
+@@ -374,6 +374,11 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
+         '#tag' => 'div',
+         '#value' => $this->t('Marker Infowindow @state', ['@state' => !empty($settings['map_marker_and_infowindow']['infowindow_field']) ? 'from: ' . $settings['map_marker_and_infowindow']['infowindow_field'] : $this->t('disabled')]),
+       ],
++      'force_open' => [
++        '#type' => 'html_tag',
++        '#tag' => 'div',
++        '#value' => $this->t('Open Infowindow on Load: @state', ['@state' => $settings['map_marker_and_infowindow']['force_open'] ? $this->t('Yes') : $this->t('No')]),
++      ],
+     ];
+ 
+     if ($settings['map_marker_and_infowindow']['infowindow_field'] == '#rendered_entity') {
