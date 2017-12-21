@@ -28,6 +28,8 @@ trait GeofieldMapFieldTrait {
     'terrain' => 'Terrain',
   ];
 
+  protected $customMapStylePlaceholder = '[{"elementType":"geometry","stylers":[{"color":"#1d2c4d"}]},{"elementType":"labels.text.fill","stylers":[{"color":"#8ec3b9"}]},{"elementType":"labels.text.stroke","stylers":[{"color":"#1a3646"}]},{"featureType":"administrative.country","elementType":"geometry.stroke","stylers":[{"color":"#4b6878"}]},{"featureType":"administrative.province","elementType":"geometry.stroke","stylers":[{"color":"#4b6878"}]},{"featureType":"water","elementType":"geometry","stylers":[{"color":"#0e1626"}]},{"featureType":"water","elementType":"labels.text.fill","stylers":[{"color":"#4e6d70"}]}]';
+
   /**
    * The Link generator Service.
    *
@@ -685,13 +687,11 @@ trait GeofieldMapFieldTrait {
         ])),
       ]),
       '#default_value' => $settings['custom_style_map']['custom_style_options'],
-      '#placeholder' => '[{"elementType": "geometry", "stylers": [{"color": "#ebe3cd"}]},
-{"elementType": "labels.text.stroke", "stylers": [{"color": "#523735"}]},
-{"elementType": "labels.text.fill", "stylers": [{"color": "#f5f1e6"}]},
-{"featureType": "administrative",
-"elementType": "geometry.stroke",
-"stylers": [{"color": "#c9b2a6"}]}]',
-      '#element_validate' => [[get_class($this), 'jsonValidate'], [get_class($this), 'customMapStyleValidate']],
+      '#placeholder' => $this->customMapStylePlaceholder,
+      '#element_validate' => [
+        [get_class($this), 'jsonValidate'],
+        [get_class($this), 'customMapStyleValidate'],
+      ],
     ];
     $elements['custom_style_map']['custom_style_default'] = [
       '#type' => 'checkbox',
