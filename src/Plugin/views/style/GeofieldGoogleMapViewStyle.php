@@ -112,11 +112,11 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
   protected $link;
 
   /**
-   * The GeoPHPWrapper service.
+   * The geoPhpWrapper service.
    *
    * @var \Drupal\geofield\GeoPHP\GeoPHPInterface
    */
-  protected $GeoPHPWrapper;
+  protected $geoPhpWrapper;
 
   /**
    * Current user service.
@@ -147,7 +147,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
    * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
    *   The Link Generator service.
    * @param \Drupal\geofield\GeoPHP\GeoPHPInterface $geophp_wrapper
-   *   The The GeoPHPWrapper.
+   *   The The geoPhpWrapper.
    * @param \Drupal\Core\Session\AccountInterface $current_user
    *   Current user service.
    */
@@ -172,7 +172,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     $this->config = $config_factory;
     $this->renderer = $renderer;
     $this->link = $link_generator;
-    $this->GeoPHPWrapper = $geophp_wrapper;
+    $this->geoPhpWrapper = $geophp_wrapper;
     $this->currentUser = $current_user;
   }
 
@@ -196,7 +196,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
   }
 
   /**
-   * If this view is displaying an entity, save the entity type and info.
+   * {@inheritdoc}
    */
   public function init(ViewExecutable $view, DisplayPluginBase $display, array &$options = NULL) {
     parent::init($view, $display, $options);
@@ -222,7 +222,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
   }
 
   /**
-   * Options form.
+   * {@inheritdoc}
    */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
@@ -423,12 +423,12 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     $options['description_field'] = array('default' => '');
     $options['view_mode'] = array('default' => 'full');
 
-    $geofieldGoogleMapDefaultSettings = [];
+    $geofield_google_map_default_settings = [];
     foreach (self::getDefaultSettings() as $k => $setting) {
-      $geofieldGoogleMapDefaultSettings[$k] = ['default' => $setting];
+      $geofield_google_map_default_settings[$k] = ['default' => $setting];
     }
 
-    return $options + $geofieldGoogleMapDefaultSettings;
+    return $options + $geofield_google_map_default_settings;
   }
 
 }
