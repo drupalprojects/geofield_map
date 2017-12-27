@@ -944,7 +944,7 @@ trait GeofieldMapFieldTrait {
     foreach ($items as $delta => $item) {
 
       /* @var \Point $geometry */
-      $geometry = $this->GeoPHPWrapper->load(is_a($item, '\Drupal\geofield\Plugin\Field\FieldType\GeofieldItem') ? $item->value : $item);
+      $geometry = $this->geoPhpWrapper->load(is_a($item, '\Drupal\geofield\Plugin\Field\FieldType\GeofieldItem') ? $item->value : $item);
       if (!empty($geometry)) {
         $datum = [
           "type" => "Feature",
