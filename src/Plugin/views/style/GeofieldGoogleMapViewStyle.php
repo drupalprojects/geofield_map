@@ -381,12 +381,19 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
           // Normal rendering via fields.
           elseif ($description_field) {
             $description_field_name = strtolower($map_settings['map_marker_and_infowindow']['infowindow_field']);
-            foreach ($entity->$description_field_name->getValue() as $value) {
-              if ($map_settings['map_marker_and_infowindow']['multivalue_split'] == FALSE) {
-                $description[] = $this->rendered_fields[$id][$description_field];
-                break;
+            if ($entity->$description_field_name) {
+              // Check if the entity has a $description_field_name field.
+              foreach ($entity->$description_field_name->getValue() as $value) {
+                if ($map_settings['map_marker_and_infowindow']['multivalue_split'] == FALSE) {
+                  $description[] = $this->rendered_fields[$id][$description_field];
+                  break;
+                }
+                $description[] = $value['value'];
               }
-              $description[] = $value['value'];
+            }
+            // Else get the views field value.
+            else {
+              $description[] = $this->rendered_fields[$id][$description_field];
             }
           }
 
