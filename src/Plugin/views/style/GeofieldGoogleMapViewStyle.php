@@ -230,8 +230,8 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     $default_settings = self::defineOptions();
 
     // Get a list of fields and a sublist of geo data fields in this view.
-    $fields = array();
-    $fields_geo_data = array();
+    $fields = [];
+    $fields_geo_data = [];
     /* @var \Drupal\views\Plugin\views\ViewsHandlerInterface $handler) */
     foreach ($this->displayHandler->getHandlers('field') as $field_id => $handler) {
       $label = $handler->adminLabel() ?: $field_id;
@@ -267,21 +267,21 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     }
 
     // Map data source.
-    $form['data_source'] = array(
+    $form['data_source'] = [
       '#type' => 'select',
       '#title' => $this->t('Data Source'),
       '#description' => $this->t('Which field contains geodata?'),
       '#options' => $fields_geo_data,
       '#default_value' => $this->options['data_source'],
       '#required' => TRUE,
-    );
+    ];
 
     $desc_options = array_merge(['0' => $this->t('- Any - No Infowindow')], $fields);
     // Add an option to render the entire entity using a view mode.
     if ($this->entityType) {
-      $desc_options += array(
-        '#rendered_entity' => $this->t('- Rendered @entity entity -', array('@entity' => $this->entityType)),
-      );
+      $desc_options += [
+        '#rendered_entity' => $this->t('- Rendered @entity entity -', ['@entity' => $this->entityType]),
+      ];
     }
 
     $this->options['infowindow_content_options'] = $desc_options;
@@ -289,27 +289,27 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     if ($this->entityType) {
 
       // Get the human readable labels for the entity view modes.
-      $view_mode_options = array();
+      $view_mode_options = [];
       foreach ($this->entityDisplay->getViewModes($this->entityType) as $key => $view_mode) {
         $view_mode_options[$key] = $view_mode['label'];
       }
       // The View Mode drop-down is visible conditional on "#rendered_entity"
       // being selected in the Description drop-down above.
-      $form['view_mode'] = array(
+      $form['view_mode'] = [
         '#fieldset' => 'map_marker_and_infowindow',
         '#type' => 'select',
         '#title' => $this->t('View mode'),
         '#description' => $this->t('View mode the entity will be displayed in the Infowindow.'),
         '#options' => $view_mode_options,
         '#default_value' => !empty($this->options['view_mode']) ? $this->options['view_mode'] : 'full',
-        '#states' => array(
-          'visible' => array(
-            ':input[name="style_options[map_marker_and_infowindow][infowindow_field]"]' => array(
+        '#states' => [
+          'visible' => [
+            ':input[name="style_options[map_marker_and_infowindow][infowindow_field]"]' => [
               'value' => '#rendered_entity',
-            ),
-          ),
-        ),
-      );
+            ],
+          ],
+        ],
+      ];
     }
 
     $form = $form + $this->generateGmapSettingsForm($form, $form_state, $this->options, $default_settings);
@@ -388,7 +388,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
                   $description[] = $this->rendered_fields[$id][$description_field];
                   break;
                 }
-                $description[] = $value['value'];
+                $description[] = isset($value['value']) ? $value['value'] : '';
               }
             }
             // Else get the views field value.
@@ -425,10 +425,10 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
    */
   protected function defineOptions() {
     $options = parent::defineOptions();
-    $options['data_source'] = array('default' => '');
-    $options['name_field'] = array('default' => '');
-    $options['description_field'] = array('default' => '');
-    $options['view_mode'] = array('default' => 'full');
+    $options['data_source'] = ['default' => ''];
+    $options['name_field'] = ['default' => ''];
+    $options['description_field'] = ['default' => ''];
+    $options['view_mode'] = ['default' => 'full'];
 
     $geofield_google_map_default_settings = [];
     foreach (self::getDefaultSettings() as $k => $setting) {
