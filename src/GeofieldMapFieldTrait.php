@@ -471,7 +471,7 @@ trait GeofieldMapFieldTrait {
       $entity_type = $form['#entity_type'];
       $bundles = (!empty($form['#bundle'])) ? [$form['#bundle']] : [];
     }
-    elseif (property_exists(get_class($this), 'field_definition')) {
+    elseif (property_exists(get_class($this), 'fieldDefinition')) {
       $entity_type = $this->fieldDefinition->getTargetEntityTypeId();
       $field_name = $this->fieldDefinition->getName();
       $fields = $this->entityFieldManager->getFieldMapByFieldType($this->fieldDefinition->getType());
