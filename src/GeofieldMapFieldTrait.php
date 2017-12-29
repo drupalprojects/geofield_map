@@ -528,7 +528,7 @@ trait GeofieldMapFieldTrait {
         }
 
         // Remove the fields options that are not string/text type fields.
-        if (isset($this->entity_type) && substr($k, 0, 5) == 'field' && !array_key_exists($k, $fields_list[$k])) {
+        if (isset($this->entityType) && substr($k, 0, 5) == 'field' && !array_key_exists($k, $fields_list[$k])) {
           unset($info_window_source_options[$k]);
         }
 
