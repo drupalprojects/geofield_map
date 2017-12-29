@@ -369,19 +369,19 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
           // If it is a single value field, transform into an array.
           $geofield_value = is_array($geofield_value) ? $geofield_value : [$geofield_value];
 
-          $description_field = $map_settings['map_marker_and_infowindow']['infowindow_field'];
+          $description_field = isset($map_settings['map_marker_and_infowindow']['infowindow_field']) ? $map_settings['map_marker_and_infowindow']['infowindow_field'] : NULL;
           $description = [];
           $entity = $result->_entity;
 
           // Render the entity with the selected view mode.
-          if ($description_field === '#rendered_entity' && is_object($result)) {
+          if (isset($description_field) && $description_field === '#rendered_entity' && is_object($result)) {
             $build = $this->entityManager->getViewBuilder($entity->getEntityTypeId())->view($entity, $map_settings['view_mode'], $entity->language()->getId());
             $description[] = $this->renderer->renderRoot($build);
           }
           // Normal rendering via fields.
-          elseif ($description_field) {
+          elseif (isset($description_field)) {
             $description_field_name = strtolower($map_settings['map_marker_and_infowindow']['infowindow_field']);
-            if ($entity->$description_field_name) {
+            if (isset($entity->$description_field_name)) {
               // Check if the entity has a $description_field_name field.
               foreach ($entity->$description_field_name->getValue() as $value) {
                 if ($map_settings['map_marker_and_infowindow']['multivalue_split'] == FALSE) {
@@ -392,7 +392,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
               }
             }
             // Else get the views field value.
-            else {
+            elseif (isset($this->rendered_fields[$id][$description_field])) {
               $description[] = $this->rendered_fields[$id][$description_field];
             }
           }

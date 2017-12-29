@@ -514,21 +514,21 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       'data' => [],
     ];
 
-    $description_field = $map_settings['map_marker_and_infowindow']['infowindow_field'];
+    $description_field = isset($map_settings['map_marker_and_infowindow']['infowindow_field']) ? $map_settings['map_marker_and_infowindow']['infowindow_field'] : NULL;
     $description = [];
     // Render the entity with the selected view mode.
-    if ($description_field === '#rendered_entity' && is_object($entity)) {
+    if (isset($description_field) && $description_field === '#rendered_entity' && is_object($entity)) {
       $build = $this->entityTypeManager->getViewBuilder($entity_type)->view($entity, $map_settings['map_marker_and_infowindow']['view_mode']);
       $description[] = render($build);
     }
     // Normal rendering via fields.
-    elseif ($description_field) {
+    elseif (isset($description_field)) {
       $description_field_name = strtolower($map_settings['map_marker_and_infowindow']['infowindow_field']);
 
       if ($map_settings['map_marker_and_infowindow']['infowindow_field'] === 'title') {
         $description[] = $entity->label();
       }
-      else {
+      elseif (isset($entity->$description_field_name)) {
         foreach ($entity->$description_field_name->getValue() as $value) {
           $description[] = $value['value'];
           if ($map_settings['map_marker_and_infowindow']['multivalue_split'] == FALSE) {
