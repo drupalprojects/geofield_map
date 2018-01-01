@@ -530,7 +530,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       }
       elseif (isset($entity->$description_field_name)) {
         foreach ($entity->$description_field_name->getValue() as $value) {
-          $description[] = $value['value'];
+          $description[] = isset($value['value']) ? $value['value'] : '';
           if ($map_settings['map_marker_and_infowindow']['multivalue_split'] == FALSE) {
             break;
           }
