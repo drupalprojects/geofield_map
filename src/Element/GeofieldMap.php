@@ -16,32 +16,32 @@ class GeofieldMap extends GeofieldElementBase {
   /**
    * {@inheritdoc}
    */
-  public static $components = array(
-    'lat' => array(
+  public static $components = [
+    'lat' => [
       'title' => 'Latitude',
       'range' => 90,
-    ),
-    'lon' => array(
+    ],
+    'lon' => [
       'title' => 'Longitude',
       'range' => 180,
-    ),
-  );
+    ],
+  ];
 
   /**
    * {@inheritdoc}
    */
   public function getInfo() {
     $class = get_class($this);
-    return array(
+    return [
       '#input' => TRUE,
-      '#process' => array(
-        array($class, 'latLonProcess'),
-      ),
-      '#element_validate' => array(
-        array($class, 'elementValidate'),
-      ),
-      '#theme_wrappers' => array('fieldset'),
-    );
+      '#process' => [
+        [$class, 'latLonProcess'],
+      ],
+      '#element_validate' => [
+        [$class, 'elementValidate'],
+      ],
+      '#theme_wrappers' => ['fieldset'],
+    ];
   }
 
   /**
@@ -74,7 +74,7 @@ class GeofieldMap extends GeofieldElementBase {
     ];
 
     if (strlen($element['#gmap_api_key']) > 0) {
-      $element['map']['geocode'] = array(
+      $element['map']['geocode'] = [
         '#prefix' => '<label>' . t("Geocode address") . '</label>',
         '#type' => 'textfield',
         '#description' => t("Use this to geocode your search location"),
@@ -84,10 +84,10 @@ class GeofieldMap extends GeofieldElementBase {
           'id' => 'search-' . $element['#id'],
           'class' => ['form-text', 'form-autocomplete', 'geofield-map-search'],
         ],
-      );
+      ];
     }
     elseif (\Drupal::currentUser()->hasPermission('configure geofield_map')) {
-      $element['map']['geocode_missing'] = array(
+      $element['map']['geocode_missing'] = [
         '#type' => 'html_tag',
         '#tag' => 'div',
         '#value' => t("Gmap Api Key missing | The Geocode Address and ReverseGeocode functionalities are not available. <br>@settings_page_link", [
@@ -101,52 +101,52 @@ class GeofieldMap extends GeofieldElementBase {
         '#attributes' => [
           'class' => ['gmap-apikey-missing geofield-map-warning'],
         ],
-      );
+      ];
     }
 
-    $element['map']['geofield_map'] = array(
+    $element['map']['geofield_map'] = [
       '#theme' => 'geofield_google_map',
       '#mapid' => $mapid,
       '#width' => isset($element['#map_dimensions']['width']) ? $element['#map_dimensions']['width'] : '100%',
       '#height' => isset($element['#map_dimensions']['height']) ? $element['#map_dimensions']['height'] : '450px',
-    );
+    ];
 
     $element['map']['actions'] = [
       '#type' => 'actions',
     ];
 
     if (!empty($element['#click_to_find_marker']) && $element['#click_to_find_marker'] == TRUE) {
-      $element['map']['actions']['click_to_find_marker'] = array(
+      $element['map']['actions']['click_to_find_marker'] = [
         '#type' => 'button',
         '#value' => t('Find marker'),
         '#name' => 'geofield-map-center',
         '#attributes' => [
           'id' => $element['#id'] . '-click-to-find-marker',
         ],
-      );
+      ];
       $element['#attributes']['class'] = ['geofield-map-center'];
     }
 
     if (!empty($element['#click_to_place_marker']) && $element['#click_to_place_marker'] == TRUE) {
-      $element['map']['actions']['click_to_place_marker'] = array(
+      $element['map']['actions']['click_to_place_marker'] = [
         '#type' => 'button',
         '#value' => t('Place marker here'),
         '#name' => 'geofield-map-marker',
         '#attributes' => [
           'id' => $element['#id'] . '-click-to-place-marker',
         ],
-      );
+      ];
       $element['#attributes']['class'] = ['geofield-map-marker'];
     }
 
     if (!empty($element['#geolocation']) && $element['#geolocation'] == TRUE) {
       $element['#attached']['library'][] = 'geofield_map/geolocation';
-      $element['map']['actions']['geolocation'] = array(
+      $element['map']['actions']['geolocation'] = [
         '#type' => 'button',
         '#value' => t('Find my location'),
         '#name' => 'geofield-html5-geocode-button',
         '#attributes' => ['mapid' => $mapid],
-      );
+      ];
       $element['#attributes']['class'] = ['auto-geocode'];
     }
 

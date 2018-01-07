@@ -16,14 +16,21 @@
     },
     "license": "GPL-2.0+",
     "minimum-stability": "dev",
+    "prefer-stable": true,
+    "repositories": {
+        "drupal": {
+            "type": "composer",
+            "url": "https://packages.drupal.org/8"
+        }
+    },
     "require": {
-        "drupal/geofield": "8.*"
+        "drupal/geofield": "1.*"
     },
     "require-dev": {
         "phpro/grumphp": "^0.12.1",
         "squizlabs/php_codesniffer": "^2.7",
         "sensiolabs/security-checker": "^4.1",
-        "phpunit/phpunit": "^6.5",
+        "phpunit/phpunit": "^5.7|^6.5",
         "drupal/coder": "^8.2"
     }
 }

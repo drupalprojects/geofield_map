@@ -30,7 +30,7 @@ function geofield_map_help($route_name, RouteMatchInterface $route_match) {
  * Implements hook_theme().
  */
 function geofield_map_theme($existing, $type, $theme, $path) {
-  return array(
+  return [
     'geofield_map_widget' => [
       'variables' => [
         'mapid' => NULL,
@@ -45,7 +45,7 @@ function geofield_map_theme($existing, $type, $theme, $path) {
         'height' => '450px',
       ],
     ],
-  );
+  ];
 }
 
 /**
