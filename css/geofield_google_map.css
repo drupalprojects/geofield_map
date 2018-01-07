@@ -35,7 +35,9 @@
   margin: 4px 0 4px 0;
 }
 /* line 31, ../sass/geofield_google_map.scss */
-.gm-style-iw p:first-child, .gm-style-iw div:first-child, .gm-style-iw .field:first-child {
+.gm-style-iw p:first-child,
+.gm-style-iw div:first-child,
+.gm-style-iw .field:first-child {
   padding: 2px 0;
 }
 /* line 34, ../sass/geofield_google_map.scss */
