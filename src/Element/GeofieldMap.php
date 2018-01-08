@@ -90,7 +90,7 @@ class GeofieldMap extends GeofieldElementBase {
       $element['map']['geocode_missing'] = [
         '#type' => 'html_tag',
         '#tag' => 'div',
-        '#value' => t("Gmap Api Key missing | The Geocode Address and ReverseGeocode functionalities are not available. <br>@settings_page_link", [
+        '#value' => t("Gmap Api Key missing | The Geocode & ReverseGeocode functionalities are not available. <br>@settings_page_link", [
           '@settings_page_link' => \Drupal::linkGenerator()->generate(t('Set it in the Geofield Map Configuration Page'), Url::fromRoute('geofield_map.settings', [], [
             'query' => [
               'destination' => Url::fromRoute('<current>')
