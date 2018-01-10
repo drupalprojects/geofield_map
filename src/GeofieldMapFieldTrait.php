@@ -953,8 +953,13 @@ trait GeofieldMapFieldTrait {
     foreach ($items as $delta => $item) {
 
       /* @var \Point $geometry */
-      $geometry = $this->geoPhpWrapper->load(is_a($item, '\Drupal\geofield\Plugin\Field\FieldType\GeofieldItem') ? $item->value : $item);
-      if (!empty($geometry)) {
+      if (is_a($item, '\Drupal\geofield\Plugin\Field\FieldType\GeofieldItem') && isset($item->value)) {
+        $geometry = $this->geoPhpWrapper->load($item->value);
+      }
+      elseif (preg_match('/^(POINT).*\(.*.*\)$/', $item)) {
+        $geometry = $this->geoPhpWrapper->load($item);
+      }
+      if (isset($geometry)) {
         $datum = [
           "type" => "Feature",
           "geometry" => json_decode($geometry->out('json')),
