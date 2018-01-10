@@ -57,7 +57,7 @@ function geofield_map_theme($existing, $type, $theme, $path) {
  * @return array
  *   The returned render array.
  */
-function geofield_map_googlemap_render($js_settings) {
+function geofield_map_googlemap_render(array $js_settings) {
 
   $render_array = [
     '#theme' => 'geofield_google_map',
