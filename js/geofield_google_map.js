@@ -162,10 +162,12 @@
         feature.setTitle(properties.title);
       }
       map.infowindow.close();
-      map.infowindow.setContent(properties.description);
-      setTimeout(function() {
-        map.infowindow.open(map, feature);
-      }, 200);
+      if (properties.description) {
+        map.infowindow.setContent(properties.description);
+        setTimeout(function () {
+          map.infowindow.open(map, feature);
+        }, 200);
+      }
     },
 
     // Init Geofield Google Map and its functions.
