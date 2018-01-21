@@ -437,13 +437,19 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
 
     $string_fields_options = [
       '0' => $this->t('- Any -'),
-      'title' => $this->t('- Title -'),
     ];
 
+    // Filter out the not acceptable values from the options.
     foreach ($fields_list[$form['#entity_type']] as $k => $field) {
       if (in_array(
           $form['#bundle'], $field['bundles']) &&
-        !in_array($k, ['title', 'revision_log'])) {
+        !in_array($k, [
+          'revision_log',
+          'behavior_settings',
+          'parent_id',
+          'parent_type',
+          'parent_field_name',
+        ])) {
         $string_fields_options[$k] = $k;
       }
     }
@@ -461,7 +467,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     $elements['geoaddress_field']['field'] = [
       '#type' => 'select',
       '#title' => $this->t('Choose an existing field where to store the Searched / Reverse Geocoded Address'),
-      '#description' => $this->t('Choose among the Title and Text fields of this content type'),
+      '#description' => $this->t('Choose among the title and the text fields of this entity type, if available'),
       '#options' => $string_fields_options,
       '#default_value' => $this->getSetting('geoaddress_field')['field'],
     ];

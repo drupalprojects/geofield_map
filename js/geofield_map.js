@@ -334,7 +334,7 @@
 
     setGeoaddressField: function(mapid, address) {
       var self = this;
-      if (mapid === self.firstMapId) {
+      if (mapid) {
         self.map_data[mapid].geoaddress_field.val(address);
       }
     },
