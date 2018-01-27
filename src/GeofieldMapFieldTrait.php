@@ -28,6 +28,18 @@ trait GeofieldMapFieldTrait {
     'terrain' => 'Terrain',
   ];
 
+  /**
+   * Google Map Types Options.
+   *
+   * @var array
+   */
+  protected $infowindowFieldTypesOptions = [
+    'string_long',
+    'string',
+    'text',
+    'text_long',
+  ];
+
   protected $customMapStylePlaceholder = '[{"elementType":"geometry","stylers":[{"color":"#1d2c4d"}]},{"elementType":"labels.text.fill","stylers":[{"color":"#8ec3b9"}]},{"elementType":"labels.text.stroke","stylers":[{"color":"#1a3646"}]},{"featureType":"administrative.country","elementType":"geometry.stroke","stylers":[{"color":"#4b6878"}]},{"featureType":"administrative.province","elementType":"geometry.stroke","stylers":[{"color":"#4b6878"}]},{"featureType":"water","elementType":"geometry","stylers":[{"color":"#0e1626"}]},{"featureType":"water","elementType":"labels.text.fill","stylers":[{"color":"#4e6d70"}]}]';
 
   /**
@@ -480,12 +492,10 @@ trait GeofieldMapFieldTrait {
 
     $multivalue_fields_states = [];
 
-    $fields_list = array_merge_recursive(
-      $this->entityFieldManager->getFieldMapByFieldType('string_long'),
-      $this->entityFieldManager->getFieldMapByFieldType('string'),
-      $this->entityFieldManager->getFieldMapByFieldType('text'),
-      $this->entityFieldManager->getFieldMapByFieldType('text_long')
-    );
+    $infowindow_fields_options = [];
+    foreach ($this->infowindowFieldTypesOptions as $field_type) {
+      $infowindow_fields_options = array_merge_recursive($infowindow_fields_options, $this->entityFieldManager->getFieldMapByFieldType($field_type));
+    }
 
     // In case it is a Field Formatter.
     if (isset($entity_type)) {
@@ -497,7 +507,7 @@ trait GeofieldMapFieldTrait {
       // Get the Cardinality set for the Formatter Field.
       $field_cardinality = $this->fieldDefinition->getFieldStorageDefinition()->getCardinality();
 
-      foreach ($fields_list[$entity_type] as $k => $field) {
+      foreach ($infowindow_fields_options[$entity_type] as $k => $field) {
         if (isset($bundles) && !empty(array_intersect($field['bundles'], $bundles)) &&
           !in_array($k, ['title', 'revision_log'])) {
           $desc_options[$k] = $k;
@@ -527,8 +537,9 @@ trait GeofieldMapFieldTrait {
           $multivalue_fields_states[] = ['value' => $k];
         }
 
-        // Remove the fields options that are not string/text type fields.
-        if (isset($this->entityType) && substr($k, 0, 5) == 'field' && !array_key_exists($k, $fields_list[$this->entityType])) {
+        // Remove the fields options that are not string/text type fields
+        // of the view entity type.
+        if (isset($this->entityType) && substr($k, 0, 5) == 'field' && !array_key_exists($k, $infowindow_fields_options[$this->entityType])) {
           unset($info_window_source_options[$k]);
         }
 
