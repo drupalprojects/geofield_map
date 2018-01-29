@@ -656,22 +656,17 @@ trait GeofieldMapFieldTrait {
 
     if (isset($this->fieldDefinition)) {
       $elements['map_controls']['map_type_control_options_type_ids']['#states'] = [
-        'visible' => [
-          ':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][map_controls][map_type_control]"]' => ['checked' => TRUE],
-        ],
         'invisible' => [
-          $disable_default_ui_selector => ['checked' => TRUE],
+          [':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][map_controls][map_type_control]"]' => ['checked' => FALSE]],
+          [$disable_default_ui_selector => ['checked' => TRUE]],
         ],
       ];
     }
     else {
       $elements['map_controls']['map_type_control_options_type_ids']['#states'] = [
-        'visible' => [
-          ':input[name="style_options[map_controls][map_type_control]"]' => ['checked' => TRUE],
-        ],
         'invisible' => [
-          $disable_default_ui_selector => ['checked' => TRUE],
-
+          [':input[name="style_options[map_controls][map_type_control]"]' => ['checked' => FALSE]],
+          [$disable_default_ui_selector => ['checked' => TRUE]],
         ],
       ];
     }
