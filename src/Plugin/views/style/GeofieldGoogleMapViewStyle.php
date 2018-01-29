@@ -14,10 +14,10 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
-use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\geofield\GeoPHP\GeoPHPInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Render\RendererInterface;
 
 /**
  * Style plugin to render a View output as a Leaflet map.
@@ -98,13 +98,6 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
   protected $entityDisplay;
 
   /**
-   * The Renderer service property.
-   *
-   * @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface
-   */
-  protected $renderer;
-
-  /**
    * The Link generator Service.
    *
    * @var \Drupal\Core\Utility\LinkGeneratorInterface
@@ -126,6 +119,13 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
   protected $currentUser;
 
   /**
+   * The Renderer service property.
+   *
+   * @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface
+   */
+  protected $renderer;
+
+  /**
    * Constructs a GeofieldGoogleMapView style instance.
    *
    * @param array $configuration
@@ -142,14 +142,14 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
    *   The entity field manager.
    * @param \Drupal\Core\Entity\EntityDisplayRepositoryInterface $entity_display
    *   The entity display manager.
-   * @param \Drupal\Core\Render\RendererInterface $renderer
-   *   The renderer.
    * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
    *   The Link Generator service.
    * @param \Drupal\geofield\GeoPHP\GeoPHPInterface $geophp_wrapper
    *   The The geoPhpWrapper.
    * @param \Drupal\Core\Session\AccountInterface $current_user
    *   Current user service.
+   * @param \Drupal\Core\Render\RendererInterface $renderer
+   *   The Renderer service.
    */
   public function __construct(
     array $configuration,
@@ -159,10 +159,10 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     EntityTypeManagerInterface $entity_manager,
     EntityFieldManagerInterface $entity_field_manager,
     EntityDisplayRepositoryInterface $entity_display,
-    RendererInterface $renderer,
     LinkGeneratorInterface $link_generator,
     GeoPHPInterface $geophp_wrapper,
-    AccountInterface $current_user
+    AccountInterface $current_user,
+    RendererInterface $renderer
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
@@ -170,10 +170,10 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     $this->entityFieldManager = $entity_field_manager;
     $this->entityDisplay = $entity_display;
     $this->config = $config_factory;
-    $this->renderer = $renderer;
     $this->link = $link_generator;
     $this->geoPhpWrapper = $geophp_wrapper;
     $this->currentUser = $current_user;
+    $this->renderer = $renderer;
   }
 
   /**
@@ -188,10 +188,10 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
       $container->get('entity_type.manager'),
       $container->get('entity_field.manager'),
       $container->get('entity_display.repository'),
-      $container->get('renderer'),
       $container->get('link_generator'),
       $container->get('geofield.geophp'),
-      $container->get('current_user')
+      $container->get('current_user'),
+      $container->get('renderer')
     );
   }
 
