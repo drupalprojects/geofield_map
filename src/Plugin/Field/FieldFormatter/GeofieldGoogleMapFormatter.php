@@ -18,6 +18,7 @@ use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\geofield\GeoPHP\GeoPHPInterface;
+use Drupal\Core\Render\RendererInterface;
 
 /**
  * Plugin implementation of the 'geofield_google_map' formatter.
@@ -89,6 +90,13 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
   protected $geoPhpWrapper;
 
   /**
+   * The Renderer service property.
+   *
+   * @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface
+   */
+  protected $renderer;
+
+  /**
    * GeofieldGoogleMapFormatter constructor.
    *
    * @param string $plugin_id
@@ -119,6 +127,8 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
    *   The Entity Field Manager.
    * @param \Drupal\geofield\GeoPHP\GeoPHPInterface $geophp_wrapper
    *   The The geoPhpWrapper.
+   * @param \Drupal\Core\Render\RendererInterface $renderer
+   *   The Renderer service.
    */
   public function __construct(
     $plugin_id,
@@ -134,7 +144,8 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     EntityTypeManagerInterface $entity_type_manager,
     EntityDisplayRepositoryInterface $entity_display_repository,
     EntityFieldManagerInterface $entity_field_manager,
-    GeoPHPInterface $geophp_wrapper
+    GeoPHPInterface $geophp_wrapper,
+    RendererInterface $renderer
   ) {
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $label, $view_mode, $third_party_settings);
     $this->config = $config_factory;
@@ -143,6 +154,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     $this->entityDisplayRepository = $entity_display_repository;
     $this->entityFieldManager = $entity_field_manager;
     $this->geoPhpWrapper = $geophp_wrapper;
+    $this->renderer = $renderer;
   }
 
   /**
@@ -163,7 +175,8 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       $container->get('entity_type.manager'),
       $container->get('entity_display.repository'),
       $container->get('entity_field.manager'),
-      $container->get('geofield.geophp')
+      $container->get('geofield.geophp'),
+      $container->get('renderer')
     );
   }
 
@@ -519,7 +532,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     // Render the entity with the selected view mode.
     if (isset($description_field) && $description_field === '#rendered_entity' && is_object($entity)) {
       $build = $this->entityTypeManager->getViewBuilder($entity_type)->view($entity, $map_settings['map_marker_and_infowindow']['view_mode']);
-      $description[] = render($build);
+      $description[] = $this->renderer->renderRoot($build);
     }
     // Normal rendering via fields.
     elseif (isset($description_field)) {
