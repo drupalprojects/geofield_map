@@ -761,7 +761,7 @@ trait GeofieldMapFieldTrait {
           !in_array($k, ['title', 'revision_log'])) {
           $desc_options[$k] = $k;
           /* @var \\Drupal\Core\Field\BaseFieldDefinition $fields_configurations[$k] */
-          if ($field_cardinality !== 1 && $fields_configurations[$k]->getCardinality() !== 1) {
+          if ($field_cardinality !== 1 && (isset($fields_configurations[$k]) && $fields_configurations[$k]->getCardinality() !== 1)) {
             $multivalue_fields_states[] = ['value' => $k];
           }
         }
