@@ -4,6 +4,6 @@ package: Field types
 dependencies:
   - drupal:geofield
 
-type: module
 core: 8.x
+type: module
 configure: geofield_map.settings
