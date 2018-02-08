@@ -15,6 +15,7 @@ use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\geofield\GeoPHP\GeoPHPInterface;
 use Drupal\geofield\WktGeneratorInterface;
 
 /**
@@ -31,6 +32,20 @@ use Drupal\geofield\WktGeneratorInterface;
 class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactoryPluginInterface {
 
   use GeofieldMapFieldTrait;
+
+  /**
+   * The geoPhpWrapper service.
+   *
+   * @var \Drupal\geofield\GeoPHP\GeoPHPInterface
+   */
+  protected $geoPhpWrapper;
+
+  /**
+   * The WKT format Generator service.
+   *
+   * @var \Drupal\geofield\WktGeneratorInterface
+   */
+  protected $wktGenerator;
 
   /**
    * The config factory service.
@@ -59,13 +74,6 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
    * @var \Drupal\Core\Entity\EntityFieldManagerInterface
    */
   protected $entityFieldManager;
-
-  /**
-   * The WKT format Generator service.
-   *
-   * @var \Drupal\geofield\WktGeneratorInterface
-   */
-  protected $wktGenerator;
 
   /**
    * Lat Lon widget components.
@@ -161,6 +169,10 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
    *   The formatter settings.
    * @param array $third_party_settings
    *   Any third party settings settings.
+   * @param \Drupal\geofield\GeoPHP\GeoPHPInterface|null $geophp_wrapper
+   *   The geoPhpWrapper.
+   * @param \Drupal\geofield\WktGeneratorInterface|null $wkt_generator
+   *   The WKT format Generator service.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   A config factory for retrieving required config objects.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
@@ -171,8 +183,6 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
    *   The Entity Field Manager.
    * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
    *   The Link Generator service.
-   * @param \Drupal\geofield\WktGeneratorInterface $wkt_generator
-   *   The WKT format Generator service.
    */
   public function __construct(
     $plugin_id,
@@ -180,14 +190,15 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     FieldDefinitionInterface $field_definition,
     array $settings,
     array $third_party_settings,
+    GeoPHPInterface $geophp_wrapper,
+    WktGeneratorInterface $wkt_generator,
     ConfigFactoryInterface $config_factory,
     TranslationInterface $string_translation,
     RendererInterface $renderer,
     EntityFieldManagerInterface $entity_field_manager,
-    LinkGeneratorInterface $link_generator,
-    WktGeneratorInterface $wkt_generator
+    LinkGeneratorInterface $link_generator
   ) {
-    parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $third_party_settings);
+    parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $third_party_settings, $geophp_wrapper, $wkt_generator);
     $this->config = $config_factory;
     $this->renderer = $renderer;
     $this->entityFieldManager = $entity_field_manager;
@@ -210,12 +221,13 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       $configuration['field_definition'],
       $configuration['settings'],
       $configuration['third_party_settings'],
+      $container->get('geofield.geophp'),
+      $container->get('geofield.wkt_generator'),
       $container->get('config.factory'),
       $container->get('string_translation'),
       $container->get('renderer'),
       $container->get('entity_field.manager'),
-      $container->get('link_generator'),
-      $container->get('geofield.wkt_generator')
+      $container->get('link_generator')
     );
   }
 
@@ -662,7 +674,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
         }
       }
       $components = $value['value'];
-      $values[$delta]['value'] = $this->wktGenerator->WktBuildPoint([$components['lon'], $components['lat']]);
+      $values[$delta]['value'] = $this->wktGenerator->wktBuildPoint([$components['lon'], $components['lat']]);
     }
 
     return $values;
