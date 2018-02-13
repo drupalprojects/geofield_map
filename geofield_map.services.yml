@@ -1,0 +1,4 @@
+services:
+  plugin.manager.geofield_map.themer:
+      class: Drupal\geofield_map\Plugin\MapThemerPluginManager
+      parent: default_plugin_manager
