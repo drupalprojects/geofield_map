@@ -6,6 +6,8 @@ use Drupal\Component\Annotation\Plugin;
 
 /**
  * Defines a base class for Geofield Map Themer plugin annotations.
+ *
+ * @Annotation
  */
 class MapThemer extends Plugin {
 

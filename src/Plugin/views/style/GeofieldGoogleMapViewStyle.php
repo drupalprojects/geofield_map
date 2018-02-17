@@ -18,6 +18,7 @@ use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\geofield\GeoPHP\GeoPHPInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\geofield_map\MapThemerPluginManager;
 
 /**
  * Style plugin to render a View output as a Leaflet map.
@@ -126,6 +127,13 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
   protected $renderer;
 
   /**
+   * The MapThemer Manager service .
+   *
+   * @var \Drupal\geofield_map\MapThemerPluginManager
+   */
+  protected $mapThemerManager;
+
+  /**
    * Constructs a GeofieldGoogleMapView style instance.
    *
    * @param array $configuration
@@ -150,6 +158,8 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
    *   Current user service.
    * @param \Drupal\Core\Render\RendererInterface $renderer
    *   The Renderer service.
+   * @param \Drupal\geofield_map\MapThemerPluginManager $map_themer_manager
+   *   The mapThemerManager service.
    */
   public function __construct(
     array $configuration,
@@ -162,7 +172,8 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     LinkGeneratorInterface $link_generator,
     GeoPHPInterface $geophp_wrapper,
     AccountInterface $current_user,
-    RendererInterface $renderer
+    RendererInterface $renderer,
+    MapThemerPluginManager $map_themer_manager
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
@@ -174,6 +185,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     $this->geoPhpWrapper = $geophp_wrapper;
     $this->currentUser = $current_user;
     $this->renderer = $renderer;
+    $this->mapThemerManager = $map_themer_manager;
   }
 
   /**
@@ -191,7 +203,8 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
       $container->get('link_generator'),
       $container->get('geofield.geophp'),
       $container->get('current_user'),
-      $container->get('renderer')
+      $container->get('renderer'),
+      $container->get('plugin.manager.geofield_map.themer')
     );
   }
 
@@ -311,6 +324,8 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
         ],
       ];
     }
+
+    $map_themers = $this->mapThemerManager->getDefinitions();
 
     $form = $form + $this->generateGmapSettingsForm($form, $form_state, $this->options, $default_settings);
 
