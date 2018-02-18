@@ -2,7 +2,7 @@
 
 namespace Drupal\geofield_map;
 
-use Drupal\views\Plugin\views\PluginBase;
+use Drupal\Component\Plugin\PluginBase;
 
 /**
  * A base class for MapThemer plugins.

@@ -32,6 +32,6 @@ class MapThemer extends Plugin {
    *
    * @var array
    */
-  public $settings = [];
+  public $defaultSettings = [];
 
 }

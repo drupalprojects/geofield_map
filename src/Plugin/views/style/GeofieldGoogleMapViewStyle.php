@@ -332,17 +332,17 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     // Implement Map Theming based on available GeofieldMapThemers.
     $map_themers_options = array_merge(['none' => 'None'], $this->mapThemerManager->getThemersOptions());
 
-    $form['map_marker_and_infowindow']['map_themer'] = [
+    $form['theming']['map_themer'] = [
       '#type' => 'select',
       '#title' => $this->t('Map Theming'),
-      '#default_value' => isset($this->options['map_marker_and_infowindow']['map_themer']) ? $this->options['map_marker_and_infowindow']['map_themer'] : 'none',
+      '#default_value' => isset($this->options['theming']['map_themer']) ? $this->options['theming']['map_themer'] : 'none',
       '#options' => $map_themers_options,
-      '#weight' => -10,
+      '#weight' => $form['map_marker_and_infowindow'] + 0.5,
     ];
 
     $form['map_marker_and_infowindow']['icon_image_path']['#states'] = [
       'visible' => [
-        ':input[name="style_options[map_marker_and_infowindow][map_themer]"]' => [
+        ':input[name="style_options[theming][map_themer]"]' => [
           'value' => 'none',
         ],
       ],

@@ -31,7 +31,7 @@ class CustomIconThemer extends MapThemerBase {
       '#description' => $this->t('Input the Specific Icon Image path (absolute path, or relative to the Drupal site root). If not set, or not found/loadable, the Default Google Marker will be used.'),
       '#default_value' => $this->defaultSettings('icon_image_path'),
       '#placeholder' => 'modules/custom/geofield_map/images/beachflag.png',
-      '#element_validate' => [[get_class($this), 'urlValidate']],
+      '#element_validate' => [['Drupal\geofield_map\GeofieldMapFormElementsValidationTrait', 'urlValidate']],
     ];
   }
 
