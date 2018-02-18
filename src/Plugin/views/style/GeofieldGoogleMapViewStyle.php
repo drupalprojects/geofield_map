@@ -3,6 +3,7 @@
 namespace Drupal\geofield_map\Plugin\views\style;
 
 use Drupal\geofield_map\GeofieldMapFieldTrait;
+use Drupal\geofield_map\GeofieldMapFormElementsValidationTrait;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
@@ -38,6 +39,7 @@ use Drupal\geofield_map\MapThemerPluginManager;
 class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactoryPluginInterface {
 
   use GeofieldMapFieldTrait;
+  use GeofieldMapFormElementsValidationTrait;
 
   /**
    * Empty Map Options.

@@ -3,6 +3,7 @@
 namespace Drupal\geofield_map\Plugin\Field\FieldFormatter;
 
 use Drupal\geofield_map\GeofieldMapFieldTrait;
+use Drupal\geofield_map\GeofieldMapFormElementsValidationTrait;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Url;
 use Drupal\Core\Field\FieldItemListInterface;
@@ -34,6 +35,7 @@ use Drupal\Core\Render\RendererInterface;
 class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFactoryPluginInterface {
 
   use GeofieldMapFieldTrait;
+  use GeofieldMapFormElementsValidationTrait;
 
   /**
    * Empty Map Options.
