@@ -3,6 +3,7 @@
 namespace Drupal\geofield_map;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Component\Plugin\PluginInspectionInterface;
 
 /**
  * Provides an interface for Geofield Map Themers plugins.
@@ -10,7 +11,7 @@ use Drupal\Core\Form\FormStateInterface;
  * Geofield Map Themers are plugins that allow to differentiate map elements
  * (markers, poly-lines, polygons) based on specific dynamic logics .
  */
-interface MapThemerInterface {
+interface MapThemerInterface extends PluginInspectionInterface {
 
   /**
    * Provides a Map Themer Color Table.

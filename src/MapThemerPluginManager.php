@@ -30,4 +30,19 @@ class MapThemerPluginManager extends DefaultPluginManager {
     $this->setCacheBackend($cache_backend, 'geofield_map_themer_plugins');
   }
 
+  /**
+   * Generate an Options array for all the MapThemers plugins.
+   *
+   * @return mixed[]
+   *   An array of MapThemers plugins Options. Keys are plugin IDs.
+   */
+  public function getThemersOptions() {
+    $options = [];
+    foreach ($this->getDefinitions() as $k => $map_themer) {
+      /* @var \Drupal\Core\StringTranslation\TranslatableMarkup $map_themer['name'] */
+      $options[$k] = $map_themer['name']->render();
+    }
+    return $options;
+  }
+
 }

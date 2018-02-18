@@ -13,8 +13,8 @@ use Drupal\Core\Form\FormStateInterface;
  * Attributes set below end up in the $this->definition[] array.
  *
  * @MapThemer(
- *   id = "entity_type_themer",
- *   name = @Translation("Entity Type Map Themer"),
+ *   id = "entity_type",
+ *   name = @Translation("Entity Type"),
  * )
  */
 class EntityTypeThemer extends MapThemerBase {

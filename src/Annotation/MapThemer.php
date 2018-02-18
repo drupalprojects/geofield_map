@@ -27,4 +27,11 @@ class MapThemer extends Plugin {
    */
   public $name;
 
+  /**
+   * Settings for the Themer.
+   *
+   * @var array
+   */
+  public $settings = [];
+
 }
