@@ -20,6 +20,8 @@ use Drupal\geofield\GeoPHP\GeoPHPInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\geofield_map\MapThemerPluginManager;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\HtmlCommand;
 
 /**
  * Style plugin to render a View output as a Leaflet map.
@@ -244,6 +246,28 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
 
     $default_settings = self::defineOptions();
 
+    // Get the Views filters.
+    $views_filters = $this->view->display_handler->getOption('filters');
+    // Set the specific filtered entity types/bundles.
+    if (!empty($views_filters['type'])) {
+      $bundles = array_keys($views_filters['type']['value']);
+    }
+
+    // Define the $form_state storage.
+    $form_state_storage = ['entityType' => $this->entityType];
+    // Add specific filtered entity types/bundles (if existing) into the
+    // form_state storage.
+    if (isset($bundles)) {
+      $form_state_storage['bundles'] = $bundles;
+    }
+
+    // Set the form 'view_settings' property to be used later.
+    // In the map themer ajax callback.
+    $form['view_settings'] = [
+      '#type' => 'value',
+      '#value' => $form_state_storage,
+    ];
+
     // Get a list of fields and a sublist of geo data fields in this view.
     $fields = [];
     $fields_geo_data = [];
@@ -332,12 +356,36 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     // Implement Map Theming based on available GeofieldMapThemers.
     $map_themers_options = array_merge(['none' => 'None'], $this->mapThemerManager->getThemersOptions());
 
-    $form['theming']['map_themer'] = [
+    $form['map_marker_and_infowindow']['theming'] = [
+      '#type' => 'fieldset',
+      '#title' => 'Map Theming Options',
+      '#weight' => -10,
+    ];
+
+    $form['map_marker_and_infowindow']['theming']['map_themer'] = [
       '#type' => 'select',
       '#title' => $this->t('Map Theming'),
-      '#default_value' => isset($this->options['theming']['map_themer']) ? $this->options['theming']['map_themer'] : 'none',
+      '#default_value' => isset($this->options['map_marker_and_infowindow']['theming']['map_themer']) ? $this->options['map_marker_and_infowindow']['theming']['map_themer'] : 'none',
       '#options' => $map_themers_options,
-      '#weight' => $form['map_marker_and_infowindow'] + 0.5,
+      '#ajax' => [
+        'callback' => [get_called_class(), 'mapThemerSelectAjax'],
+        'event' => 'change',
+        'effect' => 'fade',
+        'speed' => 'default',
+        'progress' => [
+          'type' => 'throbber',
+          'message' => $this->t('Fetching data ...'),
+        ],
+      ],
+    ];
+
+    $form['map_marker_and_infowindow']['theming']['map_themer_result'] = [
+      '#type' => 'html_tag',
+      '#tag' => 'div',
+      '#value' => 'none',
+      '#attributes' => [
+        'id' => 'magazine-view',
+      ],
     ];
 
     $form['map_marker_and_infowindow']['icon_image_path']['#states'] = [
@@ -348,6 +396,57 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
       ],
     ];
 
+  }
+
+  /**
+   * Ajax callback for the Map Themer Selection.
+   *
+   * @param array $form
+   *   The form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   *
+   * @return \Drupal\Core\Ajax\AjaxResponse
+   *   The AjaxResponse.
+   */
+  public function mapThemerSelectAjax(array &$form, FormStateInterface $form_state) {
+
+    $view_settings = $form_state->getValue([
+      'style_options',
+      'view_settings',
+      ]
+    );
+
+    // Fetch the selected subscription node id.
+    $selected_map_themer_id = $form_state->getValue([
+      'style_options',
+      'map_marker_and_infowindow',
+      'theming',
+      'map_themer',
+    ]
+    );
+
+    /* @var \Drupal\geofield_map\MapThemerPluginManager $map_themer_manager */
+    $map_themer_manager = \Drupal::service('plugin.manager.geofield_map.themer');
+
+    /* @var \Drupal\geofield_map\MapThemerInterface $map_themer */
+    $map_themer = $map_themer_manager->createInstance($selected_map_themer_id, $view_settings);
+
+    $response = new AjaxResponse();
+
+    // Else, return an empty render array, keeping the id selector,
+    // for subsequent ajax calls.
+    $response_body_array = [
+      '#type' => 'html_tag',
+      '#tag' => 'div',
+      '#value' => $map_themer->getName(),
+      '#attributes' => [
+        'id' => 'magazine-view',
+      ],
+    ];
+
+    $response->addCommand(new HtmlCommand('#magazine-view', $response_body_array));
+    return $response;
   }
 
   /**
@@ -471,5 +570,4 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
 
     return $options + $geofield_google_map_default_settings;
   }
-
 }

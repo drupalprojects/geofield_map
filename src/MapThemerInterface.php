@@ -14,6 +14,25 @@ use Drupal\Component\Plugin\PluginInspectionInterface;
 interface MapThemerInterface extends PluginInspectionInterface {
 
   /**
+   * Get the MapThemer name property.
+   *
+   * @return string
+   *   The MapThemer name.
+   */
+  public function getName();
+
+  /**
+   * Get the defaultSettings for the Map Themer Plugin.
+   *
+   * @param string $k
+   *   A specific defaultSettings key index.
+   *
+   * @return array|string
+   *   The defaultSettings to be returned.
+   */
+  public function defaultSettings($k = NULL);
+
+  /**
    * Provides a Map Themer Color Table.
    *
    * @param array $form

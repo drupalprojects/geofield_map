@@ -15,7 +15,9 @@ use Drupal\Core\Form\FormStateInterface;
  * @MapThemer(
  *   id = "custom_icon",
  *   name = @Translation("Custom Icon"),
- *   defaultSettings = ['icon_image_path' => ''],
+ *   defaultSettings = {
+ *    "icon_image_path" = NULL
+ *   },
  * )
  */
 class CustomIconThemer extends MapThemerBase {
