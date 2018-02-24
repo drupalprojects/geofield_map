@@ -17,6 +17,8 @@ use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\geofield\GeoPHP\GeoPHPInterface;
 use Drupal\geofield\WktGeneratorInterface;
+use Drupal\geofield_map\leafletTileLayer\LeafletTileLayerPluginManager;
+use Drupal\Core\Session\AccountInterface;
 
 /**
  * Plugin implementation of the 'geofield_map' widget.
@@ -76,6 +78,20 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
   protected $entityFieldManager;
 
   /**
+   * The LeafletTileLayer Manager service.
+   *
+   * @var \Drupal\geofield_map\leafletTileLayer\LeafletTileLayerPluginManager
+   */
+  protected $leafletTileManager;
+
+  /**
+   * The Current User.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
+  protected $currentUser;
+
+  /**
    * Lat Lon widget components.
    *
    * @var array
@@ -90,64 +106,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
    *
    * @var array
    */
-  protected $leafletTileLayers = [
-    'OpenStreetMap_Mapnik' => [
-      'label' => 'OpenStreetMap Mapnik',
-      'url' => 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      'options' => [
-        'maxZoom' => 19,
-        'attribution' => '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      ],
-    ],
-    'OpenTopoMap' => [
-      'label' => 'OpenTopoMap',
-      'url' => 'http://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-      'options' => [
-        'maxZoom' => 17,
-        'attribution' => 'Map data: &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)',
-      ],
-    ],
-    'OpenMapSurfer_Roads' => [
-      'label' => 'OpenMapSurfer Roads',
-      'url' => 'http://korona.geog.uni-heidelberg.de/tiles/roads/x={x}&y={y}&z={z}',
-      'options' => [
-        'maxZoom' => 20,
-        'attribution' => 'Imagery from <a href="http://giscience.uni-hd.de/">GIScience Research Group @ University of Heidelberg</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      ],
-    ],
-    'Stamen_Toner' => [
-      'label' => 'Stamen Toner',
-      'url' => 'http://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}.{ext}',
-      'options' => [
-        'minZoom' => 0,
-        'maxZoom' => 20,
-        'ext' => 'png',
-        'attribution' => 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      ],
-    ],
-    'Stamen_Watercolor' => [
-      'label' => 'Stamen Watercolor',
-      'url' => 'http://stamen-tiles-{s}.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.{ext}',
-      'options' => [
-        'minZoom' => 1,
-        'maxZoom' => 16,
-        'ext' => 'png',
-        'subdomains' => 'abcd',
-        'attribution' => 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      ],
-    ],
-    'Stamen_Terrain' => [
-      'label' => 'Stamen Terrain',
-      'url' => 'http://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.{ext}',
-      'options' => [
-        'minZoom' => 4,
-        'maxZoom' => 18,
-        'ext' => 'png',
-        'bounds' => [[22, -132], [70, -56]],
-        'attribution' => 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      ],
-    ],
-  ];
+  protected $leafletTileLayers;
 
   /**
    * Leaflet Map Tile Layers Options.
@@ -183,6 +142,10 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
    *   The Entity Field Manager.
    * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
    *   The Link Generator service.
+   * @param \Drupal\geofield_map\leafletTileLayer\LeafletTileLayerPluginManager $leaflet_tile_manager
+   *   The LeafletTileLayer Manager service.
+   * @param \Drupal\Core\Session\AccountInterface $current_user
+   *   The Current User.
    */
   public function __construct(
     $plugin_id,
@@ -196,7 +159,9 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     TranslationInterface $string_translation,
     RendererInterface $renderer,
     EntityFieldManagerInterface $entity_field_manager,
-    LinkGeneratorInterface $link_generator
+    LinkGeneratorInterface $link_generator,
+    LeafletTileLayerPluginManager $leaflet_tile_manager,
+    AccountInterface $current_user
   ) {
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $third_party_settings, $geophp_wrapper, $wkt_generator);
     $this->config = $config_factory;
@@ -204,11 +169,9 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     $this->entityFieldManager = $entity_field_manager;
     $this->link = $link_generator;
     $this->wktGenerator = $wkt_generator;
-
-    foreach ($this->leafletTileLayers as $k => $tile_layer) {
-      $this->leafletTileLayersOptions[$k] = $tile_layer['label'];
-    }
-
+    $this->leafletTileManager = $leaflet_tile_manager;
+    $this->leafletTileLayers = $this->leafletTileManager->getLeafletTileLayers();
+    $this->currentUser = $current_user;
   }
 
   /**
@@ -227,7 +190,9 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       $container->get('string_translation'),
       $container->get('renderer'),
       $container->get('entity_field.manager'),
-      $container->get('link_generator')
+      $container->get('link_generator'),
+      $container->get('plugin.manager.leaflet_tile_layer_plugin'),
+      $container->get('current_user')
     );
   }
 
@@ -350,7 +315,8 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#type' => 'select',
       '#title' => $this->t('Map type'),
       '#default_value' => $this->getSetting('map_type_leaflet'),
-      '#options' => $this->leafletTileLayersOptions,
+      '#options' => $this->leafletTileManager->getLeafletTilesLayersOptions(),
+      '#description' => $this->currentUser->hasPermission('configure geofield_map') ? $this->t('Choose one among all the Leaflet Tiles Plugins defined for the Geofield Map module (@see LeafletTileLayerPlugin).<br>You can add your one into your custom module as a new LeafletTileLayer Plugin. (Free Leaflet Tile Layers definitions are available from <a href="@free_leaflet_tiles_link" target="_blank">this link.</a>)', ['@free_leaflet_tiles_link' => 'http://leaflet-extras.github.io/leaflet-providers/preview/index.html']) : '',
       '#states' => [
         'visible' => [
           ':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][map_library]"]' => ['value' => 'leaflet'],

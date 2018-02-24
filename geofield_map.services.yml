@@ -1,0 +1,5 @@
+services:
+  plugin.manager.leaflet_tile_layer_plugin:
+    class: Drupal\geofield_map\LeafletTileLayer\LeafletTileLayerPluginManager
+    parent: default_plugin_manager
+    arguments: ['@request_stack']
