@@ -88,6 +88,7 @@ Format settings for specific personalization;
  should be able to configure/edit the module settings.
 
 ####Hints for Advanced Use: 
+- GeofieldMapWidget uses Leaflet MapTypes/Tiles pre-defined as LeafletTileLayers D8 plugins, but any third party module is able to define and add its new LeafletTileLayer Plugins.
 - As default (configurable) option, eventual overlapping markers will be 
 Spiderfied, with the support of the 
 [Overlapping Marker Spiderfier Library (for Google Maps)](https://github.com/jawj/OverlappingMarkerSpiderfier#overlapping-marker-spiderfier-for-google-maps-api-v3)

@@ -1,4 +1,9 @@
 services:
+  plugin.manager.leaflet_tile_layer_plugin:
+    class: Drupal\geofield_map\LeafletTileLayer\LeafletTileLayerPluginManager
+    parent: default_plugin_manager
+    arguments: ['@request_stack']
+
   plugin.manager.geofield_map.themer:
     class: Drupal\geofield_map\MapThemerPluginManager
     parent: default_plugin_manager
