@@ -2,8 +2,8 @@
 
 namespace Drupal\geofield_map;
 
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Component\Plugin\PluginInspectionInterface;
+use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Provides an interface for Geofield Map Themers plugins.
@@ -33,13 +33,13 @@ interface MapThemerInterface extends PluginInspectionInterface {
   public function defaultSettings($k = NULL);
 
   /**
-   * Provides a Map Themer Color Table.
+   * Provides a Map Themer Options Element.
    *
-   * @param array $form
-   *   The form to be integrated.
+   * @param array $defaults
+   *   The default values/settings.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state.
    */
-  public function buildMapThemerForm(array &$form, FormStateInterface $form_state);
+  public function buildMapThemerElement(array $defaults, FormStateInterface $form_state);
 
 }
