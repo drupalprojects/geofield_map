@@ -510,6 +510,11 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
 
     /* @var \Drupal\Core\Entity\EntityInterface $entity */
     $entity = $items->getEntity();
+    // Take the entity translation, if existing.
+    /* @var \Drupal\Core\TypedData\TranslatableInterface $entity */
+    if ($entity->hasTranslation($langcode)) {
+      $entity = $entity->getTranslation($langcode);
+    }
     $entity_type = $entity->getEntityTypeId();
     $bundle = $entity->bundle();
     $entity_id = $entity->id();
