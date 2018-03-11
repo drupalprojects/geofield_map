@@ -8,8 +8,6 @@
       // Init all maps in drupalSettings.
       if (drupalSettings['geofield_map']) {
 
-        Drupal.geoFieldMap.gmapPlacesLibraryNeeded =  drupalSettings['geofield_map']['gmap_places'] ? drupalSettings['geofield_map']['gmap_places'] : false;
-
         $.each(drupalSettings['geofield_map'], function (mapid, options) {
 
           // Define the first map id, for a multivalue geofield map.
@@ -43,7 +41,6 @@
     geocoder: null,
     map_data: {},
     firstMapId: null,
-    gmapPlacesLibraryNeeded: null,
 
     // Google Maps are loaded lazily. In some situations load_google() is called twice, which results in
     // "You have included the Google Maps API multiple times on this page. This may cause unexpected errors." errors.
@@ -91,12 +88,7 @@
         // Google maps isn't loaded so lazy load google maps.
 
         // Default script path.
-        var scriptPath = '//maps.googleapis.com/maps/api/js?v=3.exp&sensor=false';
-
-        // Add the Google Maps Places Library, if requested.
-        if (self.gmapPlacesLibraryNeeded) {
-          scriptPath += '&libraries=places';
-        }
+        var scriptPath = '//maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=places';
 
         // If a Google API key is set, use it.
         if (typeof self.map_data[mapid]['gmap_api_key'] !== 'undefined' && self.map_data[mapid]['gmap_api_key'] !== null) {
@@ -388,7 +380,7 @@
       self.map_data[params.mapid].map = map;
 
       // Add the Google Places Options, if requested/enabled.
-      if (self.gmapPlacesLibraryNeeded && params['gmap_places']) {
+      if (params['gmap_places']) {
         self.map_data[params.mapid].gmap_places = params['gmap_places'];
         // Extend defaults placesAutocompleteServiceOptions.
         self.map_data[params.mapid].gmap_places_options = params['gmap_places_options'].length > 0 ? $.extend({}, {placeIdOnly: true}, JSON.parse(params['gmap_places_options'])) : {placeIdOnly: true};
@@ -419,7 +411,7 @@
         if (self.map_data[params.mapid].search) {
 
           // If the Google Places Autocomplete is not requested/enabled.
-          if (!self.map_data[params.mapid].gmap_places || !self.gmapPlacesLibraryNeeded) {
+          if (!self.map_data[params.mapid].gmap_places) {
             // Apply the Jquery Autocomplete widget, enabled by core/drupal.autocomplete
             self.map_data[params.mapid].search.autocomplete({
               // This bit uses the geocoder to fetch address values.

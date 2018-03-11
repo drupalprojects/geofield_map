@@ -237,10 +237,6 @@ class GeofieldMap extends GeofieldElementBase {
     if ($element['#gmap_api_key'] && strlen($element['#gmap_api_key']) > 0) {
       $settings['gmap_api_key'] = $element['#gmap_api_key'];
     }
-    // If the widget requests the gmap_places autocomplete library, set it.
-    if ($element['#gmap_places']) {
-      $settings['gmap_places'] = $element['#gmap_places'];
-    }
 
     $element['#attached']['drupalSettings'] = [
       'geofield_map' => $settings,
