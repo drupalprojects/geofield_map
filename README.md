@@ -25,7 +25,8 @@ An higly customizable Map widget providing an interactive and very intuitive
 map on which to perform localization and input of geographic coordinates 
 throughout:
 - MULTIPOINTS Geofield mapping support;
-- Google places autocomplete and geocoding APIs;
+- Google Geocoding and 
+[Google Maps Places Autocomplete Service](https://developers.google.com/maps/documentation/javascript/examples/places-autocomplete);
 - Google Map or Leaflet Map JS libraries and interfaces;
 - Map click and marker dragging, with instant reverse geocoding;
 - HTML5 Geolocation of the user position;
@@ -87,7 +88,8 @@ Format settings for specific personalization;
 #####Note: Grant the "Configure Geofield Map" permission to the Users Role that
  should be able to configure/edit the module settings.
 
-####Hints for Advanced Use: 
+####Hints for Advanced Use:
+- For each GeofieldMapWidget it is possible the enable (and custom configure) addresses Geocoding via the [Google Maps Places Autocomplete Service](https://developers.google.com/maps/documentation/javascript/examples/places-autocomplete).
 - GeofieldMapWidget uses Leaflet MapTypes/Tiles pre-defined as LeafletTileLayers D8 plugins, but any third party module is able to define and add its new LeafletTileLayer Plugins.
 - As default (configurable) option, eventual overlapping markers will be 
 Spiderfied, with the support of the 
