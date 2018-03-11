@@ -89,7 +89,7 @@ Format settings for specific personalization;
  should be able to configure/edit the module settings.
 
 ####Hints for Advanced Use:
-- For each GeofieldMapWidget it is possible the enable (and custom configure) addresses Geocoding via the [Google Maps Places Autocomplete Service](https://developers.google.com/maps/documentation/javascript/examples/places-autocomplete).
+- For each GeofieldMapWidget it is possible to enable (and custom configure) addresses Geocoding via the [Google Maps Places Autocomplete Service](https://developers.google.com/maps/documentation/javascript/examples/places-autocomplete).
 - GeofieldMapWidget uses Leaflet MapTypes/Tiles pre-defined as LeafletTileLayers D8 plugins, but any third party module is able to define and add its new LeafletTileLayer Plugins.
 - As default (configurable) option, eventual overlapping markers will be 
 Spiderfied, with the support of the 
