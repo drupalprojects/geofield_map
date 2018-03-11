@@ -203,34 +203,38 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
    */
   public static function defaultSettings() {
     return [
-      'default_value' => [
-        'lat' => '0',
-        'lon' => '0',
-      ],
-      'map_library' => 'gmap',
-      'map_google_api_key' => '',
-      'map_dimensions' => [
-        'width' => '100%',
-        'height' => '450px',
-      ],
-      'map_type_google' => 'roadmap',
-      'map_type_leaflet' => 'OpenStreetMap_Mapnik',
-      'map_type_selector' => TRUE,
-      'zoom_level' => 5,
-      'zoom' => [
-        'start' => 6,
-        'focus' => 12,
-        'min' => 1,
-        'max' => 22,
-      ],
-      'click_to_find_marker' => FALSE,
-      'click_to_place_marker' => FALSE,
-      'geoaddress_field' => [
-        'field' => '0',
-        'hidden' => FALSE,
-        'disabled' => TRUE,
-      ],
-    ] + parent::defaultSettings();
+        'default_value' => [
+          'lat' => '0',
+          'lon' => '0',
+        ],
+        'map_library' => 'gmap',
+        'map_google_api_key' => '',
+        'map_google_places' => [
+          'places_control' => FALSE,
+          'places_additional_options' => '',
+        ],
+        'map_dimensions' => [
+          'width' => '100%',
+          'height' => '450px',
+        ],
+        'map_type_google' => 'roadmap',
+        'map_type_leaflet' => 'OpenStreetMap_Mapnik',
+        'map_type_selector' => TRUE,
+        'zoom_level' => 5,
+        'zoom' => [
+          'start' => 6,
+          'focus' => 12,
+          'min' => 1,
+          'max' => 22,
+        ],
+        'click_to_find_marker' => FALSE,
+        'click_to_place_marker' => FALSE,
+        'geoaddress_field' => [
+          'field' => '0',
+          'hidden' => FALSE,
+          'disabled' => TRUE,
+        ],
+      ] + parent::defaultSettings();
   }
 
   /**
@@ -289,6 +293,41 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#type' => 'html_tag',
       '#tag' => 'div',
       '#value' => $map_google_api_key_value,
+    ];
+
+    $elements['map_google_places'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Google Places'),
+    ];
+    $elements['map_google_places']['places_control'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable Address Geocoding via the @google_places_link.', [
+        '@google_places_link' => $this->link->generate($this->t('Google Maps Places Autocomplete Service'), Url::fromUri('https://developers.google.com/maps/documentation/javascript/examples/places-autocomplete', [
+          'absolute' => TRUE,
+          'attributes' => ['target' => 'blank'],
+        ])),
+      ]),
+      '#default_value' => $this->getSetting('map_google_places')['places_control'],
+      '#return_value' => 1,
+    ];
+    $elements['map_google_places']['places_additional_options'] = [
+      '#type' => 'textarea',
+      '#rows' => 2,
+      '#title' => $this->t('Google Maps Places Autocomplete Service Additional Options'),
+      '#description' => $this->t('An object literal of additional options, that comply with the @autocomplete_class.<br><b>The placeholder values are the default ones used by the widget.</b><br>The syntax should respect the javascript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.', [
+        "@autocomplete_class" => $this->link->generate($this->t('google.maps.places.Autocomplete class'), Url::fromUri('https://developers.google.com/maps/documentation/javascript/reference/3/#Autocomplete', [
+          'absolute' => TRUE,
+          'attributes' => ['target' => 'blank'],
+        ])),
+      ]),
+      '#default_value' => $this->getSetting('map_google_places')['places_additional_options'],
+      '#placeholder' => '{"placeIdOnly": "true", "strictBounds": "false"}',
+      '#element_validate' => [[get_class($this), 'jsonValidate']],
+      '#states' => [
+        'visible' => [
+          ':input[name="fields[field_geofield][settings_edit_form][settings][map_google_places][places_control]"]' => ['checked' => TRUE],
+        ],
+      ],
     ];
 
     $elements['map_library'] = [
@@ -522,6 +561,10 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       ]),
     ];
 
+    $map_google_places = [
+      '#markup' => $this->t('Google Places Autocomplete Service: @state', ['@state' => $this->getSetting('map_google_places')['places_control'] ? $this->t('enabled') : $this->t('disabled')]),
+    ];
+
     $map_type_selector = [
       '#markup' => $this->t('Map Type Selector: @state', ['@state' => $this->getSetting('map_type_selector') ? $this->t('enabled') : $this->t('disabled')]),
     ];
@@ -567,9 +610,10 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     ];
 
     $summary = [
+      'map_gmap_api_key' => $map_gmap_api_key,
+      'map_google_places' => $map_google_places,
       'map_library' => $map_library,
       'map_type' => $map_type,
-      'map_gmap_api_key' => $map_gmap_api_key,
       'map_type_selector' => $map_type_selector,
       'map_dimensions' => $map_dimensions,
       'map_zoom_levels' => $map_zoom_levels,
@@ -609,6 +653,9 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     }
 
     $element += [
+      '#gmap_api_key' => $gmap_api_key,
+      '#gmap_places' => $this->getSetting('map_google_places')['places_control'],
+      '#gmap_places_options' => $this->getSetting('map_google_places')['places_additional_options'],
       '#type' => 'geofield_map',
       '#default_value' => $latlon_value,
       '#geolocation' => $this->getSetting('html5_geolocation'),
@@ -624,7 +671,6 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#click_to_place_marker' => $this->getSetting('click_to_place_marker'),
       '#geoaddress_field' => $this->getSetting('geoaddress_field'),
       '#error_label' => !empty($element['#title']) ? $element['#title'] : $this->fieldDefinition->getLabel(),
-      '#gmap_api_key' => $gmap_api_key,
     ];
 
     return ['value' => $element];

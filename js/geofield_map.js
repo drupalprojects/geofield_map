@@ -7,6 +7,7 @@
 
       // Init all maps in drupalSettings.
       if (drupalSettings['geofield_map']) {
+
         $.each(drupalSettings['geofield_map'], function (mapid, options) {
 
           // Define the first map id, for a multivalue geofield map.
@@ -19,12 +20,13 @@
             // Set the map_data[mapid] settings.
             Drupal.geoFieldMap.map_data[mapid] = options;
 
-            if (options.gmap_api_key || options.map_library === 'gmap') {
-              // Load before the Gmap Library, if needed.
+            // Load before the Gmap Library, if needed, then initialize the Map.
+            if (typeof google === 'undefined' && (drupalSettings['geofield_map'].gmap_api_key || options.map_library === 'gmap')) {
               Drupal.geoFieldMap.loadGoogle(mapid, function () {
                 Drupal.geoFieldMap.map_initialize(options);
               });
             }
+            // Just initialize the Map, if Gmap Library not requested or already loaded.
             else {
               Drupal.geoFieldMap.map_initialize(options);
             }
@@ -86,7 +88,7 @@
         // Google maps isn't loaded so lazy load google maps.
 
         // Default script path.
-        var scriptPath = '//maps.googleapis.com/maps/api/js?v=3.exp&sensor=false';
+        var scriptPath = '//maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=places';
 
         // If a Google API key is set, use it.
         if (typeof self.map_data[mapid]['gmap_api_key'] !== 'undefined' && self.map_data[mapid]['gmap_api_key'] !== null) {
@@ -139,14 +141,14 @@
       switch (self.map_data[mapid].map_library) {
         case 'leaflet':
           position = L.latLng(
-            self.map_data[mapid].lat.val(),
-            self.map_data[mapid].lng.val()
+            $('#' + self.map_data[mapid].latid).val(),
+            $('#' + self.map_data[mapid].lngid).val()
           );
           break;
         default:
           position = new google.maps.LatLng(
-            self.map_data[mapid].lat.val(),
-            self.map_data[mapid].lng.val()
+            $('#' + self.map_data[mapid].latid).val(),
+            $('#' + self.map_data[mapid].lngid).val()
           );
       }
       self.setMarkerPosition(mapid, position);
@@ -160,12 +162,12 @@
       var self = this;
       switch (self.map_data[mapid].map_library) {
         case 'leaflet':
-          self.map_data[mapid].lat.val(position.lat.toFixed(6));
-          self.map_data[mapid].lng.val(position.lng.toFixed(6));
+          $('#' + self.map_data[mapid].latid).val(position.lat.toFixed(6));
+          $('#' + self.map_data[mapid].lngid).val(position.lng.toFixed(6));
           break;
         default:
-          self.map_data[mapid].lat.val(position.lat().toFixed(6));
-          self.map_data[mapid].lng.val(position.lng().toFixed(6));
+          $('#' + self.map_data[mapid].latid).val(position.lat().toFixed(6));
+          $('#' + self.map_data[mapid].lngid).val(position.lng().toFixed(6));
       }
     },
 
@@ -377,6 +379,13 @@
       // Define a map self property, so other code can interact with it.
       self.map_data[params.mapid].map = map;
 
+      // Add the Google Places Options, if requested/enabled.
+      if (params['gmap_places']) {
+        self.map_data[params.mapid].gmap_places = params['gmap_places'];
+        // Extend defaults placesAutocompleteServiceOptions.
+        self.map_data[params.mapid].gmap_places_options = params['gmap_places_options'].length > 0 ? $.extend({}, {placeIdOnly: true}, JSON.parse(params['gmap_places_options'])) : {placeIdOnly: true};
+      }
+
       // Generate and Set/Place Marker Position.
       var marker = self.setMarker(params.mapid, position);
 
@@ -397,36 +406,64 @@
 
       // Define Lat & Lng input selectors and all related functionalities and Geofield Map Listeners
       if (params.widget && params.latid && params.lngid) {
-        self.map_data[params.mapid].lat = $('#' + params.latid);
-        self.map_data[params.mapid].lng = $('#' + params.lngid);
 
         // If it is defined the Geocode address Search field (dependant on the Gmaps API key)
         if (self.map_data[params.mapid].search) {
-          // Apply the Jquery Autocomplete widget, enabled by core/drupal.autocomplete
-          self.map_data[params.mapid].search.autocomplete({
-            // This bit uses the geocoder to fetch address values.
-            source: function (request, response) {
-              self.geocoder.geocode({address: request.term}, function (results, status) {
-                response($.map(results, function (item) {
-                  return {
-                    // the value property is needed to be passed to the select.
-                    value: item.formatted_address,
-                    latitude: item.geometry.location.lat(),
-                    longitude: item.geometry.location.lng()
-                  };
-                }));
+
+          // If the Google Places Autocomplete is not requested/enabled.
+          if (!self.map_data[params.mapid].gmap_places) {
+            // Apply the Jquery Autocomplete widget, enabled by core/drupal.autocomplete
+            self.map_data[params.mapid].search.autocomplete({
+              // This bit uses the geocoder to fetch address values.
+              source: function (request, response) {
+                self.geocoder.geocode({address: request.term}, function (results, status) {
+                  response($.map(results, function (item) {
+                    return {
+                      // the value property is needed to be passed to the select.
+                      value: item.formatted_address,
+                      latitude: item.geometry.location.lat(),
+                      longitude: item.geometry.location.lng()
+                    };
+                  }));
+                });
+              },
+              // This bit is executed upon selection of an address.
+              select: function (event, ui) {
+                // Update the Geocode address Search field value with the value (or label)
+                // property that is passed as the selected autocomplete text
+                self.map_data[params.mapid].search.val(ui.item.value);
+                // Triggers the Geocode on the Geofield Map Widget
+                var position = self.getLatLng(params.mapid, ui.item.latitude, ui.item.longitude);
+                self.trigger_geocode(params.mapid, position);
+              }
+            });
+
+          }
+          // If the Google Places Autocomplete is requested/enabled.
+          else {
+
+            // Apply the Google Places Service to the Geocoder Search Field Selector;
+            self.map_data[params.mapid].autocompletePlacesService = new google.maps.places.Autocomplete(
+              self.map_data[params.mapid].search.get(0), self.map_data[params.mapid].gmap_places_options
+            );
+            self.map_data[params.mapid].autocompletePlacesService.bindTo('bounds', self.map_data[params.mapid].map);
+            self.map_data[params.mapid].autocompletePlacesService.addListener('place_changed', function() {
+              self.map_data[params.mapid].search.removeClass('ui-autocomplete-loading');
+              var place = self.map_data[params.mapid].autocompletePlacesService.getPlace();
+              if (!place.place_id) {
+                return;
+              }
+              self.geocoder.geocode({'placeId': place.place_id}, function(results, status) {
+                if (status === google.maps.GeocoderStatus.OK && results[0]) {
+                  // Triggers the Geocode on the Geofield Map Widget
+                  var position = self.getLatLng(params.mapid, results[0].geometry.location.lat(), results[0].geometry.location.lng());
+                  // Replace the Google Place name with its formatted address.
+                  self.map_data[params.mapid].search.val(results[0].formatted_address);
+                  self.trigger_geocode(params.mapid, position);
+                }
               });
-            },
-            // This bit is executed upon selection of an address.
-            select: function (event, ui) {
-              // Update the Geocode address Search field value with the value (or label)
-              // property that is passed as the selected autocomplete text
-              self.map_data[params.mapid].search.val(ui.item.value);
-              // Triggers the Geocode on the Geofield Map Widget
-              var position = self.getLatLng(params.mapid, ui.item.latitude, ui.item.longitude);
-              self.trigger_geocode(params.mapid, position);
-            }
-          });
+            });
+          }
 
           // Geocode user input on enter.
           self.map_data[params.mapid].search.keydown(function (e) {
@@ -514,9 +551,12 @@
           // Copy from the geoaddress_field.val
           self.map_data[params.mapid].search.val(self.map_data[params.mapid].geoaddress_field.val());
         }
-        else if (self.map_data[params.mapid].search) {
-          // Sets as reverse geocode from the Geofield.
-          self.reverse_geocode(params.mapid, position);
+        // If the coordinates are valid, provide a Gmap Reverse Geocode.
+        else if (self.map_data[params.mapid].search && (params.lat > 0 && params.lng > 0)) {
+          // Sets as Reverse geocode from the Google Map Geofield Coordinates.
+          var gmapPosition = new google.maps.LatLng(params.lat, params.lng);
+          // The follwoing will work only if a google geocoder has been defined.
+          self.reverse_geocode(params.mapid, gmapPosition);
         }
 
       }

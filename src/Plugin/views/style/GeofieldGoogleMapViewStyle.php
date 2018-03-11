@@ -75,13 +75,6 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
   protected $entityInfo;
 
   /**
-   * Does the style plugin for itself support to add fields to it's output.
-   *
-   * @var bool
-   */
-  protected $usesFields = TRUE;
-
-  /**
    * The Entity type manager service.
    *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
@@ -229,6 +222,39 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
       }
     }
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $usesRowPlugin = FALSE;
+
+  /**
+   * Does the style plugin support custom css class for the rows.
+   *
+   * @var bool
+   */
+  protected $usesRowClass = FALSE;
+
+  /**
+   * Does the style plugin support grouping of rows.
+   *
+   * @var bool
+   */
+  protected $usesGrouping = FALSE;
+
+  /**
+   * Does the style plugin for itself support to add fields to it's output.
+   *
+   * @var bool
+   */
+  protected $usesFields = TRUE;
+
+  /**
+   * Should field labels be enabled by default.
+   *
+   * @var bool
+   */
+  protected $defaultFieldLabels = TRUE;
 
   /**
    * {@inheritdoc}

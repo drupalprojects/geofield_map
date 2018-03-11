@@ -231,7 +231,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       ]));
     }
     else {
-      $state = $this->t("<span class='gmap-apikey-missing'>Gmap Api Key missing<br>Some Google Map functionality may not be available.</span> @settings_page_link", [
+      $state = $this->t("<span class='geofield-map-warning'>Gmap Api Key missing<br>Google Maps functionality may not be available.</span> @settings_page_link", [
         '@settings_page_link' => $this->link->generate($this->t('Set it in the Geofield Map Configuration Page'), Url::fromRoute('geofield_map.settings', [], [
           'query' => [
             'destination' => Url::fromRoute('<current>')
@@ -512,6 +512,11 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
 
     /* @var \Drupal\Core\Entity\EntityInterface $entity */
     $entity = $items->getEntity();
+    // Take the entity translation, if existing.
+    /* @var \Drupal\Core\TypedData\TranslatableInterface $entity */
+    if ($entity->hasTranslation($langcode)) {
+      $entity = $entity->getTranslation($langcode);
+    }
     $entity_type = $entity->getEntityTypeId();
     $bundle = $entity->bundle();
     $entity_id = $entity->id();
