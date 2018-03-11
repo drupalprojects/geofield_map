@@ -89,7 +89,7 @@ class GeofieldMap extends GeofieldElementBase {
 
       if (\Drupal::currentUser()->hasPermission('configure geofield_map')) {
         $element['map']['geocode']['#description'] .= '<div>' . t('@google_places_autocomplete_message', [
-          '@google_places_autocomplete_message' => !$element['#map_google_places'] ? 'Google Places Autocomplete Service disabled (might be enabled in the Geofield Widget configuration).' : 'Google Places Autocomplete Service enabled.',
+          '@google_places_autocomplete_message' => !$element['#gmap_places'] ? 'Google Places Autocomplete Service disabled (might be enabled in the Geofield Widget configuration).' : 'Google Places Autocomplete Service enabled.',
         ]);
       }
 
@@ -199,38 +199,47 @@ class GeofieldMap extends GeofieldElementBase {
     $entityForm = $form_state->getBuildInfo()['callback_object'];
     $entity_operation = method_exists($entityForm, 'getOperation') ? $entityForm->getOperation() : 'any';
 
-    $settings = [
-      $mapid => [
-        'entity_operation' => $entity_operation,
-        'id' => $element['#id'],
-        'gmap_api_key' => $element['#gmap_api_key'] && strlen($element['#gmap_api_key']) > 0 ? $element['#gmap_api_key'] : NULL,
-        'name' => $element['#name'],
-        'lat' => floatval($element['lat']['#default_value']),
-        'lng' => floatval($element['lon']['#default_value']),
-        'zoom_start' => intval($element['#zoom']['start']),
-        'zoom_focus' => intval($element['#zoom']['focus']),
-        'zoom_min' => intval($element['#zoom']['min']),
-        'zoom_max' => intval($element['#zoom']['max']),
-        'latid' => $element['lat']['#attributes']['id'],
-        'lngid' => $element['lon']['#attributes']['id'],
-        'searchid' => isset($element['map']['geocode']) ? $element['map']['geocode']['#attributes']['id'] : NULL,
-        'geoaddress_field' => $address_field_exists ? $element['#geoaddress_field']['field'] : NULL,
-        'geoaddress_field_id' => $address_field_exists ? $address_field['widget'][0]['value']['#id'] : NULL,
-        'mapid' => $mapid,
-        'widget' => TRUE,
-        'map_google_places' => $element['#map_google_places'],
-        'map_google_places_options' => $element['#map_google_places_options'],
-        'map_library' => $element['#map_library'],
-        'map_type' => $element['#map_type'],
-        'map_type_selector' => $element['#map_type_selector'] ? TRUE : FALSE,
-        'map_types_google' => $element['#map_types_google'],
-        'map_types_leaflet' => $element['#map_types_leaflet'],
-        'click_to_find_marker_id' => $element['#click_to_find_marker'] ? $element['map']['actions']['click_to_find_marker']['#attributes']['id'] : NULL,
-        'click_to_find_marker' => $element['#click_to_find_marker'] ? TRUE : FALSE,
-        'click_to_place_marker_id' => $element['#click_to_place_marker'] ? $element['map']['actions']['click_to_place_marker']['#attributes']['id'] : NULL,
-        'click_to_place_marker' => $element['#click_to_place_marker'] ? TRUE : FALSE,
-      ],
+    // Geofield Map Element specific mapid settings.
+    $settings[$mapid] = [
+      'entity_operation' => $entity_operation,
+      'id' => $element['#id'],
+      'gmap_api_key' => $element['#gmap_api_key'] && strlen($element['#gmap_api_key']) > 0 ? $element['#gmap_api_key'] : NULL,
+      'name' => $element['#name'],
+      'lat' => floatval($element['lat']['#default_value']),
+      'lng' => floatval($element['lon']['#default_value']),
+      'zoom_start' => intval($element['#zoom']['start']),
+      'zoom_focus' => intval($element['#zoom']['focus']),
+      'zoom_min' => intval($element['#zoom']['min']),
+      'zoom_max' => intval($element['#zoom']['max']),
+      'latid' => $element['lat']['#attributes']['id'],
+      'lngid' => $element['lon']['#attributes']['id'],
+      'searchid' => isset($element['map']['geocode']) ? $element['map']['geocode']['#attributes']['id'] : NULL,
+      'geoaddress_field' => $address_field_exists ? $element['#geoaddress_field']['field'] : NULL,
+      'geoaddress_field_id' => $address_field_exists ? $address_field['widget'][0]['value']['#id'] : NULL,
+      'mapid' => $mapid,
+      'widget' => TRUE,
+      'gmap_places' => $element['#gmap_places'],
+      'gmap_places_options' => $element['#gmap_places_options'],
+      'map_library' => $element['#map_library'],
+      'map_type' => $element['#map_type'],
+      'map_type_selector' => $element['#map_type_selector'] ? TRUE : FALSE,
+      'map_types_google' => $element['#map_types_google'],
+      'map_types_leaflet' => $element['#map_types_leaflet'],
+      'click_to_find_marker_id' => $element['#click_to_find_marker'] ? $element['map']['actions']['click_to_find_marker']['#attributes']['id'] : NULL,
+      'click_to_find_marker' => $element['#click_to_find_marker'] ? TRUE : FALSE,
+      'click_to_place_marker_id' => $element['#click_to_place_marker'] ? $element['map']['actions']['click_to_place_marker']['#attributes']['id'] : NULL,
+      'click_to_place_marker' => $element['#click_to_place_marker'] ? TRUE : FALSE,
     ];
+
+    // Geofield Map Element global settings.
+    // If the gmap_api_key is defined, set it.
+    if ($element['#gmap_api_key'] && strlen($element['#gmap_api_key']) > 0) {
+      $settings['gmap_api_key'] = $element['#gmap_api_key'];
+    }
+    // If the widget requests the gmap_places autocomplete library, set it.
+    if ($element['#gmap_places']) {
+      $settings['gmap_places'] = $element['#gmap_places'];
+    }
 
     $element['#attached']['drupalSettings'] = [
       'geofield_map' => $settings,

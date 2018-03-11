@@ -651,12 +651,13 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     }
 
     $element += [
+      '#gmap_api_key' => $gmap_api_key,
+      '#gmap_places' => $this->getSetting('map_google_places')['places_control'],
+      '#gmap_places_options' => $this->getSetting('map_google_places')['places_additional_options'],
       '#type' => 'geofield_map',
       '#default_value' => $latlon_value,
       '#geolocation' => $this->getSetting('html5_geolocation'),
       '#geofield_map_geolocation_override' => $this->getSetting('html5_geolocation'),
-      '#map_google_places' => $this->getSetting('map_google_places')['places_control'],
-      '#map_google_places_options' => $this->getSetting('map_google_places')['places_additional_options'],
       '#map_library' => $this->getSetting('map_library'),
       '#map_type' => 'leaflet' === $this->getSetting('map_library') ? $this->getSetting('map_type_leaflet') : $this->getSetting('map_type_google'),
       '#map_type_selector' => $this->getSetting('map_type_selector'),
@@ -668,7 +669,6 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#click_to_place_marker' => $this->getSetting('click_to_place_marker'),
       '#geoaddress_field' => $this->getSetting('geoaddress_field'),
       '#error_label' => !empty($element['#title']) ? $element['#title'] : $this->fieldDefinition->getLabel(),
-      '#gmap_api_key' => $gmap_api_key,
     ];
 
     return ['value' => $element];
