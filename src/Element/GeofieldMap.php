@@ -88,9 +88,10 @@ class GeofieldMap extends GeofieldElementBase {
       ];
 
       if (\Drupal::currentUser()->hasPermission('configure geofield_map')) {
-        $element['map']['geocode']['#description'] .= '<div>' . t('@google_places_autocomplete_message', [
-          '@google_places_autocomplete_message' => !$element['#gmap_places'] ? 'Google Places Autocomplete Service disabled (might be enabled in the Geofield Widget configuration).' : 'Google Places Autocomplete Service enabled.',
-        ]);
+        $element['map']['geocode']['#description'] .= '<div class="geofield-map-message">' . t('@google_places_autocomplete_message<br>@message_recipient', [
+          '@google_places_autocomplete_message' => !$element['#gmap_places'] ? 'Google Places Autocomplete Service disabled. Might be enabled in the Geofield Widget configuration.' : 'Google Places Autocomplete Service enabled.',
+          '@message_recipient' => t('(This message is only shown to the Geofield Map module administrator).'),
+        ]) . '</div>';
       }
 
     }
@@ -107,7 +108,7 @@ class GeofieldMap extends GeofieldElementBase {
           ])),
         ]),
         '#attributes' => [
-          'class' => ['gmap-apikey-missing geofield-map-warning'],
+          'class' => ['geofield-map-message'],
         ],
       ];
     }

@@ -18,10 +18,3 @@
 .geofield_map_geoaddress_field_hidden {
   display: none;
 }
-
-/* line 18, ../sass/geofield_map_widget.scss */
-.gmap-apikey-missing.geofield-map-warning,
-.gmap-apikey-missing.geofield-map-warning a {
-  margin: 4px 0;
-  color: lightgray;
-}
