@@ -19,6 +19,14 @@
             // Set the map_data[mapid] settings.
             Drupal.geoFieldMap.map_data[mapid] = options;
 
+            // Set the google placesAutocompleteServiceFlag flag and options.
+            if(options['map_google_places']) {
+              Drupal.geoFieldMap.placesAutocompleteServiceFlag = options['map_google_places'];
+              Drupal.geoFieldMap.placesAutocompleteServiceOptions = {placeIdOnly: true};
+              // Extend defaults placesAutocompleteServiceOptions.
+              Drupal.geoFieldMap.placesAutocompleteServiceOptions = options['map_google_places_options'].length > 0 ? $.extend({}, {placeIdOnly: true}, JSON.parse(options['map_google_places_options'])) : {placeIdOnly: true};
+            }
+
             if (options.gmap_api_key || options.map_library === 'gmap') {
               // Load before the Gmap Library, if needed.
               Drupal.geoFieldMap.loadGoogle(mapid, function () {
@@ -39,6 +47,7 @@
     geocoder: null,
     map_data: {},
     firstMapId: null,
+    placesAutocompleteServiceFlag: null,
 
     // Google Maps are loaded lazily. In some situations load_google() is called twice, which results in
     // "You have included the Google Maps API multiple times on this page. This may cause unexpected errors." errors.
@@ -87,6 +96,11 @@
 
         // Default script path.
         var scriptPath = '//maps.googleapis.com/maps/api/js?v=3.exp&sensor=false';
+
+        // Conditionally add the Google Places library.
+        if(self.placesAutocompleteServiceFlag) {
+          scriptPath += '&libraries=places';
+        }
 
         // If a Google API key is set, use it.
         if (typeof self.map_data[mapid]['gmap_api_key'] !== 'undefined' && self.map_data[mapid]['gmap_api_key'] !== null) {
@@ -402,31 +416,58 @@
 
         // If it is defined the Geocode address Search field (dependant on the Gmaps API key)
         if (self.map_data[params.mapid].search) {
-          // Apply the Jquery Autocomplete widget, enabled by core/drupal.autocomplete
-          self.map_data[params.mapid].search.autocomplete({
-            // This bit uses the geocoder to fetch address values.
-            source: function (request, response) {
-              self.geocoder.geocode({address: request.term}, function (results, status) {
-                response($.map(results, function (item) {
-                  return {
-                    // the value property is needed to be passed to the select.
-                    value: item.formatted_address,
-                    latitude: item.geometry.location.lat(),
-                    longitude: item.geometry.location.lng()
-                  };
-                }));
+
+          if(!self.placesAutocompleteServiceFlag) {
+            // Apply the Jquery Autocomplete widget, enabled by core/drupal.autocomplete
+            self.map_data[params.mapid].search.autocomplete({
+              // This bit uses the geocoder to fetch address values.
+              source: function (request, response) {
+                self.geocoder.geocode({address: request.term}, function (results, status) {
+                  response($.map(results, function (item) {
+                    return {
+                      // the value property is needed to be passed to the select.
+                      value: item.formatted_address,
+                      latitude: item.geometry.location.lat(),
+                      longitude: item.geometry.location.lng()
+                    };
+                  }));
+                });
+              },
+              // This bit is executed upon selection of an address.
+              select: function (event, ui) {
+                // Update the Geocode address Search field value with the value (or label)
+                // property that is passed as the selected autocomplete text
+                self.map_data[params.mapid].search.val(ui.item.value);
+                // Triggers the Geocode on the Geofield Map Widget
+                var position = self.getLatLng(params.mapid, ui.item.latitude, ui.item.longitude);
+                self.trigger_geocode(params.mapid, position);
+              }
+            });
+
+          }
+          else {
+            // Apply the Google Places Service to the Geocoder Search Field Selector;
+            self.map_data[params.mapid].autocompletePlacesService = new google.maps.places.Autocomplete(
+              self.map_data[params.mapid].search.get(0), self.placesAutocompleteServiceOptions
+            );
+            self.map_data[params.mapid].autocompletePlacesService.bindTo('bounds', self.map_data[params.mapid].map);
+            self.map_data[params.mapid].autocompletePlacesService.addListener('place_changed', function() {
+              self.map_data[params.mapid].search.removeClass('ui-autocomplete-loading');
+              var place = self.map_data[params.mapid].autocompletePlacesService.getPlace();
+              if (!place.place_id) {
+                return;
+              }
+              self.geocoder.geocode({'placeId': place.place_id}, function(results, status) {
+                if (status === google.maps.GeocoderStatus.OK && results[0]) {
+                  // Triggers the Geocode on the Geofield Map Widget
+                  var position = self.getLatLng(params.mapid, results[0].geometry.location.lat(), results[0].geometry.location.lng());
+                  self.trigger_geocode(params.mapid, position);
+                  // Replace the Google Place name with its formatted address.
+                  self.map_data[params.mapid].search.val(results[0].formatted_address);
+                }
               });
-            },
-            // This bit is executed upon selection of an address.
-            select: function (event, ui) {
-              // Update the Geocode address Search field value with the value (or label)
-              // property that is passed as the selected autocomplete text
-              self.map_data[params.mapid].search.val(ui.item.value);
-              // Triggers the Geocode on the Geofield Map Widget
-              var position = self.getLatLng(params.mapid, ui.item.latitude, ui.item.longitude);
-              self.trigger_geocode(params.mapid, position);
-            }
-          });
+            });
+          }
 
           // Geocode user input on enter.
           self.map_data[params.mapid].search.keydown(function (e) {

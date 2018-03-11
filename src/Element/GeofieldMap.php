@@ -78,7 +78,7 @@ class GeofieldMap extends GeofieldElementBase {
       $element['map']['geocode'] = [
         '#prefix' => '<label>' . t("Geocode address") . '</label>',
         '#type' => 'textfield',
-        '#description' => t("Use this to geocode your search location"),
+        '#description' => t("Use this to geocode your search location."),
         '#size' => 60,
         '#maxlength' => 128,
         '#attributes' => [
@@ -86,6 +86,13 @@ class GeofieldMap extends GeofieldElementBase {
           'class' => ['form-text', 'form-autocomplete', 'geofield-map-search'],
         ],
       ];
+
+      if (\Drupal::currentUser()->hasPermission('configure geofield_map')) {
+        $element['map']['geocode']['#description'] .= '<div>' . t('@google_places_autocomplete_message', [
+          '@google_places_autocomplete_message' => !$element['#map_google_places'] ? 'Google Places Autocomplete Service disabled (might be enabled in the Geofield Widget configuration).' : 'Google Places Autocomplete Service enabled.',
+        ]);
+      }
+
     }
     elseif (\Drupal::currentUser()->hasPermission('configure geofield_map')) {
       $element['map']['geocode_missing'] = [
@@ -211,6 +218,8 @@ class GeofieldMap extends GeofieldElementBase {
         'geoaddress_field_id' => $address_field_exists ? $address_field['widget'][0]['value']['#id'] : NULL,
         'mapid' => $mapid,
         'widget' => TRUE,
+        'map_google_places' => $element['#map_google_places'],
+        'map_google_places_options' => $element['#map_google_places_options'],
         'map_library' => $element['#map_library'],
         'map_type' => $element['#map_type'],
         'map_type_selector' => $element['#map_type_selector'] ? TRUE : FALSE,

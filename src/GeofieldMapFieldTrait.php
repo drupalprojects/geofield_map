@@ -1058,7 +1058,7 @@ trait GeofieldMapFieldTrait {
     ];
     $elements['map_markercluster']['markercluster_additional_options'] = [
       '#type' => 'textarea',
-      '#rows' => 5,
+      '#rows' => 4,
       '#title' => $this->t('Marker Cluster Additional Options'),
       '#description' => $this->t('An object literal of additional marker cluster options, that comply with the Marker Clusterer Google Maps JavaScript Library.<br>The syntax should respect the javascript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.'),
       '#default_value' => $settings['map_markercluster']['markercluster_additional_options'],
