@@ -244,7 +244,9 @@ trait GeofieldMapFieldTrait {
    *   The Geofield Data Values.
    * @param string $description
    *   The description value.
-   * @param mixed $additional_data
+   * @param array $theming
+   *   The theming array definition.
+   * @param array $additional_data
    *   Additional data to be added to the feature properties, i.e.
    *   GeofieldGoogleMapViewStyle will add row fields (already rendered).
    *
@@ -252,7 +254,7 @@ trait GeofieldMapFieldTrait {
    *   The data array for the current feature, including Geojson and additional
    *   data.
    */
-  protected function getGeoJsonData($items, $description = NULL, $additional_data = NULL) {
+  protected function getGeoJsonData($items, $description = NULL, array $theming = NULL, array $additional_data = NULL) {
     $data = [];
     foreach ($items as $delta => $item) {
 
@@ -274,6 +276,9 @@ trait GeofieldMapFieldTrait {
           'description' => isset($description[$delta]) ? $description[$delta] : (isset($description[0]) ? $description[0] : NULL),
           'data' => $additional_data,
         ];
+        if ($theming && isset($theming['plugin_id']) && isset($theming['values'])) {
+          $datum['properties']['icon'] = $this->mapThemerManager->getIcon($theming['plugin_id'], $theming['values']);
+        }
         $data[] = $datum;
       }
     }

@@ -107,6 +107,11 @@
     place_feature: function(feature, icon_image, mapid) {
       var self = this;
 
+      // Override and set icon image with geojsonProperties.icon, if set as not null/empty.
+      if(feature.geojsonProperties.icon && feature.geojsonProperties.icon.length > 0) {
+        icon_image = feature.geojsonProperties.icon;
+      }
+
       // Define the OverlappingMarkerSpiderfier flag.
       var oms = self.map_data[mapid].oms ? self.map_data[mapid].oms : null;
 
@@ -120,11 +125,14 @@
           img.onerror = logError;
         }
 
-        checkImage(icon_image, function(){
+        checkImage(icon_image,
+          // Success loading image.
+          function(){
             feature.setIcon(icon_image);
           },
+          // Error loading image.
           function(){
-            console.log("Geofield Gmap: The Icon Image doesn't exist at the set path");
+            console.log("Geofield Gmap: The Icon Image doesn't exist at the requeted path: " + icon_image);
           });
       }
 
@@ -306,6 +314,7 @@
 
           // Define the icon_image, if set.
           var icon_image = map_settings.map_marker_and_infowindow.icon_image_path.length > 0 ? map_settings.map_marker_and_infowindow.icon_image_path : null;
+
 
           if (features.setMap) {
             self.place_feature(features, icon_image, mapid);

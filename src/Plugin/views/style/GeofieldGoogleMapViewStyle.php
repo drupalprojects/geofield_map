@@ -20,8 +20,6 @@ use Drupal\geofield\GeoPHP\GeoPHPInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\geofield_map\MapThemerPluginManager;
-use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\HtmlCommand;
 
 /**
  * Style plugin to render a View output as a Leaflet map.
@@ -129,6 +127,13 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
    * @var \Drupal\geofield_map\MapThemerPluginManager
    */
   protected $mapThemerManager;
+
+  /**
+   * The MapThemer Manager service .
+   *
+   * @var \Drupal\geofield_map\MapThemerInterface
+   */
+  protected $mapThemerPlugin;
 
   /**
    * Constructs a GeofieldGoogleMapView style instance.
@@ -392,14 +397,14 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     $map_themer_id = $form_state->getValue([
       'style_options',
       'map_marker_and_infowindow',
-      'theming', 'map_themer',
+      'theming', 'plugin_id',
     ]);
 
-    $default_map_themer = isset($this->options['map_marker_and_infowindow']['theming']) ? $this->options['map_marker_and_infowindow']['theming']['map_themer'] : t('none');
+    $default_map_themer = isset($this->options['map_marker_and_infowindow']['theming']['plugin_id']) ? $this->options['map_marker_and_infowindow']['theming']['plugin_id'] : t('none');
 
     $selected_map_themer = !empty($map_themer_id) ? $map_themer_id : $default_map_themer;
 
-    $form['map_marker_and_infowindow']['theming']['map_themer'] = [
+    $form['map_marker_and_infowindow']['theming']['plugin_id'] = [
       '#type' => 'select',
       '#title' => $this->t('Map Theming'),
       '#default_value' => $selected_map_themer,
@@ -417,9 +422,8 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     ];
 
     if ($selected_map_themer != 'none') {
-      /* @var \Drupal\geofield_map\MapThemerInterface $map_themer */
-      $map_themer = $this->mapThemerManager->createInstance($selected_map_themer);
-      $form['map_marker_and_infowindow']['theming']['element'] = $map_themer->buildMapThemerElement($this->options, $form_state);
+      $this->mapThemerPlugin = $this->mapThemerManager->createInstance($selected_map_themer);
+      $form['map_marker_and_infowindow']['theming']['values'] = $this->mapThemerPlugin->buildMapThemerElement($this->options, $form_state);
     }
 
     $form['map_marker_and_infowindow']['icon_image_path']['#states'] = [
@@ -528,6 +532,8 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
             }
           }
 
+          $theming = $map_settings['map_marker_and_infowindow']['theming'];
+
           // Add Views fields to the Json output as additional_data property.
           $view_data = [];
           foreach ($this->rendered_fields[$id] as $field_name => $rendered_field) {
@@ -536,7 +542,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
               $view_data[$field_name] = $rendered_field->__toString();
             }
           }
-          $data = array_merge($data, $this->getGeoJsonData($geofield_value, $description, $view_data));
+          $data = array_merge($data, $this->getGeoJsonData($geofield_value, $description, $theming, $view_data));
         }
       }
 

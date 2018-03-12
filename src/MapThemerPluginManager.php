@@ -6,6 +6,7 @@ use Drupal\Core\Plugin\DefaultPluginManager;
 use Drupal\geofield_map\Annotation\MapThemer;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Component\Plugin\Exception\PluginException;
 
 /**
  * Provides a plugin manager for Geofield Map Themers.
@@ -39,10 +40,41 @@ class MapThemerPluginManager extends DefaultPluginManager {
   public function getThemersOptions() {
     $options = [];
     foreach ($this->getDefinitions() as $k => $map_themer) {
-      /* @var \Drupal\Core\StringTranslation\TranslatableMarkup $map_themer['name'] */
-      $options[$k] = $map_themer['name']->render();
+      /* @var \Drupal\Core\StringTranslation\TranslatableMarkup $map_themer_name */
+      $map_themer_name = $map_themer['name'];
+      $options[$k] = $map_themer_name->render();
     }
     return $options;
+  }
+
+  /**
+   * Retrieve the icon for theming definition.
+   *
+   * @param string $plugin_id
+   *   The Map Themer plugin id.
+   * @param array|string $values
+   *   The theming definition.
+   *
+   * @return mixed
+   *   The icon definition.
+   */
+  public function getIcon($plugin_id, $values) {
+    try {
+      $plugin = $this->createInstance($plugin_id);
+      if (isset($plugin) && $plugin instanceof MapThemerInterface) {
+        $plugin_type = $plugin->getPluginDefinition()['type'];
+        switch ($plugin_type) {
+          case 'single_value':
+            $icon = $values;
+            break;
+        }
+      }
+      return $icon;
+    }
+    catch (PluginException $e) {
+    }
+    return NULL;
+
   }
 
 }
