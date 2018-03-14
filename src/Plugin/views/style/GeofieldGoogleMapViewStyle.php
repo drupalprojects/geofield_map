@@ -421,6 +421,12 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
       ],
     ];
 
+    $form['map_marker_and_infowindow']['theming']['values'] = [
+      '#type' => 'value',
+      '#value' => '',
+      '#default_value' => $this->options['map_marker_and_infowindow']['theming']['values'],
+    ];
+
     if ($selected_map_themer != 'none') {
       $this->mapThemerPlugin = $this->mapThemerManager->createInstance($selected_map_themer);
       $form['map_marker_and_infowindow']['theming']['values'] = $this->mapThemerPlugin->buildMapThemerElement($this->options, $form_state);
@@ -448,7 +454,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
    *   The Form.
    */
   public static function mapThemerSelectAjax(array $form, FormStateInterface $form_state) {
-    return $form['options']['style_options']['map_marker_and_infowindow']['theming'];
+    return $form['options']['style_options']['map_marker_and_infowindow'];
   }
 
   /**
