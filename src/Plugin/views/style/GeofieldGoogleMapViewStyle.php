@@ -421,15 +421,9 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
       ],
     ];
 
-    $form['map_marker_and_infowindow']['theming']['values'] = [
-      '#type' => 'value',
-      '#value' => '',
-      '#default_value' => $this->options['map_marker_and_infowindow']['theming']['values'],
-    ];
-
     if ($selected_map_themer != 'none') {
       $this->mapThemerPlugin = $this->mapThemerManager->createInstance($selected_map_themer);
-      $form['map_marker_and_infowindow']['theming']['values'] = $this->mapThemerPlugin->buildMapThemerElement($this->options, $form_state);
+      $form['map_marker_and_infowindow']['theming'][$this->mapThemerPlugin->pluginId]['values'] = $this->mapThemerPlugin->buildMapThemerElement($this->options, $form_state);
     }
 
     $form['map_marker_and_infowindow']['icon_image_path']['#states'] = [
@@ -537,8 +531,8 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
               $description[] = $this->rendered_fields[$id][$description_field];
             }
           }
-
           $theming = $map_settings['map_marker_and_infowindow']['theming'];
+          $theming['plugin'] = $this->mapThemerManager->createInstance($theming['plugin_id'], ['geofieldMapView' => $this]);
 
           // Add Views fields to the Json output as additional_data property.
           $view_data = [];

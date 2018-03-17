@@ -4,6 +4,7 @@ namespace Drupal\geofield_map\Plugin\GeofieldMapThemer;
 
 use Drupal\geofield_map\MapThemerBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\geofield_map\Plugin\views\style\GeofieldGoogleMapViewStyle;
 
 /**
  * Style plugin to render a View output as a Leaflet map.
@@ -29,9 +30,9 @@ class CustomIconThemer extends MapThemerBase {
   public function buildMapThemerElement(array $defaults, FormStateInterface $form_state) {
 
     $user_input = $form_state->getUserInput();
-    $input_element = $user_input['style_options']['map_marker_and_infowindow']['theming']['values'];
+    $input_element = $user_input['style_options']['map_marker_and_infowindow']['theming'][$this->pluginId]['values'];
 
-    $default_value = !empty($defaults['map_marker_and_infowindow']['theming']['values']) ? $defaults['map_marker_and_infowindow']['theming']['values'] : $this->defaultSettings('values');
+    $default_value = !empty($defaults['map_marker_and_infowindow']['theming'][$this->pluginId]['values']) ? $defaults['map_marker_and_infowindow']['theming'][$this->pluginId]['values'] : $this->defaultSettings('values');
 
     $default_element = !empty($input_element) ? $input_element : $default_value;
     $element = [
@@ -46,6 +47,16 @@ class CustomIconThemer extends MapThemerBase {
 
     return $element;
 
+  }
+
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getIcon(array $datum, GeofieldGoogleMapViewStyle $geofieldMapView, $map_theming_values) {
+    // The Custom Icon Themer plugin defines a unique icon value.
+    $icon_value = $map_theming_values;
+    return $icon_value;
   }
 
 }

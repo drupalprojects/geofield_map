@@ -4,6 +4,7 @@ namespace Drupal\geofield_map;
 
 use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\geofield_map\Plugin\views\style\GeofieldGoogleMapViewStyle;
 
 /**
  * Provides an interface for Geofield Map Themers plugins.
@@ -39,7 +40,25 @@ interface MapThemerInterface extends PluginInspectionInterface {
    *   The default values/settings.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state.
+   *
+   * @return array
+   *   The Map Themer Options Element
    */
   public function buildMapThemerElement(array $defaults, FormStateInterface $form_state);
+
+  /**
+   * Retrieve the icon for theming definition.
+   *
+   * @param array $datum
+   *   The geometry feature array definition.
+   * @param \Drupal\geofield_map\Plugin\views\style\GeofieldGoogleMapViewStyle $geofieldMapView
+   *   The value to confront.
+   * @param mixed $map_theming_values
+   *   The Map themer mapping values.
+   *
+   * @return mixed
+   *   The icon definition.
+   */
+  public function getIcon(array $datum, GeofieldGoogleMapViewStyle $geofieldMapView, $map_theming_values);
 
 }
