@@ -28,7 +28,10 @@ class EntityTypeThemer extends MapThemerBase {
     $user_input = $form_state->getUserInput();
     $input_element = $user_input['style_options']['map_marker_and_infowindow']['theming'][$this->pluginId]['values'];
 
-    $entity_type = \Drupal::entityManager()->getBundleInfo($geofieldMapView->entityType);
+    $entity_type = $geofieldMapView->getViewEntityType();
+    $entity_filtered_bundles = $geofieldMapView->getViewFilteredBundles();
+
+    $entity_get_bundles = \Drupal::entityManager()->getBundleInfo($entity_type);;
 
 
     $default_value = !empty($defaults['map_marker_and_infowindow']['theming'][$this->pluginId]['values']) ? $defaults['map_marker_and_infowindow']['theming'][$this->pluginId]['values'] : $this->defaultSettings('values');

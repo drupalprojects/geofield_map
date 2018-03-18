@@ -285,12 +285,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
 
     $default_settings = self::defineOptions();
 
-    // Get the Views filters.
-    $views_filters = $this->view->display_handler->getOption('filters');
-    // Set the specific filtered entity types/bundles.
-    if (!empty($views_filters['type'])) {
-      $bundles = array_keys($views_filters['type']['value']);
-    }
+    $bundles = $this->getViewBundles();
 
     // Define the $form_state storage.
     $form_state_storage = ['entityType' => $this->entityType];
@@ -582,6 +577,30 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     }
 
     return $options + $geofield_google_map_default_settings;
+  }
+
+
+  /**
+   * Get View Entity Type.
+   */
+  public function getViewEntityType() {
+    return $this->entityType;
+  }
+
+  /**
+   * Get the bundles defined as View Filter.
+   */
+  public function getViewFilteredBundles() {
+
+    // Get the Views filters.
+    $views_filters = $this->view->display_handler->getOption('filters');
+    // Set the specific filtered entity types/bundles.
+    if (!empty($views_filters['type'])) {
+      $bundles = array_keys($views_filters['type']['value']);
+    }
+
+    return isset($bundles) ? $bundles : NULL;
+
   }
 
 }
