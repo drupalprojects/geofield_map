@@ -136,6 +136,13 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
   protected $mapThemerPlugin;
 
   /**
+   * The Geofield Map View Properties container.
+   *
+   * @var array
+   */
+  protected $geofieldMapViewProperties;
+
+  /**
    * Constructs a GeofieldGoogleMapView style instance.
    *
    * @param array $configuration
@@ -188,6 +195,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     $this->currentUser = $current_user;
     $this->renderer = $renderer;
     $this->mapThemerManager = $map_themer_manager;
+    $this->geofieldMapViewProperties = [];
   }
 
   /**
@@ -423,7 +431,8 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
 
     if ($selected_map_themer != 'none') {
       $this->mapThemerPlugin = $this->mapThemerManager->createInstance($selected_map_themer);
-      $form['map_marker_and_infowindow']['theming'][$this->mapThemerPlugin->pluginId]['values'] = $this->mapThemerPlugin->buildMapThemerElement($this->options, $form_state);
+      $this->geofieldMapViewProperties = [];
+      $form['map_marker_and_infowindow']['theming'][$this->mapThemerPlugin->pluginId]['values'] = $this->mapThemerPlugin->buildMapThemerElement($this->options, $form_state, $this->geofieldMapViewProperties);
     }
 
     $form['map_marker_and_infowindow']['icon_image_path']['#states'] = [

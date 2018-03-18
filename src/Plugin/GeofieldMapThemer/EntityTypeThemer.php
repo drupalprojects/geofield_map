@@ -23,10 +23,13 @@ class EntityTypeThemer extends MapThemerBase {
   /**
    * {@inheritdoc}
    */
-  public function buildMapThemerElement(array $defaults, FormStateInterface $form_state) {
+  public function buildMapThemerElement(array $defaults, FormStateInterface $form_state, GeofieldGoogleMapViewStyle $geofieldMapView) {
 
     $user_input = $form_state->getUserInput();
     $input_element = $user_input['style_options']['map_marker_and_infowindow']['theming'][$this->pluginId]['values'];
+
+    $entity_type = \Drupal::entityManager()->getBundleInfo($geofieldMapView->entityType);
+
 
     $default_value = !empty($defaults['map_marker_and_infowindow']['theming'][$this->pluginId]['values']) ? $defaults['map_marker_and_infowindow']['theming'][$this->pluginId]['values'] : $this->defaultSettings('values');
 

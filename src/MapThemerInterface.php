@@ -40,11 +40,13 @@ interface MapThemerInterface extends PluginInspectionInterface {
    *   The default values/settings.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state.
+   * @param \Drupal\geofield_map\Plugin\views\style\GeofieldGoogleMapViewStyle $geofieldMapView
+   *   The Geofield Map View dispaly object.
    *
    * @return array
    *   The Map Themer Options Element
    */
-  public function buildMapThemerElement(array $defaults, FormStateInterface $form_state);
+  public function buildMapThemerElement(array $defaults, FormStateInterface $form_state, GeofieldGoogleMapViewStyle $geofieldMapView);
 
   /**
    * Retrieve the icon for theming definition.
@@ -52,7 +54,7 @@ interface MapThemerInterface extends PluginInspectionInterface {
    * @param array $datum
    *   The geometry feature array definition.
    * @param \Drupal\geofield_map\Plugin\views\style\GeofieldGoogleMapViewStyle $geofieldMapView
-   *   The value to confront.
+   *   The Geofield Map View dispaly object.
    * @param mixed $map_theming_values
    *   The Map themer mapping values.
    *
