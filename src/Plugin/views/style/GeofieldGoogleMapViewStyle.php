@@ -285,7 +285,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
 
     $default_settings = self::defineOptions();
 
-    $bundles = $this->getViewBundles();
+    $bundles = $this->getViewFilteredBundles();
 
     // Define the $form_state storage.
     $form_state_storage = ['entityType' => $this->entityType];
@@ -427,7 +427,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     if ($selected_map_themer != 'none') {
       $this->mapThemerPlugin = $this->mapThemerManager->createInstance($selected_map_themer);
       $this->geofieldMapViewProperties = [];
-      $form['map_marker_and_infowindow']['theming'][$this->mapThemerPlugin->pluginId]['values'] = $this->mapThemerPlugin->buildMapThemerElement($this->options, $form_state, $this->geofieldMapViewProperties);
+      $form['map_marker_and_infowindow']['theming'][$this->mapThemerPlugin->pluginId]['values'] = $this->mapThemerPlugin->buildMapThemerElement($this->options, $form_state, $this);
     }
 
     $form['map_marker_and_infowindow']['icon_image_path']['#states'] = [
@@ -452,7 +452,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
    *   The Form.
    */
   public static function mapThemerSelectAjax(array $form, FormStateInterface $form_state) {
-    return $form['options']['style_options']['map_marker_and_infowindow'];
+    return $form['options']['style_options']['map_marker_and_infowindow']['theming'];
   }
 
   /**
@@ -535,8 +535,11 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
               $description[] = $this->rendered_fields[$id][$description_field];
             }
           }
-          $theming = $map_settings['map_marker_and_infowindow']['theming'];
-          $theming['plugin'] = $this->mapThemerManager->createInstance($theming['plugin_id'], ['geofieldMapView' => $this]);
+          $theming = NULL;
+          if (isset($map_settings['map_marker_and_infowindow']['theming'])) {
+            $theming = isset($map_settings['map_marker_and_infowindow']['theming']);
+            $theming['plugin'] = $this->mapThemerManager->createInstance($theming['plugin_id'], ['geofieldMapView' => $this]);
+          }
 
           // Add Views fields to the Json output as additional_data property.
           $view_data = [];
@@ -599,7 +602,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
       $bundles = array_keys($views_filters['type']['value']);
     }
 
-    return isset($bundles) ? $bundles : NULL;
+    return isset($bundles) ? $bundles : [];
 
   }
 

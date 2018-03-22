@@ -41,7 +41,7 @@ interface MapThemerInterface extends PluginInspectionInterface {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state.
    * @param \Drupal\geofield_map\Plugin\views\style\GeofieldGoogleMapViewStyle $geofieldMapView
-   *   The Geofield Map View dispaly object.
+   *   The Geofield Map View display object.
    *
    * @return array
    *   The Map Themer Options Element

@@ -49,7 +49,6 @@ class CustomIconThemer extends MapThemerBase {
 
   }
 
-
   /**
    * {@inheritdoc}
    */
