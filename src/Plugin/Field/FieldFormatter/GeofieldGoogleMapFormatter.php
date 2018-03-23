@@ -537,7 +537,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     // Render the entity with the selected view mode.
     if (isset($description_field) && $description_field === '#rendered_entity' && is_object($entity)) {
       $build = $this->entityTypeManager->getViewBuilder($entity_type)->view($entity, $map_settings['map_marker_and_infowindow']['view_mode']);
-      $description[] = $this->renderer->renderRoot($build);
+      $description[] = $this->renderer->renderPlain($build);
     }
     // Normal rendering via fields.
     elseif (isset($description_field)) {
