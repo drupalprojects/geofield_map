@@ -515,7 +515,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
           // Render the entity with the selected view mode.
           if (isset($description_field) && $description_field === '#rendered_entity' && is_object($result)) {
             $build = $this->entityManager->getViewBuilder($entity->getEntityTypeId())->view($entity, $map_settings['view_mode'], $entity->language()->getId());
-            $description[] = $this->renderer->renderRoot($build);
+            $description[] = $this->renderer->renderPlain($build);
           }
           // Normal rendering via fields.
           elseif (isset($description_field)) {
