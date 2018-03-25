@@ -84,6 +84,13 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
   /**
    * {@inheritdoc}
    */
+  public function getDescription() {
+    return $this->pluginDefinition['description'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function defaultSettings($k = NULL) {
     $default_settings = $this->pluginDefinition['defaultSettings'];
     if (!empty($k)) {
@@ -98,7 +105,7 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
   public function getDefaultThemerElement(array $defaults, FormStateInterface $form_state) {
 
     $user_input = $form_state->getUserInput();
-    $input_element = $user_input['style_options']['map_marker_and_infowindow']['theming'][$this->pluginId]['values'];
+    $input_element = isset($user_input['style_options']) ? $user_input['style_options']['map_marker_and_infowindow']['theming'][$this->pluginId]['values'] : NULL;
 
     $default_value = !empty($defaults['map_marker_and_infowindow']['theming'][$this->pluginId]['values']) ? $defaults['map_marker_and_infowindow']['theming'][$this->pluginId]['values'] : $this->defaultSettings('values');
     return !empty($input_element) ? $input_element : $default_value;

@@ -14,8 +14,9 @@ use Drupal\geofield_map\Plugin\views\style\GeofieldGoogleMapViewStyle;
  * Attributes set below end up in the $this->definition[] array.
  *
  * @MapThemer(
- *   id = "custom_icon",
- *   name = @Translation("Custom Icon Image"),
+ *   id = "geofieldmap_custom_icon",
+ *   name = @Translation("Geofield Map Custom Icon Image"),
+ *   description = "This Geofield Map Themer allows the definition of a unique custom Marker Icon, valid for all the Map Markers.",
  *   type = "single_value",
  *   defaultSettings = {
  *    "values" = NULL
@@ -29,7 +30,7 @@ class CustomIconThemer extends MapThemerBase {
    */
   public function buildMapThemerElement(array $defaults, FormStateInterface $form_state, GeofieldGoogleMapViewStyle $geofieldMapView) {
 
-    // Get the Default Themer Element.
+    // Get the existing (Default) Element settings.
     $default_element = $this->getDefaultThemerElement($defaults, $form_state);
 
     $element = [

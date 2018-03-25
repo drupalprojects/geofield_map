@@ -2,6 +2,7 @@
 
 namespace Drupal\geofield_map\Plugin\GeofieldMapThemer;
 
+use Drupal\Component\Utility\Bytes;
 use Drupal\geofield_map\MapThemerBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\geofield_map\Plugin\views\style\GeofieldGoogleMapViewStyle;
@@ -10,6 +11,8 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Render\Markup;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 
 /**
  * Style plugin to render a View output as a Leaflet map.
@@ -19,10 +22,13 @@ use Drupal\Core\Render\RendererInterface;
  * Attributes set below end up in the $this->definition[] array.
  *
  * @MapThemer(
- *   id = "entity_type",
- *   name = @Translation("Entity Type"),
- *   description = "this is the description for this Map Themer"
- *   type = "key_value"
+ *   id = "geofieldmap_entity_type",
+ *   name = @Translation("Geofield Map Entity Type"),
+ *   description = "This Geofield Map Themer allows the definition of different Marker Icons based on the View filetered Entity Types/Bundles.",
+ *   type = "key_value",
+ *   defaultSettings = {
+ *    "values": {}
+ *   },
  * )
  */
 class EntityTypeThemer extends MapThemerBase {
@@ -42,6 +48,13 @@ class EntityTypeThemer extends MapThemerBase {
   protected $renderer;
 
   /**
+   * The Entity type manager service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityManager;
+
+  /**
    * Constructs a Drupal\Component\Plugin\PluginBase object.
    *
    * @param array $configuration
@@ -58,6 +71,8 @@ class EntityTypeThemer extends MapThemerBase {
    *   The entity type bundle info.
    * @param \Drupal\Core\Render\RendererInterface $renderer
    *   The renderer.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_manager
+   *   The entity manager.
    */
   public function __construct(
     array $configuration,
@@ -66,7 +81,8 @@ class EntityTypeThemer extends MapThemerBase {
     ConfigFactoryInterface $config_factory,
     TranslationInterface $translation_manager,
     EntityTypeBundleInfoInterface $entity_type_bundle_info,
-    RendererInterface $renderer
+    RendererInterface $renderer,
+    EntityTypeManagerInterface $entity_manager
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $config_factory, $translation_manager);
 
@@ -77,6 +93,7 @@ class EntityTypeThemer extends MapThemerBase {
     $this->setStringTranslation($translation_manager);
     $this->entityTypeBundleInfo = $entity_type_bundle_info;
     $this->renderer = $renderer;
+    $this->entityManager = $entity_manager;
   }
 
   /**
@@ -90,7 +107,8 @@ class EntityTypeThemer extends MapThemerBase {
       $container->get('config.factory'),
       $container->get('string_translation'),
       $container->get('entity_type.bundle.info'),
-      $container->get('renderer')
+      $container->get('renderer'),
+      $container->get('entity_type.manager')
     );
   }
 
@@ -102,16 +120,20 @@ class EntityTypeThemer extends MapThemerBase {
     // Get the existing (Default) Element settings.
     $default_element = $this->getDefaultThemerElement($defaults, $form_state);
 
-    // Order the default elements based on the weight.
-    // uasort($default_element, 'Drupal\Component\Utility\SortArray::sortByWeightElement');
-
     // Get the View Filtered entity bundles.
     $entity_type = $geofieldMapView->getViewEntityType();
     $entity_bundles = !empty($geofieldMapView->getViewFilteredBundles()) ? $geofieldMapView->getViewFilteredBundles() : array_keys($this->entityTypeBundleInfo->getBundleInfo($entity_type));
 
     // Reorder the entity bundles based on existing (Default) Element settings.
     if (!empty($default_element)) {
-      $entity_bundles = array_merge(array_keys($default_element), $entity_bundles);
+      $weighted_bundles = [];
+      foreach ($entity_bundles as $bundle) {
+        $weighted_bundles[$bundle] = [
+          'weight' => isset($default_element[$bundle]) ? $default_element[$bundle]['weight'] : 0,
+        ];
+      }
+      uasort($weighted_bundles, 'Drupal\Component\Utility\SortArray::sortByWeightElement');
+      $entity_bundles = array_keys($weighted_bundles);
     }
 
     $caption = [
@@ -127,12 +149,33 @@ class EntityTypeThemer extends MapThemerBase {
       ],
     ];
 
+    $file_upload_validators = [
+      'file_validate_extensions' => ['gif png jpg jpeg svg'],
+      'file_validate_is_image' => [],
+      'file_validate_size' => [Bytes::toInt('250 KB')],
+    ];
+
+    $file_upload_help = [
+      '#type' => 'container',
+      '#tag' => 'div',
+      'file_upload_help' => [
+        '#theme' => 'file_upload_help',
+        '#upload_validators' => $file_upload_validators,
+        '#cardinality' => 1,
+      ],
+      '#attributes' => [
+        'style' => ['style' => 'font-size:0.8em; color: gray; text-transform: lowercase; font-weight: normal'],
+      ],
+    ];
+
     $element = [
       '#type' => 'table',
       '#header' => [
         $this->t('@entity type Type/Bundle', ['@entity type' => $entity_type]),
         $this->t('Weight'),
-        $this->t('Icon Url'),
+        Markup::create($this->t('Icon Url @file_upload_help', [
+          '@file_upload_help' => $this->renderer->renderPlain($file_upload_help),
+        ])),
       ],
       '#tabledrag' => [[
         'action' => 'order',
@@ -144,6 +187,9 @@ class EntityTypeThemer extends MapThemerBase {
     ];
 
     foreach ($entity_bundles as $bundle) {
+
+      $fid = !empty($default_element[$bundle]['icon_url']) ? $default_element[$bundle]['icon_url'][0] : NULL;
+
       $element[$bundle] = [
         'label' => [
           '#markup' => $bundle,
@@ -157,14 +203,36 @@ class EntityTypeThemer extends MapThemerBase {
           '#attributes' => ['class' => ['bundles-order-weight']],
         ],
         'icon_url' => [
-          '#type' => 'textfield',
-          '#size' => '80',
-          '#default_value' => $default_element[$bundle]['icon_url'],
-          '#placeholder' => '/url_path/to_icon',
-          '#element_validate' => [['Drupal\geofield_map\GeofieldMapFormElementsValidationTrait', 'urlValidate']],
+          '#type' => 'managed_file',
+          '#title' => t('Choose a Marker Icon file'),
+          '#title_display' => 'invisible',
+          '#default_value' => !empty($fid) ? [$fid] : NULL,
+          '#multiple' => FALSE,
+          '#error_no_message' => FALSE,
+          '#upload_location' => 'public://certfiles',
+          '#upload_validators' => $file_upload_validators,
+          '#progress_indicator' => 'throbber',
+          '#element_validate' => [
+            '\Drupal\file\Element\ManagedFile::validateManagedFile',
+            [get_class($this), 'validateDefaultImageForm'],
+          ],
         ],
         '#attributes' => ['class' => ['draggable']],
       ];
+
+      if (!empty($fid)) {
+        /* @var \Drupal\file\Entity\file $file */
+        $file = $this->entityManager->getStorage('file')->load($fid);
+        $element[$bundle]['icon_url']['preview'] = [
+          '#weight' => -10,
+          '#theme' => 'image_style',
+          '#width' => '40px',
+          '#height' => '40px',
+          '#style_name' => 'thumbnail',
+          '#uri' => $file->getFileUri(),
+        ];
+      }
+
     }
 
     return $element;

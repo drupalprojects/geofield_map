@@ -20,6 +20,7 @@ use Drupal\geofield\GeoPHP\GeoPHPInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\geofield_map\MapThemerPluginManager;
+use Drupal\Component\Plugin\Exception\PluginException;
 
 /**
  * Style plugin to render a View output as a Leaflet map.
@@ -388,6 +389,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     $form = $form + $this->generateGmapSettingsForm($form, $form_state, $this->options, $default_settings);
 
     // Implement Map Theming based on available GeofieldMapThemers.
+    $map_themers_definitions = $this->mapThemerManager->getDefinitions();
     $map_themers_options = array_merge(['none' => 'None'], $this->mapThemerManager->getThemersOptions());
 
     $form['map_marker_and_infowindow']['theming'] = [
@@ -425,9 +427,35 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     ];
 
     if ($selected_map_themer != 'none') {
-      $this->mapThemerPlugin = $this->mapThemerManager->createInstance($selected_map_themer);
-      $this->geofieldMapViewProperties = [];
-      $form['map_marker_and_infowindow']['theming'][$this->mapThemerPlugin->pluginId]['values'] = $this->mapThemerPlugin->buildMapThemerElement($this->options, $form_state, $this);
+      try {
+        $this->mapThemerPlugin = $this->mapThemerManager->createInstance($selected_map_themer);
+        $form['map_marker_and_infowindow']['theming']['plugin_description'] = [
+          '#type' => 'html_tag',
+          '#tag' => 'div',
+          '#value' => $this->mapThemerPlugin->getDescription(),
+        ];
+        $form['map_marker_and_infowindow']['theming'][$this->mapThemerPlugin->pluginId]['values'] = $this->mapThemerPlugin->buildMapThemerElement($this->options, $form_state, $this);
+      }
+      catch (PluginException $e) {
+        $form['map_marker_and_infowindow']['theming']['plugin_id']['#default_value'] = $map_themers_options['none'];
+      }
+
+    }
+    else {
+      $form['map_marker_and_infowindow']['theming']['plugin_description'] = [
+        '#type' => 'table',
+        '#caption' => $this->t('Available Map Themers & Descriptions:'),
+      ];
+      foreach ($map_themers_definitions as $k => $map_themer) {
+        $form['map_marker_and_infowindow']['theming']['plugin_description'][$k] = [
+          'label' => [
+            '#markup' => $map_themers_options[$k],
+          ],
+          'description' => [
+            '#markup' => $map_themer['description'],
+          ],
+        ];
+      }
     }
 
     $form['map_marker_and_infowindow']['icon_image_path']['#states'] = [
@@ -581,7 +609,6 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
 
     return $options + $geofield_google_map_default_settings;
   }
-
 
   /**
    * Get View Entity Type.

@@ -35,14 +35,14 @@ class MapThemer extends Plugin {
    * This will appear under the options select, once the Map Themer plugin
    * has been chosen by the user.
    */
-  public $type;
+  public $description;
 
   /**
    * The Geofield Map Themer plugin types.
    *
    * @var string
    */
-  public $description;
+  public $type;
 
   /**
    * Settings for the Themer.

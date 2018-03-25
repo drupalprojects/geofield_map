@@ -23,6 +23,14 @@ interface MapThemerInterface extends PluginInspectionInterface {
   public function getName();
 
   /**
+   * Get the MapThemer description property.
+   *
+   * @return string
+   *   The MapThemer description.
+   */
+  public function getDescription();
+
+  /**
    * Get the defaultSettings for the Map Themer Plugin.
    *
    * @param string $k
