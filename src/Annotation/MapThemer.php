@@ -28,17 +28,21 @@ class MapThemer extends Plugin {
   public $name;
 
   /**
-   * The Geofield Map Themer plugin types.
+   * The Geofield Map Themer plugin Description.
    *
    * @var string
    *
-   * Possible values might be the followings:
-   * - "single_value"
-   * - "key_value"
-   * - "int_interval"
-   * - "float_interval"
+   * This will appear under the options select, once the Map Themer plugin
+   * has been chosen by the user.
    */
   public $type;
+
+  /**
+   * The Geofield Map Themer plugin types.
+   *
+   * @var string
+   */
+  public $description;
 
   /**
    * Settings for the Themer.

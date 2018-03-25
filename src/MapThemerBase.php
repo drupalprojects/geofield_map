@@ -8,6 +8,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\Core\Form\FormStateInterface;
 
 /**
  * A base class for MapThemer plugins.
@@ -89,6 +90,18 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
       return $default_settings[$k];
     }
     return $default_settings;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultThemerElement(array $defaults, FormStateInterface $form_state) {
+
+    $user_input = $form_state->getUserInput();
+    $input_element = $user_input['style_options']['map_marker_and_infowindow']['theming'][$this->pluginId]['values'];
+
+    $default_value = !empty($defaults['map_marker_and_infowindow']['theming'][$this->pluginId]['values']) ? $defaults['map_marker_and_infowindow']['theming'][$this->pluginId]['values'] : $this->defaultSettings('values');
+    return !empty($input_element) ? $input_element : $default_value;
   }
 
 }

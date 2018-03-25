@@ -21,6 +21,8 @@ use Drupal\Core\Render\RendererInterface;
  * @MapThemer(
  *   id = "entity_type",
  *   name = @Translation("Entity Type"),
+ *   description = "this is the description for this Map Themer"
+ *   type = "key_value"
  * )
  */
 class EntityTypeThemer extends MapThemerBase {
@@ -97,32 +99,38 @@ class EntityTypeThemer extends MapThemerBase {
    */
   public function buildMapThemerElement(array $defaults, FormStateInterface $form_state, GeofieldGoogleMapViewStyle $geofieldMapView) {
 
-    $user_input = $form_state->getUserInput();
-    $input_element = $user_input['style_options']['map_marker_and_infowindow']['theming'][$this->pluginId]['values'];
+    // Get the existing (Default) Element settings.
+    $default_element = $this->getDefaultThemerElement($defaults, $form_state);
 
+    // Order the default elements based on the weight.
+    // uasort($default_element, 'Drupal\Component\Utility\SortArray::sortByWeightElement');
+
+    // Get the View Filtered entity bundles.
     $entity_type = $geofieldMapView->getViewEntityType();
-    $entity_get_bundles = !empty($geofieldMapView->getViewFilteredBundles()) ? $geofieldMapView->getViewFilteredBundles() : array_keys($this->entityTypeBundleInfo->getBundleInfo($entity_type));
+    $entity_bundles = !empty($geofieldMapView->getViewFilteredBundles()) ? $geofieldMapView->getViewFilteredBundles() : array_keys($this->entityTypeBundleInfo->getBundleInfo($entity_type));
 
-    $default_value = !empty($defaults['map_marker_and_infowindow']['theming'][$this->pluginId]['values']) ? $defaults['map_marker_and_infowindow']['theming'][$this->pluginId]['values'] : $this->defaultSettings('values');
-    $default_element = !empty($input_element) ? $input_element : $default_value;
+    // Reorder the entity bundles based on existing (Default) Element settings.
+    if (!empty($default_element)) {
+      $entity_bundles = array_merge(array_keys($default_element), $entity_bundles);
+    }
 
     $caption = [
       'title' => [
         '#type' => 'html_tag',
         '#tag' => 'label',
-        '#value' => $this->t('Geocoder plugin(s)'),
+        '#value' => $this->t('Icon Urls, per Entity Types'),
       ],
       'caption' => [
         '#type' => 'html_tag',
         '#tag' => 'div',
-        '#value' => $this->t('Select the Geocoder plugins to use, you can reorder them. The first one to return a valid value will be used.'),
+        '#value' => $this->t('Input the Specific Icon Image path (absolute path, or relative to the Drupal site root prefixed with a trailing hash).<br>If not set, or not loadable, the Default Google Marker will be used.'),
       ],
     ];
 
     $element = [
       '#type' => 'table',
       '#header' => [
-        $this->t('@entity type', ['@entity type' => $entity_type]),
+        $this->t('@entity type Type/Bundle', ['@entity type' => $entity_type]),
         $this->t('Weight'),
         $this->t('Icon Url'),
       ],
@@ -135,7 +143,7 @@ class EntityTypeThemer extends MapThemerBase {
       '#caption' => $this->renderer->renderRoot($caption),
     ];
 
-    foreach ($entity_get_bundles as $bundle) {
+    foreach ($entity_bundles as $bundle) {
       $element[$bundle] = [
         'label' => [
           '#markup' => $bundle,
@@ -150,11 +158,9 @@ class EntityTypeThemer extends MapThemerBase {
         ],
         'icon_url' => [
           '#type' => 'textfield',
-          '#title' => $this->t('Icon Url'),
           '#size' => '80',
-          '#description' => $this->t('Input the Specific Icon Image path (absolute path, or relative to the Drupal site root prefixed with a trailing hash). If not set, or not found/loadable, the Default Google Marker will be used.'),
           '#default_value' => $default_element[$bundle]['icon_url'],
-          '#placeholder' => '/the_url_path/to_the_icon',
+          '#placeholder' => '/url_path/to_icon',
           '#element_validate' => [['Drupal\geofield_map\GeofieldMapFormElementsValidationTrait', 'urlValidate']],
         ],
         '#attributes' => ['class' => ['draggable']],

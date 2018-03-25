@@ -536,8 +536,8 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
             }
           }
           $theming = NULL;
-          if (isset($map_settings['map_marker_and_infowindow']['theming'])) {
-            $theming = isset($map_settings['map_marker_and_infowindow']['theming']);
+          if (isset($map_settings['map_marker_and_infowindow']['theming']) && $map_settings['map_marker_and_infowindow']['theming']['plugin_id'] != 'none') {
+            $theming = $map_settings['map_marker_and_infowindow']['theming'];
             $theming['plugin'] = $this->mapThemerManager->createInstance($theming['plugin_id'], ['geofieldMapView' => $this]);
           }
 

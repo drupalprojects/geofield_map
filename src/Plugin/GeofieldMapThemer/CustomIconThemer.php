@@ -29,12 +29,9 @@ class CustomIconThemer extends MapThemerBase {
    */
   public function buildMapThemerElement(array $defaults, FormStateInterface $form_state, GeofieldGoogleMapViewStyle $geofieldMapView) {
 
-    $user_input = $form_state->getUserInput();
-    $input_element = $user_input['style_options']['map_marker_and_infowindow']['theming'][$this->pluginId]['values'];
+    // Get the Default Themer Element.
+    $default_element = $this->getDefaultThemerElement($defaults, $form_state);
 
-    $default_value = !empty($defaults['map_marker_and_infowindow']['theming'][$this->pluginId]['values']) ? $defaults['map_marker_and_infowindow']['theming'][$this->pluginId]['values'] : $this->defaultSettings('values');
-
-    $default_element = !empty($input_element) ? $input_element : $default_value;
     $element = [
       '#type' => 'textfield',
       '#title' => $this->t('Custom Icon Image'),
