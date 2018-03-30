@@ -4,9 +4,7 @@ namespace Drupal\geofield_map;
 
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Url;
-use Drupal\Component\Serialization\Json;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\geofield_map\Plugin\views\style\GeofieldGoogleMapViewStyle;
 
 /**
  * Class GeofieldMapFieldTrait.
@@ -255,7 +253,7 @@ trait GeofieldMapFieldTrait {
    *   The data array for the current feature, including Geojson and additional
    *   data.
    */
-  protected function getGeoJsonData($items, $description = NULL, array $theming = NULL, array $additional_data = NULL) {
+  protected function getGeoJsonData($items, $description = NULL, array $additional_data = NULL) {
     $data = [];
     foreach ($items as $delta => $item) {
 
@@ -277,14 +275,6 @@ trait GeofieldMapFieldTrait {
           'description' => isset($description[$delta]) ? $description[$delta] : (isset($description[0]) ? $description[0] : NULL),
           'data' => $additional_data,
         ];
-
-        // Add icon property based on the $theming plugin.
-        if ($this instanceof GeofieldGoogleMapViewStyle && $theming && $theming['plugin'] instanceof MapThemerInterface && isset($theming[$theming['plugin_id']]['values'])) {
-          /* @var \Drupal\geofield_map\MapThemerInterface $map_themer */
-          $map_themer = $theming['plugin'];
-          $map_theming = $theming[$map_themer->pluginId]['values'];
-          $datum['properties']['icon'] = $map_themer->getIcon($datum, $map_themer->configuration['geofieldMapView'], $map_theming);
-        }
 
         $data[] = $datum;
       }

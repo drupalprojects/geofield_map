@@ -2,7 +2,6 @@
 
 namespace Drupal\geofield_map\Plugin\GeofieldMapThemer;
 
-use Drupal\Component\Utility\Bytes;
 use Drupal\geofield_map\MapThemerBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\geofield_map\Plugin\views\style\GeofieldGoogleMapViewStyle;
@@ -13,6 +12,7 @@ use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\EntityInterface;
 
 /**
  * Style plugin to render a View output as a Leaflet map.
@@ -84,7 +84,7 @@ class EntityTypeThemer extends MapThemerBase {
     RendererInterface $renderer,
     EntityTypeManagerInterface $entity_manager
   ) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $config_factory, $translation_manager);
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $config_factory, $translation_manager, $entity_manager);
 
     $this->configuration = $configuration;
     $this->pluginId = $plugin_id;
@@ -115,7 +115,7 @@ class EntityTypeThemer extends MapThemerBase {
   /**
    * {@inheritdoc}
    */
-  public function buildMapThemerElement(array $defaults, FormStateInterface $form_state, GeofieldGoogleMapViewStyle $geofieldMapView) {
+  public function buildMapThemerElement(array $defaults, array &$form, FormStateInterface $form_state, GeofieldGoogleMapViewStyle $geofieldMapView) {
 
     // Get the existing (Default) Element settings.
     $default_element = $this->getDefaultThemerElement($defaults, $form_state);
@@ -149,32 +149,13 @@ class EntityTypeThemer extends MapThemerBase {
       ],
     ];
 
-    $file_upload_validators = [
-      'file_validate_extensions' => ['gif png jpg jpeg svg'],
-      'file_validate_is_image' => [],
-      'file_validate_size' => [Bytes::toInt('250 KB')],
-    ];
-
-    $file_upload_help = [
-      '#type' => 'container',
-      '#tag' => 'div',
-      'file_upload_help' => [
-        '#theme' => 'file_upload_help',
-        '#upload_validators' => $file_upload_validators,
-        '#cardinality' => 1,
-      ],
-      '#attributes' => [
-        'style' => ['style' => 'font-size:0.8em; color: gray; text-transform: lowercase; font-weight: normal'],
-      ],
-    ];
-
     $element = [
       '#type' => 'table',
       '#header' => [
         $this->t('@entity type Type/Bundle', ['@entity type' => $entity_type]),
         $this->t('Weight'),
         Markup::create($this->t('Icon Url @file_upload_help', [
-          '@file_upload_help' => $this->renderer->renderPlain($file_upload_help),
+          '@file_upload_help' => $this->renderer->renderPlain($this->getFileUploadHelp()),
         ])),
       ],
       '#tabledrag' => [[
@@ -188,8 +169,7 @@ class EntityTypeThemer extends MapThemerBase {
 
     foreach ($entity_bundles as $bundle) {
 
-      $fid = !empty($default_element[$bundle]['icon_url']) ? $default_element[$bundle]['icon_url'][0] : NULL;
-
+      $fid = (integer) !empty($default_element[$bundle]['icon_file']['fids']) ? $default_element[$bundle]['icon_file']['fids'] : NULL;
       $element[$bundle] = [
         'label' => [
           '#markup' => $bundle,
@@ -202,36 +182,9 @@ class EntityTypeThemer extends MapThemerBase {
           '#delta' => 20,
           '#attributes' => ['class' => ['bundles-order-weight']],
         ],
-        'icon_url' => [
-          '#type' => 'managed_file',
-          '#title' => t('Choose a Marker Icon file'),
-          '#title_display' => 'invisible',
-          '#default_value' => !empty($fid) ? [$fid] : NULL,
-          '#multiple' => FALSE,
-          '#error_no_message' => FALSE,
-          '#upload_location' => 'public://certfiles',
-          '#upload_validators' => $file_upload_validators,
-          '#progress_indicator' => 'throbber',
-          '#element_validate' => [
-            '\Drupal\file\Element\ManagedFile::validateManagedFile',
-            [get_class($this), 'validateDefaultImageForm'],
-          ],
-        ],
+        'icon_file' => $this->getFileIconElement($fid),
         '#attributes' => ['class' => ['draggable']],
       ];
-
-      if (!empty($fid)) {
-        /* @var \Drupal\file\Entity\file $file */
-        $file = $this->entityManager->getStorage('file')->load($fid);
-        $element[$bundle]['icon_url']['preview'] = [
-          '#weight' => -10,
-          '#theme' => 'image_style',
-          '#width' => '40px',
-          '#height' => '40px',
-          '#style_name' => 'thumbnail',
-          '#uri' => $file->getFileUri(),
-        ];
-      }
 
     }
 
@@ -242,10 +195,9 @@ class EntityTypeThemer extends MapThemerBase {
   /**
    * {@inheritdoc}
    */
-  public function getIcon(array $datum, GeofieldGoogleMapViewStyle $geofieldMapView, $map_theming_values) {
-    // The Custom Icon Themer plugin defines a unique icon value.
-    $icon_value = $map_theming_values;
-    return $icon_value;
+  public function getIcon(array $datum, GeofieldGoogleMapViewStyle $geofieldMapView, EntityInterface $entity, $map_theming_values) {
+    //$a = 1;
+    return '';
   }
 
 }

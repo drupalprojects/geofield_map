@@ -5,6 +5,7 @@ namespace Drupal\geofield_map;
 use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\geofield_map\Plugin\views\style\GeofieldGoogleMapViewStyle;
+use Drupal\Core\Entity\EntityInterface;
 
 /**
  * Provides an interface for Geofield Map Themers plugins.
@@ -46,6 +47,8 @@ interface MapThemerInterface extends PluginInspectionInterface {
    *
    * @param array $defaults
    *   The default values/settings.
+   * @param array $form
+   *   The form array.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state.
    * @param \Drupal\geofield_map\Plugin\views\style\GeofieldGoogleMapViewStyle $geofieldMapView
@@ -54,7 +57,7 @@ interface MapThemerInterface extends PluginInspectionInterface {
    * @return array
    *   The Map Themer Options Element
    */
-  public function buildMapThemerElement(array $defaults, FormStateInterface $form_state, GeofieldGoogleMapViewStyle $geofieldMapView);
+  public function buildMapThemerElement(array $defaults, array &$form, FormStateInterface $form_state, GeofieldGoogleMapViewStyle $geofieldMapView);
 
   /**
    * Retrieve the icon for theming definition.
@@ -63,12 +66,14 @@ interface MapThemerInterface extends PluginInspectionInterface {
    *   The geometry feature array definition.
    * @param \Drupal\geofield_map\Plugin\views\style\GeofieldGoogleMapViewStyle $geofieldMapView
    *   The Geofield Map View dispaly object.
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity generating the datum.
    * @param mixed $map_theming_values
    *   The Map themer mapping values.
    *
    * @return mixed
    *   The icon definition.
    */
-  public function getIcon(array $datum, GeofieldGoogleMapViewStyle $geofieldMapView, $map_theming_values);
+  public function getIcon(array $datum, GeofieldGoogleMapViewStyle $geofieldMapView, EntityInterface $entity, $map_theming_values);
 
 }

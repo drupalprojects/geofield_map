@@ -5,6 +5,7 @@ namespace Drupal\geofield_map\Plugin\GeofieldMapThemer;
 use Drupal\geofield_map\MapThemerBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\geofield_map\Plugin\views\style\GeofieldGoogleMapViewStyle;
+use Drupal\Core\Entity\EntityInterface;
 
 /**
  * Style plugin to render a View output as a Leaflet map.
@@ -28,19 +29,14 @@ class CustomIconThemer extends MapThemerBase {
   /**
    * {@inheritdoc}
    */
-  public function buildMapThemerElement(array $defaults, FormStateInterface $form_state, GeofieldGoogleMapViewStyle $geofieldMapView) {
+  public function buildMapThemerElement(array $defaults, array &$form, FormStateInterface $form_state, GeofieldGoogleMapViewStyle $geofieldMapView) {
 
     // Get the existing (Default) Element settings.
     $default_element = $this->getDefaultThemerElement($defaults, $form_state);
 
+    $fid = (integer) !empty($default_element['icon_file']['fids']) ? $default_element['icon_file']['fids'] : NULL;
     $element = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Custom Icon Image'),
-      '#size' => '120',
-      '#description' => $this->t('Input the Specific Icon Image path (absolute path, or relative to the Drupal site root prefixed with a trailing hash). If not set, or not found/loadable, the Default Google Marker will be used.'),
-      '#default_value' => $default_element,
-      '#placeholder' => '/modules/custom/geofield_map/images/beachflag.png',
-      '#element_validate' => [['Drupal\geofield_map\GeofieldMapFormElementsValidationTrait', 'urlValidate']],
+      'icon_file' => $this->getFileIconElement($fid[0]),
     ];
 
     return $element;
@@ -50,7 +46,7 @@ class CustomIconThemer extends MapThemerBase {
   /**
    * {@inheritdoc}
    */
-  public function getIcon(array $datum, GeofieldGoogleMapViewStyle $geofieldMapView, $map_theming_values) {
+  public function getIcon(array $datum, GeofieldGoogleMapViewStyle $geofieldMapView, EntityInterface $entity, $map_theming_values) {
     // The Custom Icon Themer plugin defines a unique icon value.
     $icon_value = $map_theming_values;
     return $icon_value;
