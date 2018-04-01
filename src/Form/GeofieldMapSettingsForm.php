@@ -8,6 +8,7 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Url;
 use Drupal\Core\Utility\LinkGeneratorInterface;
+use Drupal\Core\Site\Settings;
 
 /**
  * Implements the GeofieldMapSettingsForm controller.
@@ -54,6 +55,8 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
 
     $form['#tree'] = TRUE;
 
+    $form['#attached']['library'][] = 'geofield_map/geofield_map_settings';
+
     $form['gmap_api_key'] = [
       '#type' => 'textfield',
       '#default_value' => $config->get('gmap_api_key'),
@@ -65,6 +68,55 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
       ]),
       '#description' => $this->t('Geofield Map requires a valid Google API key for his main features based on Google & Google Maps APIs.'),
       '#placeholder' => $this->t('Input a valid Gmap API Key'),
+    ];
+
+    $form['theming'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Geofield Map Theming Settings'),
+    ];
+
+    $form['theming']['markers_location'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Markers Icons Storage location'),
+      '#attributes' => [
+        'class' => ['markers-location'],
+      ],
+    ];
+
+    $files_security_opts = ['public://' => 'public://'];
+
+    if (Settings::get('file_private_path')) {
+      $files_security_opts['private://'] = 'private://';
+    }
+
+    $form['theming']['markers_location']['security'] = [
+      '#type' => 'select',
+      '#options' => $files_security_opts,
+      '#title' => $this->t('Security method'),
+      '#default_value' => !empty($config->get('theming.markers_location.security')) ? $config->get('theming.markers_location.security') : 'public://',
+    ];
+
+    $form['theming']['markers_location']['rel_path'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('- Relative Path'),
+      '#default_value' => !empty($config->get('theming.markers_location.rel_path')) ? $config->get('theming.markers_location.rel_path') : 'geofieldmap_markers',
+      '#placeholder' => $this->t("Don't use any start / end trailing slash"),
+    ];
+
+    $form['theming']['markers_extensions'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Markers Allowed file extensions'),
+      '#default_value' => !empty($config->get('theming.markers_extensions')) ? $config->get('theming.markers_extensions') : 'gif png jpg jpeg',
+      '#description' => $this->t('Separate extensions with a space or comma and do not include the leading dot.'),
+    ];
+
+    $form['theming']['markers_filesize'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Maximum file size'),
+      '#default_value' => !empty($config->get('theming.markers_filesize')) ? $config->get('theming.markers_filesize') : '250 KB',
+      '#description' => t('Enter a value like "512" (bytes), "80 KB" (kilobytes) or "50 MB" (megabytes) in order to restrict the allowed file size. If left empty the file sizes will be limited only by PHP\'s maximum post and file upload sizes (current limit <strong>%limit</strong>).', ['%limit' => format_size(file_upload_max_size())]),
+      '#size' => 10,
+      '#element_validate' => ['\Drupal\file\Plugin\Field\FieldType\FileItem::validateMaxFilesize'],
     ];
 
     return parent::buildForm($form, $form_state);
@@ -92,7 +144,7 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $config = $this->configFactory()->getEditable('geofield_map.settings');
     $config->set('gmap_api_key', $form_state->getValue('gmap_api_key'));
-
+    $config->set('theming', $form_state->getValue('theming'));
     $config->save();
 
     // Confirmation on form submission.

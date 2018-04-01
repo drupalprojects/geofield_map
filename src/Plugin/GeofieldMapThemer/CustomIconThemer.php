@@ -55,8 +55,7 @@ class CustomIconThemer extends MapThemerBase {
    */
   public function getIcon(array $datum, GeofieldGoogleMapViewStyle $geofieldMapView, EntityInterface $entity, $map_theming_values) {
     // The Custom Icon Themer plugin defines a unique icon value.
-    $icon_value = $map_theming_values;
-    return $icon_value;
+    return $this->getFileManagedUrl($map_theming_values['icon_file']['fids'][0]);
   }
 
 }

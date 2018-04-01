@@ -174,8 +174,61 @@ class EntityTypeThemer extends MapThemerBase {
    * {@inheritdoc}
    */
   public function getIcon(array $datum, GeofieldGoogleMapViewStyle $geofieldMapView, EntityInterface $entity, $map_theming_values) {
-    //$a = 1;
-    return '';
+    $fid = NULL;
+    if (method_exists($entity, 'bundle')) {
+      $fid = $map_theming_values[$entity->bundle()]['icon_file']['fids'];
+    }
+    return $this->getFileManagedUrl($fid);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLegend(GeofieldGoogleMapViewStyle $geofieldMapView, $map_theming_values) {
+
+    $entity_type = 'entity_type';
+    $entity_bundles = 'entity_type';
+
+    $legend = [
+      '#type' => 'table',
+      '#header' => [
+        $this->t('@entity type Type/Bundle', ['@entity type' => $entity_type]),
+        $this->t('Weight'),
+        Markup::create($this->t('Icon Url @file_upload_help', [
+          '@file_upload_help' => $this->renderer->renderPlain($this->getFileUploadHelp()),
+        ])),
+      ],
+      '#tabledrag' => [[
+        'action' => 'order',
+        'relationship' => 'sibling',
+        'group' => 'bundles-order-weight',
+      ],
+      ],
+      '#caption' => $this->renderer->renderPlain($caption),
+    ];
+
+    foreach ($map_theming_values as $value) {
+
+      $fid = (integer) !empty($default_element[$bundle]['icon_file']['fids']) ? $default_element[$bundle]['icon_file']['fids'] : NULL;
+      $element[$bundle] = [
+        'label' => [
+          '#markup' => $bundle,
+        ],
+        'weight' => [
+          '#type' => 'weight',
+          '#title' => $this->t('Weight for @bundle', ['@bundle' => $bundle]),
+          '#title_display' => 'invisible',
+          '#default_value' => $default_element[$bundle]['weight'],
+          '#delta' => 20,
+          '#attributes' => ['class' => ['bundles-order-weight']],
+        ],
+        'icon_file' => $this->getFileIconElement($fid),
+        '#attributes' => ['class' => ['draggable']],
+      ];
+
+    }
+
+    return $legend;
   }
 
 }

@@ -5,6 +5,7 @@ namespace Drupal\geofield_map;
 use Drupal\Component\Utility\Bytes;
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\file\FileInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -59,6 +60,13 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
   protected $fileUploadValidators;
 
   /**
+   * The geofield map settings.
+   *
+   * @var array
+   */
+  protected $geofieldMapSettings;
+
+  /**
    * Constructs a Drupal\Component\Plugin\PluginBase object.
    *
    * @param array $configuration
@@ -91,13 +99,14 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
     $this->pluginId = $plugin_id;
     $this->pluginDefinition = $plugin_definition;
     $this->config = $config_factory;
+    $this->geofieldMapSettings = $config_factory->get('geofield_map.settings');
     $this->setStringTranslation($translation_manager);
     $this->renderer = $renderer;
     $this->entityManager = $entity_manager;
     $this->fileUploadValidators = [
-      'file_validate_extensions' => ['gif png jpg jpeg svg'],
+      'file_validate_extensions' => [$this->geofieldMapSettings->get('theming.markers_extensions')],
       'file_validate_is_image' => [],
-      'file_validate_size' => [Bytes::toInt('250 KB')],
+      'file_validate_size' => [Bytes::toInt($this->geofieldMapSettings->get('theming.markers_filesize'))],
     ];
   }
 
@@ -201,6 +210,8 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
    */
   protected function getFileIconElement($fid) {
 
+    $upload_location = $this->geofieldMapSettings->get('theming.markers_location.security') . $this->geofieldMapSettings->get('theming.markers_location.rel_path');
+
     $element = [
       '#type' => 'managed_file',
       '#title' => t('Choose a Marker Icon file'),
@@ -208,7 +219,7 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
       '#default_value' => !empty($fid) ? [$fid] : NULL,
       '#multiple' => FALSE,
       '#error_no_message' => FALSE,
-      '#upload_location' => 'public://geofieldmap_markers',
+      '#upload_location' => $upload_location,
       '#upload_validators' => $this->fileUploadValidators,
       '#progress_message' => $this->t('Please wait...'),
       '#progress_indicator' => 'throbber',
@@ -221,7 +232,9 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
       try {
         /* @var \Drupal\file\Entity\file $file */
         $file = $this->entityManager->getStorage('file')->load($fid);
-        $element['preview'] = $this->getFileIconPreview($file);
+        if ($file instanceof FileInterface) {
+          $element['preview'] = $this->getFileIconPreview($file);
+        }
       }
       catch (InvalidPluginDefinitionException $e) {
         $element['preview'] = [];
@@ -270,6 +283,23 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
       '#style_name' => 'thumbnail',
       '#uri' => $file->getFileUri(),
     ];
+  }
+
+  /**
+   * Generate File Managed Url from fid.
+   *
+   * @param int $fid
+   *   The file identifier.
+   *
+   * @return string
+   *   The icon preview element.
+   */
+  protected function getFileManagedUrl($fid = NULL) {
+    if (isset($fid) && $file = File::load($fid)) {
+      $uri = $file->getFileUri();
+      $url = file_create_url($uri);
+    }
+    return $url;
   }
 
 }

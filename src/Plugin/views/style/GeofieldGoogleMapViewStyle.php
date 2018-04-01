@@ -406,7 +406,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     ];
 
     $user_input = $form_state->getUserInput();
-    $map_themer_id = $user_input['style_options']['map_marker_and_infowindow']['theming']['plugin_id'];
+    $map_themer_id = isset($user_input['style_options']['map_marker_and_infowindow']['theming']['plugin_id']) ? $user_input['style_options']['map_marker_and_infowindow']['theming']['plugin_id'] : NULL;
 
     $default_map_themer = isset($this->options['map_marker_and_infowindow']['theming']['plugin_id']) ? $this->options['map_marker_and_infowindow']['theming']['plugin_id'] : t('none');
 
@@ -600,8 +600,8 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
             /* @var \Drupal\geofield_map\MapThemerInterface $map_themer */
             $map_themer = $theming['plugin'];
             $map_theming = $theming[$map_themer->getPluginId()]['values'];
-            foreach ($geojson_data as $datum) {
-              $datum['properties']['icon'] = $map_themer->getIcon($datum, $this, $entity, $map_theming);
+            foreach ($geojson_data as $k => $datum) {
+              $geojson_data[$k]['properties']['icon'] = $map_themer->getIcon($datum, $this, $entity, $map_theming);
             }
           }
 
@@ -675,7 +675,6 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
    * {@inheritdoc}
    */
   public function submitOptionsForm(&$form, FormStateInterface $form_state) {
-    $a = 1;
   }
 
 }

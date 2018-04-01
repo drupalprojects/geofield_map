@@ -5,3 +5,24 @@ geofield_map.settings:
     gmap_api_key:
       type: string
       label: 'Google Maps API Key'
+    theming:
+      type: mapping
+      label: 'Geofield Map Theming Settings'
+      mapping:
+        markers_location:
+          type: mapping
+          label: 'Markers Icons Storage location Info'
+          mapping:
+            security:
+              type: string
+              label: 'File Storage Security Method'
+            rel_path:
+              type: string
+              label: 'Relative Path'
+        markers_extensions:
+          type: string
+          label: 'Markers Allowed file extensions'
+        markers_filesize:
+          type: string
+          label: 'Maximum file size'
+

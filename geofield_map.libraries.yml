@@ -17,6 +17,12 @@ geofield_map_general:
     component:
       css/geofield_map_general.css: {}
 
+geofield_map_settings:
+  version: 1.x
+  css:
+    component:
+      css/geofield_map_settings.css: {}
+
 geofield_map_widget:
   version: 1.x
   css:

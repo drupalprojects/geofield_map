@@ -291,14 +291,16 @@ trait GeofieldMapFieldTrait {
   private function setMapGoogleApiKeyElement(array &$elements) {
     $gmap_api_key = $this->getGmapApiKey();
 
+    $query = [];
+    if (isset($this->fieldDefinition)) {
+      $query['destination'] = Url::fromRoute('<current>')->toString();
+    }
+
     // Define the Google Maps API Key value message markup.
     if (!empty($gmap_api_key)) {
       $map_google_api_key_value = $this->t('<strong>Gmap Api Key:</strong> @gmaps_api_key_link<br><div class="description">A valid Gmap Api Key is needed anyway for the Widget Geocode and ReverseGeocode functionalities (provided by the Google Map Geocoder)</div>', [
         '@gmaps_api_key_link' => $this->link->generate($gmap_api_key, Url::fromRoute('geofield_map.settings', [], [
-          'query' => [
-            'destination' => Url::fromRoute('<current>')
-              ->toString(),
-          ],
+          'query' => $query,
         ])),
       ]);
     }
