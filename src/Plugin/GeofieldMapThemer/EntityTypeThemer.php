@@ -41,20 +41,6 @@ class EntityTypeThemer extends MapThemerBase {
   protected $entityTypeBundleInfo;
 
   /**
-   * The Renderer service property.
-   *
-   * @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface
-   */
-  protected $renderer;
-
-  /**
-   * The Entity type manager service.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityManager;
-
-  /**
    * Constructs a Drupal\Component\Plugin\PluginBase object.
    *
    * @param array $configuration
@@ -67,12 +53,12 @@ class EntityTypeThemer extends MapThemerBase {
    *   A config factory for retrieving required config objects.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $translation_manager
    *   The translation manager.
-   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
-   *   The entity type bundle info.
    * @param \Drupal\Core\Render\RendererInterface $renderer
    *   The renderer.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_manager
    *   The entity manager.
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
+   *   The entity type bundle info.
    */
   public function __construct(
     array $configuration,
@@ -80,20 +66,12 @@ class EntityTypeThemer extends MapThemerBase {
     $plugin_definition,
     ConfigFactoryInterface $config_factory,
     TranslationInterface $translation_manager,
-    EntityTypeBundleInfoInterface $entity_type_bundle_info,
     RendererInterface $renderer,
-    EntityTypeManagerInterface $entity_manager
+    EntityTypeManagerInterface $entity_manager,
+    EntityTypeBundleInfoInterface $entity_type_bundle_info
   ) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $config_factory, $translation_manager, $entity_manager);
-
-    $this->configuration = $configuration;
-    $this->pluginId = $plugin_id;
-    $this->pluginDefinition = $plugin_definition;
-    $this->config = $config_factory;
-    $this->setStringTranslation($translation_manager);
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $config_factory, $translation_manager, $renderer, $entity_manager);
     $this->entityTypeBundleInfo = $entity_type_bundle_info;
-    $this->renderer = $renderer;
-    $this->entityManager = $entity_manager;
   }
 
   /**
@@ -106,9 +84,9 @@ class EntityTypeThemer extends MapThemerBase {
       $plugin_definition,
       $container->get('config.factory'),
       $container->get('string_translation'),
-      $container->get('entity_type.bundle.info'),
       $container->get('renderer'),
-      $container->get('entity_type.manager')
+      $container->get('entity_type.manager'),
+      $container->get('entity_type.bundle.info')
     );
   }
 
@@ -164,7 +142,7 @@ class EntityTypeThemer extends MapThemerBase {
         'group' => 'bundles-order-weight',
       ],
       ],
-      '#caption' => $this->renderer->renderRoot($caption),
+      '#caption' => $this->renderer->renderPlain($caption),
     ];
 
     foreach ($entity_bundles as $bundle) {

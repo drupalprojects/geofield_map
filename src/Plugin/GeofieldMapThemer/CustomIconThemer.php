@@ -6,6 +6,7 @@ use Drupal\geofield_map\MapThemerBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\geofield_map\Plugin\views\style\GeofieldGoogleMapViewStyle;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Render\Markup;
 
 /**
  * Style plugin to render a View output as a Leaflet map.
@@ -37,6 +38,11 @@ class CustomIconThemer extends MapThemerBase {
     $fid = (integer) !empty($default_element['icon_file']['fids']) ? $default_element['icon_file']['fids'] : NULL;
     $element = [
       '#type' => 'container',
+      'description' => [
+        '#markup' => Markup::create($this->t('The chosen icon file will be used as Marker for all Geofield Map features @file_upload_help', [
+          '@file_upload_help' => $this->renderer->renderPlain($this->getFileUploadHelp()),
+        ])),
+      ],
       'icon_file' => $this->getFileIconElement($fid[0]),
     ];
 

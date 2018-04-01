@@ -417,64 +417,55 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
       '#title' => $this->t('Map Theming'),
       '#default_value' => $selected_map_themer,
       '#options' => $map_themers_options,
-      '#ajax' => [
-        'callback' => [get_called_class(), 'mapThemerSelectAjax'],
-        'wrapper' => 'map-theming-container',
-        'effect' => 'fade',
-        'speed' => 'default',
-        'progress' => [
-          'type' => 'throbber',
-          'message' => $this->t('Fetching data ...'),
-        ],
-      ],
     ];
 
     foreach ($this->mapThemerManager->getMapThemersList() as $id => $map_themer) {
-      switch ($id) {
-        case $selected_map_themer:
-          try {
-            $this->mapThemerPlugin = $this->mapThemerManager->createInstance($selected_map_themer);
-            $form['map_marker_and_infowindow']['theming'][$this->mapThemerPlugin->pluginId] = [
-              '#type' => 'container',
-              'id' => [
-                '#type' => 'value',
-                '#value' => $this->mapThemerPlugin->getPluginId(),
-              ],
-              'values' => $this->mapThemerPlugin->buildMapThemerElement($this->options, $form, $form_state, $this),
-              'description' => [
-                '#type' => 'value',
-                '#value' => $this->mapThemerPlugin->getDescription(),
-              ],
-            ];
-          }
-          catch (PluginException $e) {
-            $form['map_marker_and_infowindow']['theming']['plugin_id']['#default_value'] = $map_themers_options['none'];
-          }
-          break;
-
-        default:
-          $form['map_marker_and_infowindow']['theming'][$id] = [
+      try {
+        $this->mapThemerPlugin = $this->mapThemerManager->createInstance($id);
+        $form['map_marker_and_infowindow']['theming'][$this->mapThemerPlugin->pluginId] = [
+          '#type' => 'container',
+          'id' => [
             '#type' => 'value',
-            '#value' => $this->options['map_marker_and_infowindow']['theming'][$id],
-          ];
-      }
-    }
-
-    if ($selected_map_themer == 'none') {
-      $form['map_marker_and_infowindow']['theming']['plugin_description'] = [
-        '#type' => 'table',
-        '#caption' => $this->t('Available Map Themers & Descriptions:'),
-      ];
-      foreach ($map_themers_definitions as $k => $map_themer) {
-        $form['map_marker_and_infowindow']['theming']['plugin_description'][$k] = [
-          'label' => [
-            '#markup' => $map_themers_options[$k],
+            '#value' => $this->mapThemerPlugin->getPluginId(),
           ],
+          'values' => $this->mapThemerPlugin->buildMapThemerElement($this->options, $form, $form_state, $this),
           'description' => [
-            '#markup' => $map_themer['description'],
+            '#type' => 'value',
+            '#value' => $this->mapThemerPlugin->getDescription(),
+          ],
+          '#states' => [
+            'visible' => [
+              'select[name="style_options[map_marker_and_infowindow][theming][plugin_id]"]' => ['value' => $id],
+            ],
           ],
         ];
       }
+      catch (PluginException $e) {
+        $form['map_marker_and_infowindow']['theming']['plugin_id']['#default_value'] = $map_themers_options['none'];
+      }
+    }
+
+    $form['map_marker_and_infowindow']['theming']['plugins_descriptions'] = [
+      '#type' => 'container',
+      'table' => [
+        '#type' => 'table',
+        '#caption' => $this->t('Available Map Themers & Descriptions:'),
+      ],
+      '#states' => [
+        'visible' => [
+          'select[name="style_options[map_marker_and_infowindow][theming][plugin_id]"]' => ['value' => 'none'],
+        ],
+      ],
+    ];
+    foreach ($map_themers_definitions as $k => $map_themer) {
+      $form['map_marker_and_infowindow']['theming']['plugins_descriptions']['table'][$k] = [
+        'label' => [
+          '#markup' => $map_themers_options[$k],
+        ],
+        'description' => [
+          '#markup' => $map_themer['description'],
+        ],
+      ];
     }
 
     $form['map_marker_and_infowindow']['icon_image_path']['#states'] = [

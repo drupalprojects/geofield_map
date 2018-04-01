@@ -13,6 +13,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\file\Entity\File;
 use Drupal\Core\Entity\EntityStorageException;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
 
 /**
@@ -43,6 +44,18 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
    */
   protected $entityManager;
 
+  /**
+   * The Renderer service property.
+   *
+   * @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface
+   */
+  protected $renderer;
+
+  /**
+   * The list of file upload validators.
+   *
+   * @var array
+   */
   protected $fileUploadValidators;
 
   /**
@@ -58,6 +71,8 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
    *   A config factory for retrieving required config objects.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $translation_manager
    *   The translation manager.
+   * @param \Drupal\Core\Render\RendererInterface $renderer
+   *   The renderer.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_manager
    *   The entity manager.
    */
@@ -67,8 +82,8 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
     $plugin_definition,
     ConfigFactoryInterface $config_factory,
     TranslationInterface $translation_manager,
+    RendererInterface $renderer,
     EntityTypeManagerInterface $entity_manager
-
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
@@ -77,6 +92,7 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
     $this->pluginDefinition = $plugin_definition;
     $this->config = $config_factory;
     $this->setStringTranslation($translation_manager);
+    $this->renderer = $renderer;
     $this->entityManager = $entity_manager;
     $this->fileUploadValidators = [
       'file_validate_extensions' => ['gif png jpg jpeg svg'],
@@ -95,6 +111,7 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
       $plugin_definition,
       $container->get('config.factory'),
       $container->get('string_translation'),
+      $container->get('renderer'),
       $container->get('entity_type.manager')
     );
   }
