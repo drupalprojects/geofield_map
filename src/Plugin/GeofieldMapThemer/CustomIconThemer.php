@@ -36,6 +36,7 @@ class CustomIconThemer extends MapThemerBase {
 
     $fid = (integer) !empty($default_element['icon_file']['fids']) ? $default_element['icon_file']['fids'] : NULL;
     $element = [
+      '#type' => 'container',
       'icon_file' => $this->getFileIconElement($fid[0]),
     ];
 

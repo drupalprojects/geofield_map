@@ -197,7 +197,6 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     $this->currentUser = $current_user;
     $this->renderer = $renderer;
     $this->mapThemerManager = $map_themer_manager;
-    $this->geofieldMapViewProperties = [];
   }
 
   /**
@@ -397,7 +396,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
 
     // Implement Map Theming based on available GeofieldMapThemers.
     $map_themers_definitions = $this->mapThemerManager->getDefinitions();
-    $map_themers_options = array_merge(['none' => 'None'], $this->mapThemerManager->getThemersOptions());
+    $map_themers_options = array_merge(['none' => 'None'], $this->mapThemerManager->getMapThemersList());
 
     $form['map_marker_and_infowindow']['theming'] = [
       '#type' => 'fieldset',
@@ -430,23 +429,39 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
       ],
     ];
 
-    if ($selected_map_themer != 'none') {
-      try {
-        $this->mapThemerPlugin = $this->mapThemerManager->createInstance($selected_map_themer);
-        $form['map_marker_and_infowindow']['theming'][$this->mapThemerPlugin->pluginId] = [
-          '#type' => 'container',
-          'id' => $this->mapThemerPlugin->getPluginId(),
-          'values' => $this->mapThemerPlugin->buildMapThemerElement($this->options, $form, $form_state, $this),
-          'description' => $this->mapThemerPlugin->getDescription(),
-        ];
-      }
-      catch (PluginException $e) {
-        $form['map_marker_and_infowindow']['theming']['plugin_id']['#default_value'] = $map_themers_options['none'];
-      }
+    foreach ($this->mapThemerManager->getMapThemersList() as $id => $map_themer) {
+      switch ($id) {
+        case $selected_map_themer:
+          try {
+            $this->mapThemerPlugin = $this->mapThemerManager->createInstance($selected_map_themer);
+            $form['map_marker_and_infowindow']['theming'][$this->mapThemerPlugin->pluginId] = [
+              '#type' => 'container',
+              'id' => [
+                '#type' => 'value',
+                '#value' => $this->mapThemerPlugin->getPluginId(),
+              ],
+              'values' => $this->mapThemerPlugin->buildMapThemerElement($this->options, $form, $form_state, $this),
+              'description' => [
+                '#type' => 'value',
+                '#value' => $this->mapThemerPlugin->getDescription(),
+              ],
+            ];
+          }
+          catch (PluginException $e) {
+            $form['map_marker_and_infowindow']['theming']['plugin_id']['#default_value'] = $map_themers_options['none'];
+          }
+          break;
 
+        default:
+          $form['map_marker_and_infowindow']['theming'][$id] = [
+            '#type' => 'value',
+            '#value' => $this->options['map_marker_and_infowindow']['theming'][$id],
+          ];
+      }
     }
-    else {
-      $form['map_marker_and_infowindow']['thkeming']['plugin_description'] = [
+
+    if ($selected_map_themer == 'none') {
+      $form['map_marker_and_infowindow']['theming']['plugin_description'] = [
         '#type' => 'table',
         '#caption' => $this->t('Available Map Themers & Descriptions:'),
       ];
@@ -629,6 +644,14 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     $geofield_google_map_default_settings = [];
     foreach (self::getDefaultSettings() as $k => $setting) {
       $geofield_google_map_default_settings[$k] = ['default' => $setting];
+
+      // Define defaults for existing map themers.
+      if ($k == 'map_marker_and_infowindow') {
+        $geofield_google_map_default_settings[$k]['default']['theming']['plugin_id'] = NULL;
+        foreach ($this->mapThemerManager->getMapThemersList() as $id => $map_themer) {
+          $geofield_google_map_default_settings[$k]['default']['theming'][$id]['values'] = [];
+        }
+      }
     }
 
     return $options + $geofield_google_map_default_settings;

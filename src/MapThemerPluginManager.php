@@ -37,7 +37,7 @@ class MapThemerPluginManager extends DefaultPluginManager {
    * @return mixed[]
    *   An array of MapThemers plugins Options. Keys are plugin IDs.
    */
-  public function getThemersOptions() {
+  public function getMapThemersList() {
     $options = [];
     foreach ($this->getDefinitions() as $k => $map_themer) {
       /* @var \Drupal\Core\StringTranslation\TranslatableMarkup $map_themer_name */
