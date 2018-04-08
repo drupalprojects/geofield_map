@@ -419,9 +419,9 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
       '#options' => $map_themers_options,
     ];
 
-    foreach ($this->mapThemerManager->getMapThemersList() as $id => $map_themer) {
+    foreach ($this->mapThemerManager->getMapThemersList() as $plugin_id => $map_themer) {
       try {
-        $this->mapThemerPlugin = $this->mapThemerManager->createInstance($id);
+        $this->mapThemerPlugin = $this->mapThemerManager->createInstance($plugin_id);
         $form['map_marker_and_infowindow']['theming'][$this->mapThemerPlugin->pluginId] = [
           '#type' => 'container',
           'id' => [
@@ -435,7 +435,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
           ],
           '#states' => [
             'visible' => [
-              'select[name="style_options[map_marker_and_infowindow][theming][plugin_id]"]' => ['value' => $id],
+              'select[name="style_options[map_marker_and_infowindow][theming][plugin_id]"]' => ['value' => $plugin_id],
             ],
           ],
         ];

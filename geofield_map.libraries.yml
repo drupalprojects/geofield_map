@@ -38,6 +38,12 @@ geofield_map_widget:
       - core/drupalSettings
       - core/drupal.autocomplete
 
+geofield_map_legend:
+  version: 1.x
+  css:
+    component:
+      css/geofield_map_legend.css: {}
+
 geolocation:
   version: 1.x
   js:
