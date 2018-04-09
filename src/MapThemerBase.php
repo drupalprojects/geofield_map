@@ -229,16 +229,7 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
     ];
 
     if (!empty($fid)) {
-      try {
-        /* @var \Drupal\file\Entity\file $file */
-        $file = $this->entityManager->getStorage('file')->load($fid);
-        if ($file instanceof FileInterface) {
-          $element['preview'] = $this->getFileIconPreview($file);
-        }
-      }
-      catch (InvalidPluginDefinitionException $e) {
-        $element['preview'] = [];
-      }
+      $element = $this->getIconView($fid);
     }
 
     return $element;
@@ -274,7 +265,7 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
    * @return array
    *   The icon preview element.
    */
-  protected function getFileIconPreview(file $file) {
+  protected function getFileIconView(file $file) {
     return [
       '#weight' => -10,
       '#theme' => 'image_style',
@@ -300,6 +291,30 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
       $url = file_create_url($uri);
     }
     return $url;
+  }
+
+  /**
+   * Generate Icon View Element.
+   *
+   * @param int $fid
+   *   The file identifier.
+   *
+   * @return array
+   *   The icon view render array..
+   */
+  protected function getIconView($fid) {
+    $icon_view_element = [];
+    try {
+      /* @var \Drupal\file\Entity\file $file */
+      $file = $this->entityManager->getStorage('file')->load($fid);
+      if ($file instanceof FileInterface) {
+        $icon_view_element = $this->getFileIconView($file);
+      }
+    }
+    catch (InvalidPluginDefinitionException $e) {
+    }
+
+    return $icon_view_element;
   }
 
 }

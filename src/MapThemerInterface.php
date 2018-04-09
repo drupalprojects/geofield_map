@@ -76,4 +76,15 @@ interface MapThemerInterface extends PluginInspectionInterface {
    */
   public function getIcon(array $datum, GeofieldGoogleMapViewStyle $geofieldMapView, EntityInterface $entity, $map_theming_values);
 
+  /**
+   * Generate the Legend render array.
+   *
+   * @param mixed $map_theming_values
+   *   The Map themer mapping values.
+   *
+   * @return mixed
+   *   The icon definition.
+   */
+  public function getLegend($map_theming_values);
+
 }

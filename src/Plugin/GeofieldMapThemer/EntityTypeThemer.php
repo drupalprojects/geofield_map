@@ -100,18 +100,19 @@ class EntityTypeThemer extends MapThemerBase {
 
     // Get the View Filtered entity bundles.
     $entity_type = $geofieldMapView->getViewEntityType();
-    $entity_bundles = !empty($geofieldMapView->getViewFilteredBundles()) ? $geofieldMapView->getViewFilteredBundles() : array_keys($this->entityTypeBundleInfo->getBundleInfo($entity_type));
+    $entity_bundles = $this->entityTypeBundleInfo->getBundleInfo($entity_type);
+    $view_bundles = !empty($geofieldMapView->getViewFilteredBundles()) ? $geofieldMapView->getViewFilteredBundles() : array_keys($entity_bundles);
 
     // Reorder the entity bundles based on existing (Default) Element settings.
     if (!empty($default_element)) {
       $weighted_bundles = [];
-      foreach ($entity_bundles as $bundle) {
+      foreach ($view_bundles as $bundle) {
         $weighted_bundles[$bundle] = [
           'weight' => isset($default_element[$bundle]) ? $default_element[$bundle]['weight'] : 0,
         ];
       }
       uasort($weighted_bundles, 'Drupal\Component\Utility\SortArray::sortByWeightElement');
-      $entity_bundles = array_keys($weighted_bundles);
+      $view_bundles = array_keys($weighted_bundles);
     }
 
     $caption = [
@@ -145,7 +146,7 @@ class EntityTypeThemer extends MapThemerBase {
       '#caption' => $this->renderer->renderPlain($caption),
     ];
 
-    foreach ($entity_bundles as $bundle) {
+    foreach ($view_bundles as $bundle) {
 
       $fid = (integer) !empty($default_element[$bundle]['icon_file']['fids']) ? $default_element[$bundle]['icon_file']['fids'] : NULL;
       $element[$bundle] = [
@@ -184,46 +185,22 @@ class EntityTypeThemer extends MapThemerBase {
   /**
    * {@inheritdoc}
    */
-  public function getLegend(GeofieldGoogleMapViewStyle $geofieldMapView, $map_theming_values) {
-
-    $entity_type = 'entity_type';
-    $entity_bundles = 'entity_type';
-
+  public function getLegend($map_theming_values) {
     $legend = [
       '#type' => 'table',
       '#header' => [
-        $this->t('@entity type Type/Bundle', ['@entity type' => $entity_type]),
-        $this->t('Weight'),
-        Markup::create($this->t('Icon Url @file_upload_help', [
-          '@file_upload_help' => $this->renderer->renderPlain($this->getFileUploadHelp()),
-        ])),
+        $this->t('Type/Bundle'),
+        $this->t('Icon'),
       ],
-      '#tabledrag' => [[
-        'action' => 'order',
-        'relationship' => 'sibling',
-        'group' => 'bundles-order-weight',
-      ],
-      ],
-      '#caption' => $this->renderer->renderPlain($caption),
     ];
 
-    foreach ($map_theming_values as $value) {
-
-      $fid = (integer) !empty($default_element[$bundle]['icon_file']['fids']) ? $default_element[$bundle]['icon_file']['fids'] : NULL;
-      $element[$bundle] = [
+    foreach ($map_theming_values as $bundle => $value) {
+      $fid = (integer) $value['icon_file']['fids'] ? $value['icon_file']['fids'] : NULL;
+      $legend[$bundle] = [
         'label' => [
           '#markup' => $bundle,
         ],
-        'weight' => [
-          '#type' => 'weight',
-          '#title' => $this->t('Weight for @bundle', ['@bundle' => $bundle]),
-          '#title_display' => 'invisible',
-          '#default_value' => $default_element[$bundle]['weight'],
-          '#delta' => 20,
-          '#attributes' => ['class' => ['bundles-order-weight']],
-        ],
-        'icon_file' => $this->getFileIconElement($fid),
-        '#attributes' => ['class' => ['draggable']],
+        'icon_file' => $this->getIconView($fid),
       ];
 
     }

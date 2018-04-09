@@ -58,4 +58,16 @@ class CustomIconThemer extends MapThemerBase {
     return $this->getFileManagedUrl($map_theming_values['icon_file']['fids'][0]);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getLegend($map_theming_values) {
+    $legend = [
+      '#markup' => $this->t("This is the Legend content for the @plugin_name", [
+        '@plugin_name' => $this->getName(),
+      ]),
+    ];
+    return $legend;
+  }
+
 }

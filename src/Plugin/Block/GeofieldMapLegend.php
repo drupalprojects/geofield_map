@@ -203,14 +203,11 @@ class GeofieldMapLegend extends BlockBase implements ContainerFactoryPluginInter
       if (!empty($view_displays) && !empty($view_displays[$view_display_id])) {
         $view_options = $view_displays[$view_display_id]['display_options']['style']['options'];
         $plugin_id = isset($view_options['map_marker_and_infowindow']['theming']) ? $view_options['map_marker_and_infowindow']['theming']['plugin_id'] : NULL;
-        if (isset($plugin_id) && $plugin_id != 'none') {
+        if (isset($plugin_id) && $plugin_id != 'none' && isset($view_options['map_marker_and_infowindow']['theming'][$plugin_id])) {
           try {
             $this->mapThemerPlugin = $this->mapThemerManager->createInstance($plugin_id);
-            $legend = [
-              '#markup' => $this->t('This legend will be rendered by the @plugin_id plugin.', [
-                '@plugin_id' => $this->mapThemerPlugin->getName(),
-              ]),
-            ];
+            $theming_values = $view_options['map_marker_and_infowindow']['theming'][$plugin_id]['values'];
+            $legend = $this->mapThemerPlugin->getLegend($theming_values);
           }
           catch (PluginException $e) {
             $legend = [
