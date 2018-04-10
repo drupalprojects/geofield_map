@@ -55,18 +55,49 @@ class CustomIconThemer extends MapThemerBase {
    */
   public function getIcon(array $datum, GeofieldGoogleMapViewStyle $geofieldMapView, EntityInterface $entity, $map_theming_values) {
     // The Custom Icon Themer plugin defines a unique icon value.
-    return $this->getFileManagedUrl($map_theming_values['icon_file']['fids'][0]);
+    if (!empty($map_theming_values['icon_file']['fids'])) {
+      return $this->getFileManagedUrl($map_theming_values['icon_file']['fids'][0]);
+    }
+    return NULL;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getLegend($map_theming_values) {
+  public function getLegend(array $map_theming_values, array $configuration = []) {
+
     $legend = [
-      '#markup' => $this->t("This is the Legend content for the @plugin_name", [
-        '@plugin_name' => $this->getName(),
-      ]),
+      '#type' => 'table',
+      '#header' => [
+        isset($configuration['values_label']) ? $configuration['values_label'] : $this->t('Type/Bundle'),
+        isset($configuration['markers_label']) ? $configuration['markers_label'] : $this->t('Marker'),
+      ],
+      '#caption' => isset($configuration['legend_caption']) ? $configuration['legend_caption'] : '',
+      '#attributes' => [
+        'class' => ['geofield-map-legend', 'custom-icon'],
+      ],
     ];
+
+    $fid = (integer) !empty($map_theming_values['icon_file']['fids']) ? $map_theming_values['icon_file']['fids'][0] : NULL;
+    $legend['custom-icon'] = [
+      'value' => [
+        '#type' => 'container',
+        'label' => [
+          '#markup' => $this->t('All Markers'),
+        ],
+        '#attributes' => [
+          'class' => ['value'],
+        ],
+      ],
+      'marker' => [
+        '#type' => 'container',
+        'icon_file' => !empty($fid) ? $this->getIconView($fid) : $this->getDefaultLegendIcon(),
+        '#attributes' => [
+          'class' => ['marker'],
+        ],
+      ],
+    ];
+
     return $legend;
   }
 

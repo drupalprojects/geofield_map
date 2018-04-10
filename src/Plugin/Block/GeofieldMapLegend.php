@@ -139,30 +139,41 @@ class GeofieldMapLegend extends BlockBase implements ContainerFactoryPluginInter
     $form['#attached']['library'][] = 'geofield_map/geofield_map_general';
     $form['#attached']['library'][] = 'geofield_map/geofield_map_legend';
 
-    $geofield_legends = [];
-    /* @var \Drupal\views\Entity\View $view */
-    foreach ($enabled_views = Views::getEnabledViews() as $view_id => $view) {
-      foreach ($this->config->get('views.view.' . $view_id)->get('display') as $id => $view_display) {
-        if (isset($view_display['display_options']['style']) && $view_display['display_options']['style']['type'] == 'geofield_google_map') {
-          $view_options = $view_display['display_options']['style']['options'];
-          $plugin_id = isset($view_options['map_marker_and_infowindow']['theming']) ? $view_options['map_marker_and_infowindow']['theming']['plugin_id'] : NULL;
-          if (isset($plugin_id) && $plugin_id != 'none') {
-            $geofield_legends[$view_id . ':' . $id] = $view->label() . ' - display: ' . $id;
-          }
-        }
-      }
-    }
+    $geofield_map_legends = $this->getGeofieldMapLegends();
 
-    if (!empty($geofield_legends)) {
-
+    if (!empty($geofield_map_legends)) {
       $form['geofield_map_legend'] = [
         '#type' => 'select',
         '#title' => $this->t('Geofield Map Legend'),
         '#description' => $this->t('Select the Geofield Map legend to render in this block<br>Choose the View and the Display you want to grab the Legend definition from.'),
-        '#options' => $geofield_legends,
+        '#options' => $geofield_map_legends,
         '#default_value' => isset($this->configuration['geofield_map_legend']) ? $this->configuration['geofield_map_legend'] : t('none'),
         '#required' => TRUE,
       ];
+
+      $form['values_label'] = [
+        '#title' => $this->t('Values Column Label'),
+        '#type' => 'textfield',
+        '#description' => $this->t('Set the Label text to be shown for the Values column. Leave empty for nothing.'),
+        '#default_value' => isset($this->configuration['values_label']) ? $this->configuration['values_label'] : '',
+        '#size' => 26,
+      ];
+
+      $form['markers_label'] = [
+        '#title' => $this->t('Markers Column Label'),
+        '#type' => 'textfield',
+        '#description' => $this->t('Set the Label text to be shown for the Markers/Icon column. Leave empty for nothing.'),
+        '#default_value' => isset($this->configuration['markers_label']) ? $this->configuration['markers_label'] : '',
+        '#size' => 26,
+      ];
+
+      $form['legend_caption'] = array(
+        '#type' => 'textarea',
+        '#title' => $this->t('Legend Caption / Notes'),
+        '#description' => $this->t('Write here notes to the Legend that will be rendered as caption or attached element to it (depending on the specific Geofield Map Themer plugin rendering of its Legend).'),
+        '#default_value' => isset($this->configuration['legend_caption']) ? $this->configuration['legend_caption'] : '',
+        '#rows' => 3,
+      );
     }
     else {
       $form['geofield_map_legend_warning'] = [
@@ -198,8 +209,18 @@ class GeofieldMapLegend extends BlockBase implements ContainerFactoryPluginInter
     $geofield_map_legend_id = $this->configuration['geofield_map_legend'];
     if (!empty($geofield_map_legend_id)) {
       list($view_id, $view_display_id) = explode(':', $geofield_map_legend_id);
-      $view_displays = $this->config->get('views.view.' . $view_id)
-        ->get('display');
+      $legend_failure = [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t("The Legend can't be rendered because the chosen [@view_id:@view_display_id] view & view display combination don't exists or correspond to a valid Geofield Map Legend anymore. <u>Please reconfigure this Geofield Map Legend block consequently.</u>", [
+          '@view_id' => $view_id,
+          '@view_display_id' => $view_display_id,
+        ]),
+        '#attributes' => [
+          'class' => ['geofield-map-message legend-failure-message'],
+        ],
+      ];
+      $view_displays = $this->config->get('views.view.' . $view_id)->get('display');
       if (!empty($view_displays) && !empty($view_displays[$view_display_id])) {
         $view_options = $view_displays[$view_display_id]['display_options']['style']['options'];
         $plugin_id = isset($view_options['map_marker_and_infowindow']['theming']) ? $view_options['map_marker_and_infowindow']['theming']['plugin_id'] : NULL;
@@ -207,29 +228,24 @@ class GeofieldMapLegend extends BlockBase implements ContainerFactoryPluginInter
           try {
             $this->mapThemerPlugin = $this->mapThemerManager->createInstance($plugin_id);
             $theming_values = $view_options['map_marker_and_infowindow']['theming'][$plugin_id]['values'];
-            $legend = $this->mapThemerPlugin->getLegend($theming_values);
+            $legend = $this->mapThemerPlugin->getLegend($theming_values, $this->configuration);
           }
           catch (PluginException $e) {
-            $legend = [
-              '#markup' => $this->t("This legend won't be rendered due to @error_message", [
-                '@error_message' => $e->getMessage(),
-              ]),
-            ];
+            if ($this->currentUser->hasPermission('configure geofield_map')) {
+              $legend = [
+                '#markup' => $this->t("This legend is not be rendered due to @error_message", [
+                  '@error_message' => $e->getMessage(),
+                ]),
+              ];
+            }
           }
+        }
+        elseif ($this->currentUser->hasPermission('configure geofield_map')) {
+          $legend = $legend_failure;
         }
       }
       elseif ($this->currentUser->hasPermission('configure geofield_map')) {
-        $legend = [
-          '#type' => 'html_tag',
-          '#tag' => 'div',
-          '#value' => $this->t("The chosen Geofield Map Legend can't be rendered because the chosen @view_id:@view_display_id view & display combination don't exists anymore. <u>Please reconfigure this Geofield Map Legend block consequently.</u>", [
-            '@view_id' => $view_id,
-            '@view_display_id' => $view_display_id,
-          ]),
-          '#attributes' => [
-            'class' => ['geofield-map-message'],
-          ],
-        ];
+        $legend = $legend_failure;
       }
     }
 
@@ -242,6 +258,36 @@ class GeofieldMapLegend extends BlockBase implements ContainerFactoryPluginInter
    */
   public function blockSubmit($form, FormStateInterface $form_state) {
     $this->configuration['geofield_map_legend'] = $form_state->getValue('geofield_map_legend');
+    $this->configuration['legend_caption'] = $form_state->getValue('legend_caption');
+    $this->configuration['values_label'] = $form_state->getValue('values_label');
+    $this->configuration['markers_label'] = $form_state->getValue('markers_label');
+  }
+
+  /**
+   * Get elegible Geofield Map legends.
+   *
+   * Find of Geofield Map Views Styles where a theming has
+   * been defined and outputs them in the form of view_id:view_display_id array
+   * list.
+   *
+   * @return array
+   *   The legends list.
+   */
+  protected function getGeofieldMapLegends() {
+    $geofield_legends = [];
+    /* @var \Drupal\views\Entity\View $view */
+    foreach ($enabled_views = Views::getEnabledViews() as $view_id => $view) {
+      foreach ($this->config->get('views.view.' . $view_id)->get('display') as $id => $view_display) {
+        if (isset($view_display['display_options']['style']) && $view_display['display_options']['style']['type'] == 'geofield_google_map') {
+          $view_options = $view_display['display_options']['style']['options'];
+          $plugin_id = isset($view_options['map_marker_and_infowindow']['theming']) ? $view_options['map_marker_and_infowindow']['theming']['plugin_id'] : NULL;
+          if (isset($plugin_id) && $plugin_id != 'none') {
+            $geofield_legends[$view_id . ':' . $id] = $view->label() . ' - display: ' . $id;
+          }
+        }
+      }
+    }
+    return $geofield_legends;
   }
 
 }

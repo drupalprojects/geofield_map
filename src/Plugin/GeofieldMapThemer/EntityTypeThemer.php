@@ -133,7 +133,7 @@ class EntityTypeThemer extends MapThemerBase {
       '#header' => [
         $this->t('@entity type Type/Bundle', ['@entity type' => $entity_type]),
         $this->t('Weight'),
-        Markup::create($this->t('Icon Url @file_upload_help', [
+        Markup::create($this->t('Marker Icon @file_upload_help', [
           '@file_upload_help' => $this->renderer->renderPlain($this->getFileUploadHelp()),
         ])),
       ],
@@ -151,7 +151,11 @@ class EntityTypeThemer extends MapThemerBase {
       $fid = (integer) !empty($default_element[$bundle]['icon_file']['fids']) ? $default_element[$bundle]['icon_file']['fids'] : NULL;
       $element[$bundle] = [
         'label' => [
-          '#markup' => $bundle,
+          '#type' => 'value',
+          '#value' => $entity_bundles[$bundle]['label'],
+          'markup' => [
+            '#markup' => $entity_bundles[$bundle]['label'],
+          ],
         ],
         'weight' => [
           '#type' => 'weight',
@@ -185,22 +189,38 @@ class EntityTypeThemer extends MapThemerBase {
   /**
    * {@inheritdoc}
    */
-  public function getLegend($map_theming_values) {
+  public function getLegend(array $map_theming_values, array $configuration = []) {
     $legend = [
       '#type' => 'table',
       '#header' => [
-        $this->t('Type/Bundle'),
-        $this->t('Icon'),
+        isset($configuration['values_label']) ? $configuration['values_label'] : $this->t('Type/Bundle'),
+        isset($configuration['markers_label']) ? $configuration['markers_label'] : $this->t('Marker'),
+      ],
+      '#caption' => isset($configuration['legend_caption']) ? $configuration['legend_caption'] : '',
+      '#attributes' => [
+        'class' => ['geofield-map-legend', 'entity-type'],
       ],
     ];
 
     foreach ($map_theming_values as $bundle => $value) {
       $fid = (integer) $value['icon_file']['fids'] ? $value['icon_file']['fids'] : NULL;
       $legend[$bundle] = [
-        'label' => [
-          '#markup' => $bundle,
+        'value' => [
+          '#type' => 'container',
+          'label' => [
+            '#markup' => isset($value['label']) ? $value['label'] : $bundle,
+          ],
+          '#attributes' => [
+            'class' => ['value'],
+          ],
         ],
-        'icon_file' => $this->getIconView($fid),
+        'marker' => [
+          '#type' => 'container',
+          'icon_file' => !empty($fid) ? $this->getIconView($fid) : $this->getDefaultLegendIcon(),
+          '#attributes' => [
+            'class' => ['marker'],
+          ],
+        ],
       ];
 
     }

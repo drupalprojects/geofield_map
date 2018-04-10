@@ -79,12 +79,14 @@ interface MapThemerInterface extends PluginInspectionInterface {
   /**
    * Generate the Legend render array.
    *
-   * @param mixed $map_theming_values
+   * @param array $map_theming_values
    *   The Map themer mapping values.
+   * @param array $configuration
+   *   The legend block configuration array.
    *
    * @return mixed
    *   The icon definition.
    */
-  public function getLegend($map_theming_values);
+  public function getLegend(array $map_theming_values, array $configuration = []);
 
 }

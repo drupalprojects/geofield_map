@@ -67,6 +67,24 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
   protected $geofieldMapSettings;
 
   /**
+   * Returns the default Icon output for the Legend.
+   *
+   * @return array
+   *   The DefaultLegendIcon render array.
+   */
+  protected function getDefaultLegendIcon() {
+    return [
+      '#type' => 'container',
+      'markup' => [
+        '#markup' => $this->t('[default-icon]'),
+      ],
+      '#attributes' => [
+        'class' => ['default-icon'],
+      ],
+    ];
+  }
+
+  /**
    * Constructs a Drupal\Component\Plugin\PluginBase object.
    *
    * @param array $configuration
@@ -229,7 +247,7 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
     ];
 
     if (!empty($fid)) {
-      $element = $this->getIconView($fid);
+      $element['preview'] = $this->getIconView($fid);
     }
 
     return $element;
@@ -289,8 +307,9 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
     if (isset($fid) && $file = File::load($fid)) {
       $uri = $file->getFileUri();
       $url = file_create_url($uri);
+      return $url;
     }
-    return $url;
+    return NULL;
   }
 
   /**

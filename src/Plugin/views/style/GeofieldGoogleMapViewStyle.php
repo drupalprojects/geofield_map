@@ -470,9 +470,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
 
     $form['map_marker_and_infowindow']['icon_image_path']['#states'] = [
       'visible' => [
-        ':input[name="style_options[theming][map_themer]"]' => [
-          'value' => 'none',
-        ],
+        'select[name="style_options[map_marker_and_infowindow][theming][plugin_id]"]' => ['value' => 'none'],
       ],
     ];
 
@@ -573,16 +571,6 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
               $description[] = $this->rendered_fields[$id][$description_field];
             }
           }
-          $theming = NULL;
-          if (isset($map_settings['map_marker_and_infowindow']['theming']) && $map_settings['map_marker_and_infowindow']['theming']['plugin_id'] != 'none') {
-            $theming = $map_settings['map_marker_and_infowindow']['theming'];
-            try {
-              $theming['plugin'] = $this->mapThemerManager->createInstance($theming['plugin_id'], ['geofieldMapView' => $this]);
-            }
-            catch (PluginException $e) {
-              $theming['plugin'] = NULL;
-            }
-          }
 
           // Add Views fields to the Json output as additional_data property.
           $view_data = [];
@@ -596,12 +584,18 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
           $geojson_data = $this->getGeoJsonData($geofield_value, $description, $view_data);
 
           // Add Theming Icon based on the $theming plugin.
-          if (!empty($theming['plugin_id']) && $theming['plugin'] instanceof MapThemerInterface && isset($theming[$theming['plugin_id']]['values'])) {
-            /* @var \Drupal\geofield_map\MapThemerInterface $map_themer */
-            $map_themer = $theming['plugin'];
-            $map_theming = $theming[$map_themer->getPluginId()]['values'];
-            foreach ($geojson_data as $k => $datum) {
-              $geojson_data[$k]['properties']['icon'] = $map_themer->getIcon($datum, $this, $entity, $map_theming);
+          $theming = NULL;
+          if (isset($map_settings['map_marker_and_infowindow']['theming']) && $map_settings['map_marker_and_infowindow']['theming']['plugin_id'] != 'none') {
+            $theming = $map_settings['map_marker_and_infowindow']['theming'];
+            try {
+              /* @var \Drupal\geofield_map\MapThemerInterface $map_themer */
+              $map_themer = $this->mapThemerManager->createInstance($theming['plugin_id'], ['geofieldMapView' => $this]);
+              $map_theming = $theming[$map_themer->getPluginId()]['values'];
+              foreach ($geojson_data as $k => $datum) {
+                $geojson_data[$k]['properties']['icon'] = $map_themer->getIcon($datum, $this, $entity, $map_theming);
+              }
+            }
+            catch (PluginException $e) {
             }
           }
 
