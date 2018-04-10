@@ -132,7 +132,7 @@
           },
           // Error loading image.
           function(){
-            console.log("Geofield Gmap: The Icon Image doesn't exist at the requeted path: " + icon_image);
+            console.log("Geofield Gmap: The Icon Image doesn't exist at the requested path: " + icon_image);
           });
       }
 
