@@ -119,6 +119,7 @@ trait GeofieldMapFieldTrait {
         'fullscreen_control' => 1,
       ],
       'map_marker_and_infowindow' => [
+        'icon_image_mode' => 'icon_image_file',
         'icon_image_path' => '',
         'infowindow_field' => 'title',
         'multivalue_split' => 0,
@@ -465,6 +466,7 @@ trait GeofieldMapFieldTrait {
         '#title' => $this->t('Min Zoom Level'),
         '#default_value' => $settings['map_zoom_and_pan']['zoom']['min'],
         '#description' => $this->t('The Minimum Zoom level for the Map.'),
+        '#description' => $this->t('The Minimum Zoom level for the Map.'),
       ],
       'max' => [
         '#type' => 'number',
@@ -642,12 +644,13 @@ trait GeofieldMapFieldTrait {
     ];
     $elements['map_marker_and_infowindow']['icon_image_path'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Icon Image'),
+      '#title' => $this->t('Icon Image Path'),
       '#size' => '120',
       '#description' => $this->t('Input the Specific Icon Image path (absolute path, or relative to the Drupal site root prefixed with a trailing hash). If not set, or not found/loadable, the Default Google Marker will be used.'),
       '#default_value' => $settings['map_marker_and_infowindow']['icon_image_path'],
       '#placeholder' => 'modules/custom/geofield_map/images/beachflag.png',
       '#element_validate' => [[get_class($this), 'urlValidate']],
+      '#weight' => -10,
     ];
 
     $multivalue_fields_states = [];

@@ -116,7 +116,6 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
     $this->configuration = $configuration;
     $this->pluginId = $plugin_id;
     $this->pluginDefinition = $plugin_definition;
-    $this->config = $config_factory;
     $this->geofieldMapSettings = $config_factory->get('geofield_map.settings');
     $this->setStringTranslation($translation_manager);
     $this->renderer = $renderer;

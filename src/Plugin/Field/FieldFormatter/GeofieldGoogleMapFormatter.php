@@ -20,6 +20,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\geofield\GeoPHP\GeoPHPInterface;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Render\Markup;
 
 /**
  * Plugin implementation of the 'geofield_google_map' formatter.
@@ -208,7 +209,33 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     $default_settings = self::defaultSettings();
     $settings = $this->getSettings();
 
+    // Define a specific default_icon_image_mode that consider icon_image_path
+    // eventually set previously to its select introduction.
+    $default_icon_image_mode = !empty($settings['map_marker_and_infowindow']['icon_image_path']) ? 'icon_image_path' : $default_settings['map_marker_and_infowindow']['icon_image_mode'];
+
     $elements = $this->generateGMapSettingsForm($form, $form_state, $settings, $default_settings);
+
+    $elements['map_marker_and_infowindow']['icon_image_mode'] = [
+      '#title' => $this->t('Custom Icon definition mode'),
+      '#type' => 'select',
+      '#options' => [
+        'icon_image_file' => 'Icon Image File',
+        'icon_image_path' => 'Icon Image Path',
+      ],
+      '#default_value' => !empty($settings['map_marker_and_infowindow']['icon_image_mode']) ? $settings['map_marker_and_infowindow']['icon_image_mode'] : $default_icon_image_mode,
+      '#description' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => Markup::create('Choose method between:<br><b>Icon Image Path:</b> Point the image url (absolute or relative to Drupal root folder)<br><b>Icon Image File:</b> Upload an Icon image into Drupal application as Managed File</li>'),
+      ],
+      '#weight' => $elements['map_marker_and_infowindow']['icon_image_path']['#weight'] - 1,
+    ];
+
+    $elements['map_marker_and_infowindow']['icon_image_path']['#states'] = [
+      'visible' => [
+        'select[name="fields[field_geofield][settings_edit_form][settings][map_marker_and_infowindow][icon_image_mode]"]' => ['value' => 'icon_image_path'],
+      ],
+    ];
 
     return $elements + parent::settingsForm($form, $form_state);
   }
@@ -218,7 +245,13 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
    */
   public function settingsSummary() {
 
+    $default_settings = self::defaultSettings();
     $settings = $this->getSettings();
+
+    // Define a specific default_icon_image_mode that consider icon_image_path
+    // eventually set previously to its select introduction.
+    $default_icon_image_mode = !empty($settings['map_marker_and_infowindow']['icon_image_path']) ? 'icon_image_path' : $default_settings['map_marker_and_infowindow']['icon_image_mode'];
+
     $gmap_api_key = $this->getGmapApiKey();
 
     // Define the Google Maps API Key value message string.
@@ -375,26 +408,49 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       ];
     }
 
+    $icon_image_mode = !empty($settings['map_marker_and_infowindow']['icon_image_mode']) ? $settings['map_marker_and_infowindow']['icon_image_mode'] : $default_icon_image_mode;
     $map_marker_and_infowindow = [
       '#type' => 'html_tag',
       '#tag' => 'div',
       '#value' => '<u>' . $this->t('Map Marker and Infowindow:') . '</u>',
-      'icon_image_path' => [
+      'icon_image_mode' => [
         '#type' => 'html_tag',
         '#tag' => 'div',
-        '#value' => $this->t('Marker Icon: @state', ['@state' => !empty($settings['map_marker_and_infowindow']['icon_image_path']) ? $settings['map_marker_and_infowindow']['icon_image_path'] : $this->t('Default Google Marker')]),
+        '#value' => $this->t('Marker Custom Icon definition mode: @state', ['@state' => $icon_image_mode]),
+        '#weight' => 0,
       ],
       'infowindow_field' => [
         '#type' => 'html_tag',
         '#tag' => 'div',
         '#value' => $this->t('Marker Infowindow @state', ['@state' => !empty($settings['map_marker_and_infowindow']['infowindow_field']) ? 'from: ' . $settings['map_marker_and_infowindow']['infowindow_field'] : $this->t('disabled')]),
+        '#weight' => 2,
       ],
       'force_open' => [
         '#type' => 'html_tag',
         '#tag' => 'div',
         '#value' => $this->t('Open Infowindow on Load: @state', ['@state' => $settings['map_marker_and_infowindow']['force_open'] ? $this->t('Yes') : $this->t('No')]),
+        '#weight' => 3,
       ],
     ];
+
+    if ($icon_image_mode == 'icon_image_path') {
+      $map_marker_and_infowindow['icon_image_path'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Marker Icon: @state', ['@state' => !empty($settings['map_marker_and_infowindow']['icon_image_path']) ? $settings['map_marker_and_infowindow']['icon_image_path'] : $this->t('Default Google Marker')]),
+        '#weight' => 1,
+      ];
+    }
+
+    // @TODO: complete/implement the icon_image_file case
+    if ($icon_image_mode == 'icon_image_file') {
+      $map_marker_and_infowindow['icon_image_file'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Marker Icon: @state', ['@state' => !empty($settings['map_marker_and_infowindow']['icon_image_path']) ? $settings['map_marker_and_infowindow']['icon_image_path'] : $this->t('Default Google Marker')]),
+        '#weight' => 1,
+      ];
+    }
 
     if ($settings['map_marker_and_infowindow']['infowindow_field'] == '#rendered_entity') {
       $map_marker_and_infowindow['view_mode'] = [
