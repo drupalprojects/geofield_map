@@ -107,8 +107,13 @@
     place_feature: function(feature, icon_image, mapid) {
       var self = this;
 
+      // If the features are object of geofield map theming then remove custom url Icon Image
+      if (feature.geojsonProperties.theming) {
+        icon_image = null;
+      }
+
       // Override and set icon image with geojsonProperties.icon, if set as not null/empty.
-      if(feature.geojsonProperties.icon && feature.geojsonProperties.icon.length > 0) {
+      if (feature.geojsonProperties.icon && feature.geojsonProperties.icon.length > 0) {
         icon_image = feature.geojsonProperties.icon;
       }
 

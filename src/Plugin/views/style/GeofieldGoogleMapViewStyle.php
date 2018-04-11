@@ -20,7 +20,6 @@ use Drupal\geofield\GeoPHP\GeoPHPInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\geofield_map\MapThemerPluginManager;
-use Drupal\geofield_map\MapThemerInterface;
 use Drupal\Component\Plugin\Exception\PluginException;
 
 /**
@@ -136,13 +135,6 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
    * @var \Drupal\geofield_map\MapThemerInterface
    */
   protected $mapThemerPlugin;
-
-  /**
-   * The Geofield Map View Properties container.
-   *
-   * @var array
-   */
-  protected $geofieldMapViewProperties;
 
   /**
    * Constructs a GeofieldGoogleMapView style instance.
@@ -395,15 +387,15 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     $form = $form + $this->generateGmapSettingsForm($form, $form_state, $this->options, $default_settings);
 
     // Implement Map Theming based on available GeofieldMapThemers.
-    $map_themers_definitions = $this->mapThemerManager->getDefinitions();
-    $map_themers_options = array_merge(['none' => 'None'], $this->mapThemerManager->getMapThemersList());
-
     $form['map_marker_and_infowindow']['theming'] = [
       '#type' => 'fieldset',
       '#title' => 'Map Theming Options',
       '#weight' => -10,
       '#attributes' => ['id' => 'map-theming-container'],
     ];
+
+    $map_themers_definitions = $this->mapThemerManager->getDefinitions();
+    $map_themers_options = array_merge(['none' => 'None'], $this->mapThemerManager->getMapThemersList());
 
     $user_input = $form_state->getUserInput();
     $map_themer_id = isset($user_input['style_options']['map_marker_and_infowindow']['theming']['plugin_id']) ? $user_input['style_options']['map_marker_and_infowindow']['theming']['plugin_id'] : NULL;
@@ -474,21 +466,6 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
       ],
     ];
 
-  }
-
-  /**
-   * Ajax callback for the Map Themer Selection.
-   *
-   * @param array $form
-   *   The form array.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The form state.
-   *
-   * @return array
-   *   The Form.
-   */
-  public static function mapThemerSelectAjax(array $form, FormStateInterface $form_state) {
-    return $form['options']['style_options']['map_marker_and_infowindow']['theming'];
   }
 
   /**
@@ -593,6 +570,8 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
               $map_theming = $theming[$map_themer->getPluginId()]['values'];
               foreach ($geojson_data as $k => $datum) {
                 $geojson_data[$k]['properties']['icon'] = $map_themer->getIcon($datum, $this, $entity, $map_theming);
+                // Flag the data with theming, for later rendering logic.
+                $geojson_data[$k]['properties']['theming'] = TRUE;
               }
             }
             catch (PluginException $e) {
