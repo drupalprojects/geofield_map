@@ -40,10 +40,10 @@ class CustomIconThemer extends MapThemerBase {
       '#type' => 'container',
       'description' => [
         '#markup' => Markup::create($this->t('The chosen icon file will be used as Marker for all Geofield Map features @file_upload_help', [
-          '@file_upload_help' => $this->renderer->renderPlain($this->getFileUploadHelp()),
+          '@file_upload_help' => $this->renderer->renderPlain($this->iconFile->getFileUploadHelp()),
         ])),
       ],
-      'icon_file' => $this->getFileIconElement($fid[0]),
+      'icon_file' => $this->iconFile->getIconFileManagedElement($fid[0]),
     ];
 
     return $element;
@@ -56,7 +56,7 @@ class CustomIconThemer extends MapThemerBase {
   public function getIcon(array $datum, GeofieldGoogleMapViewStyle $geofieldMapView, EntityInterface $entity, $map_theming_values) {
     // The Custom Icon Themer plugin defines a unique icon value.
     if (!empty($map_theming_values['icon_file']['fids'])) {
-      return $this->getFileManagedUrl($map_theming_values['icon_file']['fids'][0]);
+      return $this->iconFile->getFileManagedUrl($map_theming_values['icon_file']['fids'][0]);
     }
     return NULL;
   }
@@ -91,7 +91,7 @@ class CustomIconThemer extends MapThemerBase {
       ],
       'marker' => [
         '#type' => 'container',
-        'icon_file' => !empty($fid) ? $this->getIconView($fid) : $this->getDefaultLegendIcon(),
+        'icon_file' => !empty($fid) ? $this->iconFile->getIconThumbnail($fid) : $this->getDefaultLegendIcon(),
         '#attributes' => [
           'class' => ['marker'],
         ],

@@ -2,10 +2,6 @@
 
 namespace Drupal\geofield_map;
 
-use Drupal\Core\Plugin\DefaultPluginManager;
-use Drupal\geofield_map\Annotation\MapThemer;
-use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -17,9 +13,9 @@ use Drupal\Core\Entity\EntityStorageException;
 use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
 
 /**
- * Provides a plugin manager for Geofield Map Themers.
+ * Provides an Icon Managed File Service.
  */
-class MapThemerPluginManager extends DefaultPluginManager {
+class IconFileService {
 
   use StringTranslationTrait;
 
@@ -45,52 +41,36 @@ class MapThemerPluginManager extends DefaultPluginManager {
   protected $entityManager;
 
   /**
-   * Constructor of the a Geofield Map Themers plugin manager.
+   * The list of file upload validators.
    *
-   * @param \Traversable $namespaces
-   *   An object that implements \Traversable which contains the root paths
-   *   keyed by the corresponding namespace to look for plugin implementations,.
-   * @param \Drupal\Core\Cache\CacheBackendInterface $cache_backend
-   *   The cache backend to use.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
-   *   The module handler.
+   * @var array
+   */
+  protected $fileUploadValidators;
+
+  /**
+   * The geofield map settings.
+   *
+   * @var array
+   */
+  protected $geofieldMapSettings;
+
+  /**
+   * Constructor of the Icon Managed File Service.
+   *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   A config factory for retrieving required config objects.
-   * @param \Drupal\Core\StringTranslation\TranslationInterface $translation_manager
-   *   The translation manager.
+   * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
+   *   The string translation service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_manager
    *   The entity manager.
    */
   public function __construct(
-    \Traversable $namespaces,
-    CacheBackendInterface $cache_backend,
-    ModuleHandlerInterface $module_handler,
     ConfigFactoryInterface $config_factory,
-    TranslationInterface $translation_manager,
+    TranslationInterface $string_translation,
     EntityTypeManagerInterface $entity_manager
   ) {
-    parent::__construct('Plugin/GeofieldMapThemer', $namespaces, $module_handler, MapThemerInterface::class, MapThemer::class);
-
-    $this->alterInfo('geofield_map_themer_info');
-    $this->setCacheBackend($cache_backend, 'geofield_map_themer_plugins');
     $this->entityManager = $entity_manager;
     $this->geofieldMapSettings = $config_factory->get('geofield_map.settings');
-  }
-
-  /**
-   * Generate an Options array for all the MapThemers plugins.
-   *
-   * @return mixed[]
-   *   An array of MapThemers plugins Options. Keys are plugin IDs.
-   */
-  public function getMapThemersList() {
-    $options = [];
-    foreach ($this->getDefinitions() as $k => $map_themer) {
-      /* @var \Drupal\Core\StringTranslation\TranslatableMarkup $map_themer_name */
-      $map_themer_name = $map_themer['name'];
-      $options[$k] = $map_themer_name->render();
-    }
-    return $options;
   }
 
   /**
@@ -101,7 +81,7 @@ class MapThemerPluginManager extends DefaultPluginManager {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the form.
    */
-  public static function validateIconImageStatuses(array $element, FormStateInterface $form_state) {
+  public static function validateIconImageStatus(array $element, FormStateInterface $form_state) {
     $clicked_button = end($form_state->getTriggeringElement()['#parents']);
     if (!empty($element['#value']['fids'][0])) {
       $file = File::load($element['#value']['fids'][0]);
@@ -135,7 +115,7 @@ class MapThemerPluginManager extends DefaultPluginManager {
   }
 
   /**
-   * Generate File Icon preview.
+   * Generate Icon File Managed Element.
    *
    * @param int $fid
    *   The file to save.
@@ -143,7 +123,7 @@ class MapThemerPluginManager extends DefaultPluginManager {
    * @return array
    *   The icon preview element.
    */
-  protected function getFileIconElement($fid) {
+  public function getIconFileManagedElement($fid) {
 
     $upload_location = $this->geofieldMapSettings->get('theming.markers_location.security') . $this->geofieldMapSettings->get('theming.markers_location.rel_path');
 
@@ -164,7 +144,7 @@ class MapThemerPluginManager extends DefaultPluginManager {
     ];
 
     if (!empty($fid)) {
-      $element['preview'] = $this->getIconView($fid);
+      $element['preview'] = $this->getIconThumbnail($fid);
     }
 
     return $element;
@@ -176,7 +156,7 @@ class MapThemerPluginManager extends DefaultPluginManager {
    * @return array
    *   The field upload help element.
    */
-  protected function getFileUploadHelp() {
+  public function getFileUploadHelp() {
     return [
       '#type' => 'container',
       '#tag' => 'div',
@@ -192,23 +172,34 @@ class MapThemerPluginManager extends DefaultPluginManager {
   }
 
   /**
-   * Generate File Icon preview.
+   * Generate Icon Thumbnail.
    *
-   * @param \Drupal\file\Entity\file $file
-   *   The file to save.
+   * @param int $fid
+   *   The file identifier.
    *
    * @return array
-   *   The icon preview element.
+   *   The icon view render array..
    */
-  protected function getFileIconView(file $file) {
-    return [
-      '#weight' => -10,
-      '#theme' => 'image_style',
-      '#width' => '40px',
-      '#height' => '40px',
-      '#style_name' => 'thumbnail',
-      '#uri' => $file->getFileUri(),
-    ];
+  public function getIconThumbnail($fid) {
+    $icon_view_element = [];
+    try {
+      /* @var \Drupal\file\Entity\file $file */
+      $file = $this->entityManager->getStorage('file')->load($fid);
+      if ($file instanceof FileInterface) {
+        $icon_view_element = [
+          '#weight' => -10,
+          '#theme' => 'image_style',
+          '#width' => '40px',
+          '#height' => '40px',
+          '#style_name' => 'thumbnail',
+          '#uri' => $file->getFileUri(),
+        ];;
+      }
+    }
+    catch (InvalidPluginDefinitionException $e) {
+    }
+
+    return $icon_view_element;
   }
 
   /**
@@ -220,37 +211,13 @@ class MapThemerPluginManager extends DefaultPluginManager {
    * @return string
    *   The icon preview element.
    */
-  protected function getFileManagedUrl($fid = NULL) {
+  public function getFileManagedUrl($fid = NULL) {
     if (isset($fid) && $file = File::load($fid)) {
       $uri = $file->getFileUri();
       $url = file_create_url($uri);
       return $url;
     }
     return NULL;
-  }
-
-  /**
-   * Generate Icon View Element.
-   *
-   * @param int $fid
-   *   The file identifier.
-   *
-   * @return array
-   *   The icon view render array..
-   */
-  protected function getIconView($fid) {
-    $icon_view_element = [];
-    try {
-      /* @var \Drupal\file\Entity\file $file */
-      $file = $this->entityManager->getStorage('file')->load($fid);
-      if ($file instanceof FileInterface) {
-        $icon_view_element = $this->getFileIconView($file);
-      }
-    }
-    catch (InvalidPluginDefinitionException $e) {
-    }
-
-    return $icon_view_element;
   }
 
 }

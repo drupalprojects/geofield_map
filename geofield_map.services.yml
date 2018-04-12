@@ -7,3 +7,8 @@ services:
   plugin.manager.geofield_map.themer:
     class: Drupal\geofield_map\MapThemerPluginManager
     parent: default_plugin_manager
+    arguments: ['@config.factory', '@string_translation', '@entity_type.manager']
+
+  geofield_map.icon_file:
+      class: Drupal\geofield_map\IconFileService
+      arguments: ['@config.factory', '@string_translation', '@entity_type.manager']
