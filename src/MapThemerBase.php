@@ -48,9 +48,9 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
   /**
    * The Icon Managed File Service.
    *
-   * @var \Drupal\geofield_map\IconFileService
+   * @var \Drupal\geofield_map\MarkerIconService
    */
-  protected $iconFile;
+  protected $markerIcon;
 
   /**
    * Returns the default Icon output for the Legend.
@@ -85,8 +85,8 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
    *   The renderer.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_manager
    *   The entity manager.
-   * @param \Drupal\geofield_map\IconFileService $icon_file_service
-   *   The Icon File Service.
+   * @param \Drupal\geofield_map\MarkerIconService $marker_icon_service
+   *   The Marker Icon Service.
    */
   public function __construct(
     array $configuration,
@@ -95,7 +95,7 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
     TranslationInterface $translation_manager,
     RendererInterface $renderer,
     EntityTypeManagerInterface $entity_manager,
-    IconFileService $icon_file_service
+    MarkerIconService $marker_icon_service
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
@@ -105,7 +105,7 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
     $this->setStringTranslation($translation_manager);
     $this->renderer = $renderer;
     $this->entityManager = $entity_manager;
-    $this->iconFile = $icon_file_service;
+    $this->markerIcon = $marker_icon_service;
   }
 
   /**
@@ -119,7 +119,7 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
       $container->get('string_translation'),
       $container->get('renderer'),
       $container->get('entity_type.manager'),
-      $container->get('geofield_map.icon_file')
+      $container->get('geofield_map.marker_icon')
     );
   }
 

@@ -16,7 +16,7 @@ use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
 /**
  * Provides an Icon Managed File Service.
  */
-class IconFileService {
+class MarkerIconService {
 
   use StringTranslationTrait;
 

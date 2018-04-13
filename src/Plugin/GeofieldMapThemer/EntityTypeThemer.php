@@ -11,7 +11,7 @@ use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\geofield_map\IconFileService;
+use Drupal\geofield_map\MarkerIconService;
 use Drupal\Core\Entity\EntityInterface;
 
 /**
@@ -55,8 +55,8 @@ class EntityTypeThemer extends MapThemerBase {
    *   The renderer.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_manager
    *   The entity manager.
-   * @param \Drupal\geofield_map\IconFileService $icon_file_service
-   *   The Icon File Service.
+   * @param \Drupal\geofield_map\MarkerIconService $marker_icon_service
+   *   The Marker Icon Service.
    * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
    *   The entity type bundle info.
    */
@@ -67,10 +67,10 @@ class EntityTypeThemer extends MapThemerBase {
     TranslationInterface $translation_manager,
     RendererInterface $renderer,
     EntityTypeManagerInterface $entity_manager,
-    IconFileService $icon_file_service,
+    MarkerIconService $marker_icon_service,
     EntityTypeBundleInfoInterface $entity_type_bundle_info
   ) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $translation_manager, $renderer, $entity_manager, $icon_file_service);
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $translation_manager, $renderer, $entity_manager, $marker_icon_service);
     $this->entityTypeBundleInfo = $entity_type_bundle_info;
   }
 
@@ -85,7 +85,7 @@ class EntityTypeThemer extends MapThemerBase {
       $container->get('string_translation'),
       $container->get('renderer'),
       $container->get('entity_type.manager'),
-      $container->get('geofield_map.icon_file'),
+      $container->get('geofield_map.marker_icon'),
       $container->get('entity_type.bundle.info')
     );
   }
@@ -134,7 +134,7 @@ class EntityTypeThemer extends MapThemerBase {
         $this->t('@entity type Type/Bundle', ['@entity type' => $entity_type]),
         $this->t('Weight'),
         Markup::create($this->t('Marker Icon @file_upload_help', [
-          '@file_upload_help' => $this->renderer->renderPlain($this->iconFile->getFileUploadHelp()),
+          '@file_upload_help' => $this->renderer->renderPlain($this->markerIcon->getFileUploadHelp()),
         ])),
       ],
       '#tabledrag' => [[
@@ -165,7 +165,7 @@ class EntityTypeThemer extends MapThemerBase {
           '#delta' => 20,
           '#attributes' => ['class' => ['bundles-order-weight']],
         ],
-        'icon_file' => $this->iconFile->getIconFileManagedElement($fid),
+        'icon_file' => $this->markerIcon->getIconFileManagedElement($fid),
         '#attributes' => ['class' => ['draggable']],
       ];
 
@@ -183,7 +183,7 @@ class EntityTypeThemer extends MapThemerBase {
     if (method_exists($entity, 'bundle')) {
       $fid = $map_theming_values[$entity->bundle()]['icon_file']['fids'];
     }
-    return $this->iconFile->getFileManagedUrl($fid);
+    return $this->markerIcon->getFileManagedUrl($fid);
   }
 
   /**
@@ -216,7 +216,7 @@ class EntityTypeThemer extends MapThemerBase {
         ],
         'marker' => [
           '#type' => 'container',
-          'icon_file' => !empty($fid) ? $this->iconFile->getIconThumbnail($fid) : $this->getDefaultLegendIcon(),
+          'icon_file' => !empty($fid) ? $this->markerIcon->getIconThumbnail($fid) : $this->getDefaultLegendIcon(),
           '#attributes' => [
             'class' => ['marker'],
           ],

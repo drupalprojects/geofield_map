@@ -7,6 +7,6 @@ services:
     class: Drupal\geofield_map\MapThemerPluginManager
     arguments: ['@container.namespaces', '@cache.discovery', '@module_handler', '@config.factory', '@string_translation', '@entity_type.manager']
 
-  geofield_map.icon_file:
-      class: Drupal\geofield_map\IconFileService
+  geofield_map.marker_icon:
+      class: Drupal\geofield_map\MarkerIconService
       arguments: ['@config.factory', '@string_translation', '@entity_type.manager']

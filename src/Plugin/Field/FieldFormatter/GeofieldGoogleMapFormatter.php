@@ -21,7 +21,7 @@ use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\geofield\GeoPHP\GeoPHPInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Render\Markup;
-use Drupal\geofield_map\IconFileService;
+use Drupal\geofield_map\MarkerIconService;
 
 /**
  * Plugin implementation of the 'geofield_google_map' formatter.
@@ -103,9 +103,9 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
   /**
    * The Icon Managed File Service.
    *
-   * @var \Drupal\geofield_map\IconFileService
+   * @var \Drupal\geofield_map\MarkerIconService
    */
-  protected $iconFile;
+  protected $markerIcon;
 
   /**
    * GeofieldGoogleMapFormatter constructor.
@@ -140,8 +140,8 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
    *   The The geoPhpWrapper.
    * @param \Drupal\Core\Render\RendererInterface $renderer
    *   The Renderer service.
-   * @param \Drupal\geofield_map\IconFileService $icon_file_service
-   *   The Icon File Service.
+   * @param \Drupal\geofield_map\MarkerIconService $marker_icon_service
+   *   The Marker Icon Service.
    */
   public function __construct(
     $plugin_id,
@@ -159,7 +159,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     EntityFieldManagerInterface $entity_field_manager,
     GeoPHPInterface $geophp_wrapper,
     RendererInterface $renderer,
-    IconFileService $icon_file_service
+    MarkerIconService $marker_icon_service
   ) {
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $label, $view_mode, $third_party_settings);
     $this->config = $config_factory;
@@ -169,7 +169,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     $this->entityFieldManager = $entity_field_manager;
     $this->geoPhpWrapper = $geophp_wrapper;
     $this->renderer = $renderer;
-    $this->iconFile = $icon_file_service;
+    $this->markerIcon = $marker_icon_service;
   }
 
   /**
@@ -192,7 +192,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       $container->get('entity_field.manager'),
       $container->get('geofield.geophp'),
       $container->get('renderer'),
-      $container->get('geofield_map.icon_file')
+      $container->get('geofield_map.marker_icon')
     );
   }
 
@@ -258,10 +258,10 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       ],
       'description' => [
         '#markup' => Markup::create($this->t('The chosen icon file will be used as Marker for this content @file_upload_help', [
-          '@file_upload_help' => $this->renderer->renderPlain($this->iconFile->getFileUploadHelp()),
+          '@file_upload_help' => $this->renderer->renderPlain($this->markerIcon->getFileUploadHelp()),
         ])),
       ],
-      'icon_file' => $this->iconFile->getIconFileManagedElement($fid),
+      'icon_file' => $this->markerIcon->getIconFileManagedElement($fid),
       '#states' => [
         'visible' => [
           'select[name="fields[field_geofield][settings_edit_form][settings][map_marker_and_infowindow][icon_image_mode]"]' => ['value' => 'icon_file'],
@@ -645,7 +645,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     ) {
       $fid = (integer) !empty($map_settings['map_marker_and_infowindow']['icon_file_wrapper']['icon_file']['fids']) ? $map_settings['map_marker_and_infowindow']['icon_file_wrapper']['icon_file']['fids'] : NULL;
       foreach ($geojson_data as $k => $datum) {
-        $geojson_data[$k]['properties']['icon'] = $this->iconFile->getFileManagedUrl($fid);
+        $geojson_data[$k]['properties']['icon'] = $this->markerIcon->getFileManagedUrl($fid);
         // Flag the data with theming, for later rendering logic.
         $geojson_data[$k]['properties']['theming'] = TRUE;
       }
