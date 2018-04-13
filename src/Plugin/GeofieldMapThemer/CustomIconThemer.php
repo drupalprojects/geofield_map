@@ -33,7 +33,7 @@ class CustomIconThemer extends MapThemerBase {
   public function buildMapThemerElement(array $defaults, array &$form, FormStateInterface $form_state, GeofieldGoogleMapViewStyle $geofieldMapView) {
 
     // Get the existing (Default) Element settings.
-    $default_element = $this->getDefaultThemerElement($defaults, $form_state);
+    $default_element = $this->getDefaultThemerElement($defaults);
 
     $fid = (integer) !empty($default_element['icon_file']['fids']) ? $default_element['icon_file']['fids'] : NULL;
     $element = [

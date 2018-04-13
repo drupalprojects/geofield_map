@@ -2,6 +2,7 @@
 
 namespace Drupal\geofield_map;
 
+use Drupal\Component\Utility\Bytes;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -69,8 +70,14 @@ class IconFileService {
     TranslationInterface $string_translation,
     EntityTypeManagerInterface $entity_manager
   ) {
+    $this->stringTranslation = $string_translation;
     $this->entityManager = $entity_manager;
     $this->geofieldMapSettings = $config_factory->get('geofield_map.settings');
+    $this->fileUploadValidators = [
+      'file_validate_extensions' => [$this->geofieldMapSettings->get('theming.markers_extensions')],
+      'file_validate_is_image' => [],
+      'file_validate_size' => [Bytes::toInt($this->geofieldMapSettings->get('theming.markers_filesize'))],
+    ];
   }
 
   /**
@@ -139,7 +146,7 @@ class IconFileService {
       '#progress_message' => $this->t('Please wait...'),
       '#progress_indicator' => 'throbber',
       '#element_validate' => [
-        [get_class($this), 'validateIconImageStatuses'],
+        [get_class($this), 'validateIconImageStatus'],
       ],
     ];
 

@@ -2,15 +2,12 @@
 
 namespace Drupal\geofield_map;
 
-use Drupal\Component\Utility\Bytes;
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\RendererInterface;
 
 /**
@@ -56,20 +53,6 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
   protected $iconFile;
 
   /**
-   * The list of file upload validators.
-   *
-   * @var array
-   */
-  protected $fileUploadValidators;
-
-  /**
-   * The geofield map settings.
-   *
-   * @var array
-   */
-  protected $geofieldMapSettings;
-
-  /**
    * Returns the default Icon output for the Legend.
    *
    * @return array
@@ -96,8 +79,6 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
    *   The plugin_id for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   A config factory for retrieving required config objects.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $translation_manager
    *   The translation manager.
    * @param \Drupal\Core\Render\RendererInterface $renderer
@@ -111,7 +92,6 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
     array $configuration,
     $plugin_id,
     $plugin_definition,
-    ConfigFactoryInterface $config_factory,
     TranslationInterface $translation_manager,
     RendererInterface $renderer,
     EntityTypeManagerInterface $entity_manager,
@@ -122,16 +102,10 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
     $this->configuration = $configuration;
     $this->pluginId = $plugin_id;
     $this->pluginDefinition = $plugin_definition;
-    $this->geofieldMapSettings = $config_factory->get('geofield_map.settings');
     $this->setStringTranslation($translation_manager);
     $this->renderer = $renderer;
     $this->entityManager = $entity_manager;
     $this->iconFile = $icon_file_service;
-    $this->fileUploadValidators = [
-      'file_validate_extensions' => [$this->geofieldMapSettings->get('theming.markers_extensions')],
-      'file_validate_is_image' => [],
-      'file_validate_size' => [Bytes::toInt($this->geofieldMapSettings->get('theming.markers_filesize'))],
-    ];
   }
 
   /**
@@ -142,7 +116,6 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('config.factory'),
       $container->get('string_translation'),
       $container->get('renderer'),
       $container->get('entity_type.manager'),
@@ -178,7 +151,7 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
   /**
    * {@inheritdoc}
    */
-  public function getDefaultThemerElement(array $defaults, FormStateInterface $form_state) {
+  public function getDefaultThemerElement(array $defaults) {
     $default_value = !empty($defaults['map_marker_and_infowindow']['theming'][$this->pluginId]['values']) ? $defaults['map_marker_and_infowindow']['theming'][$this->pluginId]['values'] : $this->defaultSettings('values');
     return $default_value;
   }
