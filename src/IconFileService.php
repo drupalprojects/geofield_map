@@ -92,7 +92,7 @@ class IconFileService {
     $clicked_button = end($form_state->getTriggeringElement()['#parents']);
     if (!empty($element['#value']['fids'][0])) {
       $file = File::load($element['#value']['fids'][0]);
-      if ($clicked_button == 'submit') {
+      if (in_array($clicked_button, ['save_settings', 'submit'])) {
         $file->setPermanent();
         self::fileSave($file);
       }

@@ -119,8 +119,11 @@ trait GeofieldMapFieldTrait {
         'fullscreen_control' => 1,
       ],
       'map_marker_and_infowindow' => [
-        'icon_image_mode' => 'icon_image_file',
+        'icon_image_mode' => 'icon_file',
         'icon_image_path' => '',
+        'icon_file_wrapper' => [
+          'icon_file' => '',
+        ],
         'infowindow_field' => 'title',
         'multivalue_split' => 0,
         'force_open' => 0,
@@ -244,8 +247,6 @@ trait GeofieldMapFieldTrait {
    *   The Geofield Data Values.
    * @param string $description
    *   The description value.
-   * @param array $theming
-   *   The theming array definition.
    * @param array $additional_data
    *   Additional data to be added to the feature properties, i.e.
    *   GeofieldGoogleMapViewStyle will add row fields (already rendered).
