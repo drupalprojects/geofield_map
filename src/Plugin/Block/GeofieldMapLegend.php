@@ -8,6 +8,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\geofield_map\MapThemerPluginManager;
+use Drupal\geofield_map\MarkerIconService;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\views\Views;
@@ -70,6 +71,13 @@ class GeofieldMapLegend extends BlockBase implements ContainerFactoryPluginInter
   protected $mapThemerPlugin;
 
   /**
+   * The Icon Managed File Service.
+   *
+   * @var \Drupal\geofield_map\MarkerIconService
+   */
+  protected $markerIcon;
+
+  /**
    * Creates a LocalActionsBlock instance.
    *
    * @param array $configuration
@@ -88,6 +96,8 @@ class GeofieldMapLegend extends BlockBase implements ContainerFactoryPluginInter
    *   The Renderer service.
    * @param \Drupal\geofield_map\MapThemerPluginManager $map_themer_manager
    *   The mapThemerManager service.
+   * @param \Drupal\geofield_map\MarkerIconService $marker_icon_service
+   *   The Marker Icon Service.
    */
   public function __construct(
     array $configuration,
@@ -97,7 +107,8 @@ class GeofieldMapLegend extends BlockBase implements ContainerFactoryPluginInter
     AccountInterface $current_user,
     LinkGeneratorInterface $link_generator,
     RendererInterface $renderer,
-    MapThemerPluginManager $map_themer_manager
+    MapThemerPluginManager $map_themer_manager,
+    MarkerIconService $marker_icon_service
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->config = $config_factory;
@@ -105,6 +116,7 @@ class GeofieldMapLegend extends BlockBase implements ContainerFactoryPluginInter
     $this->link = $link_generator;
     $this->renderer = $renderer;
     $this->mapThemerManager = $map_themer_manager;
+    $this->markerIcon = $marker_icon_service;
   }
 
   /**
@@ -119,7 +131,8 @@ class GeofieldMapLegend extends BlockBase implements ContainerFactoryPluginInter
       $container->get('current_user'),
       $container->get('link_generator'),
       $container->get('renderer'),
-      $container->get('plugin.manager.geofield_map.themer')
+      $container->get('plugin.manager.geofield_map.themer'),
+      $container->get('geofield_map.marker_icon')
     );
   }
 
@@ -165,6 +178,19 @@ class GeofieldMapLegend extends BlockBase implements ContainerFactoryPluginInter
         '#description' => $this->t('Set the Label text to be shown for the Markers/Icon column. Leave empty for nothing.'),
         '#default_value' => isset($this->configuration['markers_label']) ? $this->configuration['markers_label'] : '',
         '#size' => 26,
+      ];
+
+      $markers_image_style_options = array_merge([
+        '_default_legend_icon_style_' => $this->markerIcon->getDefaultIconElement()['#title'],
+        '_map_theming_image_style_' => '<- Reflect the Map Theming Icon Image Styles ->',
+      ], $this->markerIcon->getImageStyleOptions());
+
+      $form['markers_image_style'] = [
+        '#type' => 'select',
+        '#title' => t('Markers Image style'),
+        '#options' => $markers_image_style_options,
+        '#default_value' => isset($this->configuration['markers_image_style']) ? $this->configuration['markers_image_style'] : 'geofield_map_default_legend_icon',
+        '#description' => $this->t('Choose the image style the markers icons will be rendered in the Legend with.'),
       ];
 
       $form['legend_caption'] = array(
@@ -261,6 +287,7 @@ class GeofieldMapLegend extends BlockBase implements ContainerFactoryPluginInter
     $this->configuration['legend_caption'] = $form_state->getValue('legend_caption');
     $this->configuration['values_label'] = $form_state->getValue('values_label');
     $this->configuration['markers_label'] = $form_state->getValue('markers_label');
+    $this->configuration['markers_image_style'] = $form_state->getValue('markers_image_style');
   }
 
   /**

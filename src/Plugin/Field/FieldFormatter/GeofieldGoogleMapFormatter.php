@@ -262,6 +262,12 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
         ])),
       ],
       'icon_file' => $this->markerIcon->getIconFileManagedElement($fid),
+      'image_style' => [
+        '#type' => 'select',
+        '#title' => t('Image style'),
+        '#options' => $this->markerIcon->getImageStyleOptions(),
+        '#default_value' => isset($settings['map_marker_and_infowindow']['icon_file_wrapper']['image_style']) ? $settings['map_marker_and_infowindow']['icon_file_wrapper']['image_style'] : 'none',
+      ],
       '#states' => [
         'visible' => [
           'select[name="fields[field_geofield][settings_edit_form][settings][map_marker_and_infowindow][icon_image_mode]"]' => ['value' => 'icon_file'],
@@ -643,9 +649,10 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     if (isset($map_settings['map_marker_and_infowindow']['icon_image_mode'])
       && $map_settings['map_marker_and_infowindow']['icon_image_mode'] == 'icon_file'
     ) {
+      $image_style = isset($map_settings['map_marker_and_infowindow']['icon_file_wrapper']['image_style']) ? $map_settings['map_marker_and_infowindow']['icon_file_wrapper']['image_style'] : 'none';
       $fid = (integer) !empty($map_settings['map_marker_and_infowindow']['icon_file_wrapper']['icon_file']['fids']) ? $map_settings['map_marker_and_infowindow']['icon_file_wrapper']['icon_file']['fids'] : NULL;
       foreach ($geojson_data as $k => $datum) {
-        $geojson_data[$k]['properties']['icon'] = $this->markerIcon->getFileManagedUrl($fid);
+        $geojson_data[$k]['properties']['icon'] = $this->markerIcon->getFileManagedUrl($fid, $image_style);
         // Flag the data with theming, for later rendering logic.
         $geojson_data[$k]['properties']['theming'] = TRUE;
       }

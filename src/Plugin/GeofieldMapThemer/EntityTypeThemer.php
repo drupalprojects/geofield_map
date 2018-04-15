@@ -136,6 +136,7 @@ class EntityTypeThemer extends MapThemerBase {
         Markup::create($this->t('Marker Icon @file_upload_help', [
           '@file_upload_help' => $this->renderer->renderPlain($this->markerIcon->getFileUploadHelp()),
         ])),
+        $this->t('Icon Image Style'),
       ],
       '#tabledrag' => [[
         'action' => 'order',
@@ -166,6 +167,13 @@ class EntityTypeThemer extends MapThemerBase {
           '#attributes' => ['class' => ['bundles-order-weight']],
         ],
         'icon_file' => $this->markerIcon->getIconFileManagedElement($fid),
+        'image_style' => [
+          '#type' => 'select',
+          '#title' => t('Image style'),
+          '#title_display' => 'invisible',
+          '#options' => $this->markerIcon->getImageStyleOptions(),
+          '#default_value' => isset($default_element[$bundle]['image_style']) ? $default_element[$bundle]['image_style'] : 'none',
+        ],
         '#attributes' => ['class' => ['draggable']],
       ];
 
@@ -180,10 +188,11 @@ class EntityTypeThemer extends MapThemerBase {
    */
   public function getIcon(array $datum, GeofieldGoogleMapViewStyle $geofieldMapView, EntityInterface $entity, $map_theming_values) {
     $fid = NULL;
+    $image_style = isset($map_theming_values[$entity->bundle()]['image_style']) ? $map_theming_values[$entity->bundle()]['image_style'] : 'none';
     if (method_exists($entity, 'bundle')) {
-      $fid = $map_theming_values[$entity->bundle()]['icon_file']['fids'];
+      $fid = isset($map_theming_values[$entity->bundle()]['icon_file']) ? $map_theming_values[$entity->bundle()]['icon_file']['fids'] : NULL;
     }
-    return $this->markerIcon->getFileManagedUrl($fid);
+    return $this->markerIcon->getFileManagedUrl($fid, $image_style);
   }
 
   /**
@@ -203,7 +212,14 @@ class EntityTypeThemer extends MapThemerBase {
     ];
 
     foreach ($map_theming_values as $bundle => $value) {
-      $fid = (integer) $value['icon_file']['fids'] ? $value['icon_file']['fids'] : NULL;
+
+      // Get the icon image style, as result of the Legend configuration.
+      $image_style = isset($configuration['markers_image_style']) ? $configuration['markers_image_style'] : 'none';
+      // Get the map_theming_image_style, is so set.
+      if (isset($configuration['markers_image_style']) && $configuration['markers_image_style'] == '_map_theming_image_style_') {
+        $image_style = isset($map_theming_values[$bundle]['image_style']) ? $map_theming_values[$bundle]['image_style'] : 'none';
+      }
+      $fid = (integer) !empty($value['icon_file']['fids']) ? $value['icon_file']['fids'] : NULL;
       $legend[$bundle] = [
         'value' => [
           '#type' => 'container',
@@ -216,13 +232,12 @@ class EntityTypeThemer extends MapThemerBase {
         ],
         'marker' => [
           '#type' => 'container',
-          'icon_file' => !empty($fid) ? $this->markerIcon->getIconThumbnail($fid) : $this->getDefaultLegendIcon(),
+          'icon_file' => !empty($fid) ? $this->markerIcon->getLegendIcon($fid, $image_style) : $this->getDefaultLegendIcon(),
           '#attributes' => [
             'class' => ['marker'],
           ],
         ],
       ];
-
     }
 
     return $legend;

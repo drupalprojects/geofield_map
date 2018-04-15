@@ -41,10 +41,16 @@ class CustomIconThemer extends MapThemerBase {
       '#type' => 'container',
       'description' => [
         '#markup' => Markup::create($this->t('The chosen icon file will be used as Marker for all Geofield Map features @file_upload_help', [
-          '@file_upload_help' => $this->renderer->renderPlain($this->iconFile->getFileUploadHelp()),
+          '@file_upload_help' => $this->renderer->renderPlain($this->markerIcon->getFileUploadHelp()),
         ])),
       ],
-      'icon_file' => $this->iconFile->getIconFileManagedElement($fid[0]),
+      'icon_file' => $this->markerIcon->getIconFileManagedElement($fid[0]),
+      'image_style' => [
+        '#type' => 'select',
+        '#title' => t('Image style'),
+        '#options' => $this->markerIcon->getImageStyleOptions(),
+        '#default_value' => isset($default_element['image_style']) ? $default_element['image_style'] : 'none',
+      ],
     ];
 
     return $element;
@@ -57,7 +63,8 @@ class CustomIconThemer extends MapThemerBase {
   public function getIcon(array $datum, GeofieldGoogleMapViewStyle $geofieldMapView, EntityInterface $entity, $map_theming_values) {
     // The Custom Icon Themer plugin defines a unique icon value.
     if (!empty($map_theming_values['icon_file']['fids'])) {
-      return $this->iconFile->getFileManagedUrl($map_theming_values['icon_file']['fids'][0]);
+      $image_style = isset($map_theming_values['image_style']) ? $map_theming_values['image_style'] : 'none';
+      return $this->markerIcon->getFileManagedUrl($map_theming_values['icon_file']['fids'][0], $image_style);
     }
     return NULL;
   }
@@ -66,6 +73,13 @@ class CustomIconThemer extends MapThemerBase {
    * {@inheritdoc}
    */
   public function getLegend(array $map_theming_values, array $configuration = []) {
+
+    // Get the icon image style, as result of the Legend configuration.
+    $image_style = isset($configuration['markers_image_style']) ? $configuration['markers_image_style'] : 'none';
+    // Get the map_theming_image_style, is so set.
+    if (isset($configuration['markers_image_style']) && $configuration['markers_image_style'] == '_map_theming_image_style_') {
+      $image_style = isset($map_theming_values['image_style']) ? $map_theming_values['image_style'] : 'none';
+    }
 
     $legend = [
       '#type' => 'table',
@@ -92,7 +106,7 @@ class CustomIconThemer extends MapThemerBase {
       ],
       'marker' => [
         '#type' => 'container',
-        'icon_file' => !empty($fid) ? $this->iconFile->getIconThumbnail($fid) : $this->getDefaultLegendIcon(),
+        'icon_file' => !empty($fid) ? $this->markerIcon->getLegendIcon($fid, $image_style) : $this->getDefaultLegendIcon(),
         '#attributes' => [
           'class' => ['marker'],
         ],
