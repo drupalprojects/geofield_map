@@ -11,8 +11,11 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\file\FileInterface;
 use Drupal\file\Entity\File;
+use Symfony\Component\Yaml\Yaml;
+use Drupal\Core\Config\Config;
 use Drupal\image\Entity\ImageStyle;
 use Drupal\Core\Entity\EntityStorageException;
+use Symfony\Component\Yaml\Exception\ParseException;
 
 /**
  * Provides an Icon Managed File Service.
@@ -88,6 +91,7 @@ class MarkerIconService {
     EntityTypeManagerInterface $entity_manager,
     ModuleHandlerInterface $module_handler
   ) {
+    $this->config = $config_factory;
     $this->stringTranslation = $string_translation;
     $this->entityManager = $entity_manager;
     $this->moduleHandler = $module_handler;
@@ -98,12 +102,24 @@ class MarkerIconService {
       'file_validate_size' => !empty($this->geofieldMapSettings->get('theming.markers_filesize')) ? [Bytes::toInt($this->geofieldMapSettings->get('theming.markers_filesize'))] : [Bytes::toInt('250 KB')],
     ];
     $this->defaultIconElement = [
-      '#title' => $this->t('<- Default Legend Icon (30x30 px) ->'),
+      '#title' => $this->t('<- Default Legend Icon (34x34 px) ->'),
       '#theme' => 'image',
-      '#width' => '30px',
-      '#height' => '30px',
+      '#width' => '34px',
+      '#height' => '34px',
       '#uri' => '',
     ];
+  }
+
+  /**
+   * Set Geofield Map Default Icon Style.
+   */
+  protected function setDefaultIconStyle() {
+    $image_style_path = drupal_get_path('module', 'geofield_map') . '/config/optional/image.style.geofield_map_default_icon_style.yml';
+    $image_style_data = Yaml::parse(file_get_contents($image_style_path));
+    $geofield_map_default_icon_style = $this->config->getEditable('image.style.geofield_map_default_icon_style');
+    if ($geofield_map_default_icon_style instanceof Config) {
+      $geofield_map_default_icon_style->setData($image_style_data)->save(TRUE);
+    }
   }
 
   /**
@@ -187,7 +203,7 @@ class MarkerIconService {
     ];
 
     if (!empty($fid)) {
-      $element['preview'] = $this->getLegendIcon($fid, 'geofield_map_default_legend_icon');
+      $element['preview'] = $this->getLegendIcon($fid, 'geofield_map_default_icon_style');
     }
 
     return $element;
@@ -205,6 +221,17 @@ class MarkerIconService {
     ];
 
     if ($this->moduleHandler->moduleExists('image')) {
+
+      // Always force the definition of the geofield_map_default_icon_style,
+      // if not present.
+      if (!ImageStyle::load('geofield_map_default_icon_style')) {
+        try {
+          $this->setDefaultIconStyle();
+        }
+        catch (ParseException $e) {
+        }
+      }
+
       /* @var \Drupal\image\ImageStyleInterface $style */
       foreach ($image_styles = ImageStyle::loadMultiple() as $k => $style) {
         $options[$k] = $style->getName();
@@ -253,10 +280,6 @@ class MarkerIconService {
     if ($file instanceof FileInterface) {
       $this->defaultIconElement['#uri'] = $file->getFileUri();
       switch ($image_style) {
-        case '_default_legend_icon_style_':
-          $icon_element = $this->defaultIconElement;
-          break;
-
         case 'none':
           $icon_element = [
             '#weight' => -10,
@@ -266,13 +289,14 @@ class MarkerIconService {
           break;
 
         default:
+          $icon_element = [
+            '#weight' => -10,
+            '#theme' => 'image_style',
+            '#uri' => $file->getFileUri(),
+            '#style_name' => '',
+          ];
           if ($this->moduleHandler->moduleExists('image') && ImageStyle::load($image_style)) {
-            $icon_element = [
-              '#weight' => -10,
-              '#theme' => 'image_style',
-              '#style_name' => $image_style,
-              '#uri' => $file->getFileUri(),
-            ];
+            $icon_element['#style_name'] = $image_style;
           }
           else {
             $icon_element = $this->defaultIconElement;

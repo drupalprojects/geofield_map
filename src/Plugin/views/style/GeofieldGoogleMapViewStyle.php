@@ -643,11 +643,5 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     return isset($bundles) ? $bundles : [];
 
   }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function submitOptionsForm(&$form, FormStateInterface $form_state) {
-  }
-
+  
 }

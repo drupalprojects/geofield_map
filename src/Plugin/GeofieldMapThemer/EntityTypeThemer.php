@@ -131,8 +131,9 @@ class EntityTypeThemer extends MapThemerBase {
     $element = [
       '#type' => 'table',
       '#header' => [
-        $this->t('@entity type Type/Bundle', ['@entity type' => $entity_type]),
         $this->t('Weight'),
+        $this->t('@entity type Type/Bundle', ['@entity type' => $entity_type]),
+        $this->t('Label Alias'),
         Markup::create($this->t('Marker Icon @file_upload_help', [
           '@file_upload_help' => $this->renderer->renderPlain($this->markerIcon->getFileUploadHelp()),
         ])),
@@ -147,10 +148,18 @@ class EntityTypeThemer extends MapThemerBase {
       '#caption' => $this->renderer->renderPlain($caption),
     ];
 
-    foreach ($view_bundles as $bundle) {
+    foreach ($view_bundles as $k => $bundle) {
 
       $fid = (integer) !empty($default_element[$bundle]['icon_file']['fids']) ? $default_element[$bundle]['icon_file']['fids'] : NULL;
       $element[$bundle] = [
+        'weight' => [
+          '#type' => 'weight',
+          '#title' => $this->t('Weight for @bundle', ['@bundle' => $bundle]),
+          '#title_display' => 'invisible',
+          '#default_value' => isset($default_element[$bundle]['weight']) ? $default_element[$bundle]['weight'] : $k,
+          '#delta' => 20,
+          '#attributes' => ['class' => ['bundles-order-weight']],
+        ],
         'label' => [
           '#type' => 'value',
           '#value' => $entity_bundles[$bundle]['label'],
@@ -158,13 +167,11 @@ class EntityTypeThemer extends MapThemerBase {
             '#markup' => $entity_bundles[$bundle]['label'],
           ],
         ],
-        'weight' => [
-          '#type' => 'weight',
-          '#title' => $this->t('Weight for @bundle', ['@bundle' => $bundle]),
-          '#title_display' => 'invisible',
-          '#default_value' => $default_element[$bundle]['weight'],
-          '#delta' => 20,
-          '#attributes' => ['class' => ['bundles-order-weight']],
+        'label_alias' => [
+          '#type' => 'textfield',
+          '#default_value' => isset($default_element[$bundle]['label_alias']) ? $default_element[$bundle]['label_alias'] : '',
+          '#description' => $this->t('If not empty, this will be used in the legend as label alias.'),
+          '#size' => 20,
         ],
         'icon_file' => $this->markerIcon->getIconFileManagedElement($fid),
         'image_style' => [
@@ -172,7 +179,7 @@ class EntityTypeThemer extends MapThemerBase {
           '#title' => t('Image style'),
           '#title_display' => 'invisible',
           '#options' => $this->markerIcon->getImageStyleOptions(),
-          '#default_value' => isset($default_element[$bundle]['image_style']) ? $default_element[$bundle]['image_style'] : 'none',
+          '#default_value' => isset($default_element[$bundle]['image_style']) ? $default_element[$bundle]['image_style'] : 'geofield_map_default_icon_style',
         ],
         '#attributes' => ['class' => ['draggable']],
       ];
@@ -220,11 +227,12 @@ class EntityTypeThemer extends MapThemerBase {
         $image_style = isset($map_theming_values[$bundle]['image_style']) ? $map_theming_values[$bundle]['image_style'] : 'none';
       }
       $fid = (integer) !empty($value['icon_file']['fids']) ? $value['icon_file']['fids'] : NULL;
+      $label = isset($value['label']) ? $value['label'] : $bundle;
       $legend[$bundle] = [
         'value' => [
           '#type' => 'container',
           'label' => [
-            '#markup' => isset($value['label']) ? $value['label'] : $bundle,
+            '#markup' => !empty($value['label_alias']) ? $value['label_alias'] : $label,
           ],
           '#attributes' => [
             'class' => ['value'],

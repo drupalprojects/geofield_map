@@ -49,7 +49,14 @@ class CustomIconThemer extends MapThemerBase {
         '#type' => 'select',
         '#title' => t('Image style'),
         '#options' => $this->markerIcon->getImageStyleOptions(),
-        '#default_value' => isset($default_element['image_style']) ? $default_element['image_style'] : 'none',
+        '#default_value' => isset($default_element['image_style']) ? $default_element['image_style'] : 'geofield_map_default_icon_style',
+      ],
+      'label_alias' => [
+        '#type' => 'textfield',
+        '#title' => t('Label alias'),
+        '#default_value' => isset($default_element['label_alias']) ? $default_element['label_alias'] : '',
+        '#description' => $this->t('If not empty, this will be used in the legend as label alias.'),
+        '#size' => 20,
       ],
     ];
 
@@ -84,7 +91,7 @@ class CustomIconThemer extends MapThemerBase {
     $legend = [
       '#type' => 'table',
       '#header' => [
-        isset($configuration['values_label']) ? $configuration['values_label'] : $this->t('Type/Bundle'),
+        isset($configuration['values_label']) ? $configuration['values_label'] : $this->t('Type'),
         isset($configuration['markers_label']) ? $configuration['markers_label'] : $this->t('Marker'),
       ],
       '#caption' => isset($configuration['legend_caption']) ? $configuration['legend_caption'] : '',
@@ -98,7 +105,7 @@ class CustomIconThemer extends MapThemerBase {
       'value' => [
         '#type' => 'container',
         'label' => [
-          '#markup' => $this->t('All Markers'),
+          '#markup' => !empty($map_theming_values['label_alias']) ? $map_theming_values['label_alias'] : $this->t('All Markers'),
         ],
         '#attributes' => [
           'class' => ['value'],

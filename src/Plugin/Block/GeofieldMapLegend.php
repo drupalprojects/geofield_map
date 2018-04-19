@@ -167,29 +167,34 @@ class GeofieldMapLegend extends BlockBase implements ContainerFactoryPluginInter
       $form['values_label'] = [
         '#title' => $this->t('Values Column Label'),
         '#type' => 'textfield',
-        '#description' => $this->t('Set the Label text to be shown for the Values column. Leave empty for nothing.'),
-        '#default_value' => isset($this->configuration['values_label']) ? $this->configuration['values_label'] : '',
+        '#description' => $this->t('Set the Label text to be shown for the Values column. Empty for any Label.'),
+        '#default_value' => isset($this->configuration['values_label']) ? $this->configuration['values_label'] : $this->t('Value'),
         '#size' => 26,
       ];
 
       $form['markers_label'] = [
         '#title' => $this->t('Markers Column Label'),
         '#type' => 'textfield',
-        '#description' => $this->t('Set the Label text to be shown for the Markers/Icon column. Leave empty for nothing.'),
-        '#default_value' => isset($this->configuration['markers_label']) ? $this->configuration['markers_label'] : '',
+        '#description' => $this->t('Set the Label text to be shown for the Markers/Icon column. Empty for any Label.'),
+        '#default_value' => isset($this->configuration['markers_label']) ? $this->configuration['markers_label'] : $this->t('Marker/Icon'),
         '#size' => 26,
       ];
 
+      // Define the list of possible legend icon image style.
       $markers_image_style_options = array_merge([
-        '_default_legend_icon_style_' => $this->markerIcon->getDefaultIconElement()['#title'],
         '_map_theming_image_style_' => '<- Reflect the Map Theming Icon Image Styles ->',
       ], $this->markerIcon->getImageStyleOptions());
+
+      // Force add the geofield_map_default_icon_style, if not existing.
+      if (!in_array('geofield_map_default_icon_style', array_keys($markers_image_style_options))) {
+        $markers_image_style_options['geofield_map_default_icon_style'] = 'geofield_map_default_icon_style';
+      }
 
       $form['markers_image_style'] = [
         '#type' => 'select',
         '#title' => t('Markers Image style'),
         '#options' => $markers_image_style_options,
-        '#default_value' => isset($this->configuration['markers_image_style']) ? $this->configuration['markers_image_style'] : 'geofield_map_default_legend_icon',
+        '#default_value' => isset($this->configuration['markers_image_style']) ? $this->configuration['markers_image_style'] : 'geofield_map_default_icon_style',
         '#description' => $this->t('Choose the image style the markers icons will be rendered in the Legend with.'),
       ];
 
