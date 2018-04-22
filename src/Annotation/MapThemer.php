@@ -38,11 +38,18 @@ class MapThemer extends Plugin {
   public $description;
 
   /**
-   * The Geofield Map Themer plugin types.
+   * The Geofield Map Themer plugin type.
    *
    * @var string
    */
   public $type;
+
+  /**
+   * The Geofield Map Themer plugin application context.
+   *
+   * @var string
+   */
+  public $context;
 
   /**
    * Settings for the Themer.

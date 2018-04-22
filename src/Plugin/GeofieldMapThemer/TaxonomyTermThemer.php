@@ -22,9 +22,9 @@ use Drupal\Core\Entity\EntityInterface;
  * Attributes set below end up in the $this->definition[] array.
  *
  * @MapThemer(
- *   id = "geofieldmap_entity_type",
- *   name = @Translation("Entity Type (Geofield Map)"),
- *   description = "This Geofield Map Themer allows the definition of different Marker Icons based on the View filtered Entity Types/Bundles.",
+ *   id = "geofieldmap_taxonomy_term",
+ *   name = @Translation("Taxonomy Term (Geofield Map)"),
+ *   description = "This Geofield Map Themer allows the definition of different Marker Icons based on a Taxonomy Terms reference field in View.",
  *   type = "key_value",
  *   context = "ViewStyle",
  *   defaultSettings = {
@@ -32,7 +32,7 @@ use Drupal\Core\Entity\EntityInterface;
  *   },
  * )
  */
-class EntityTypeThemer extends MapThemerBase {
+class TaxonomyTermThemer extends MapThemerBase {
 
   /**
    * The entity type bundle info.
@@ -101,6 +101,10 @@ class EntityTypeThemer extends MapThemerBase {
 
     // Get the View Filtered entity bundles.
     $entity_type = $geofieldMapView->getViewEntityType();
+
+    // Get the field_storage_definitions.
+    $field_storage_definitions = $this->entityFieldManager->getFieldStorageDefinitions($entity_type);
+
     $entity_bundles = $this->entityTypeBundleInfo->getBundleInfo($entity_type);
     $view_bundles = !empty($geofieldMapView->getViewFilteredBundles()) ? $geofieldMapView->getViewFilteredBundles() : array_keys($entity_bundles);
 
