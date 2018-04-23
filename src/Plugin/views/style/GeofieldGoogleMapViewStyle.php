@@ -123,6 +123,13 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
   protected $renderer;
 
   /**
+   * The list of fields added to the view.
+   *
+   * @var array
+   */
+  protected $viewFields = [];
+
+  /**
    * The MapThemer Manager service .
    *
    * @var \Drupal\geofield_map\MapThemerPluginManager
@@ -296,12 +303,11 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     ];
 
     // Get a list of fields and a sublist of geo data fields in this view.
-    $fields = [];
     $fields_geo_data = [];
     /* @var \Drupal\views\Plugin\views\ViewsHandlerInterface $handler) */
     foreach ($this->displayHandler->getHandlers('field') as $field_id => $handler) {
       $label = $handler->adminLabel() ?: $field_id;
-      $fields[$field_id] = $label;
+      $this->viewFields[$field_id] = $label;
       if (is_a($handler, '\Drupal\views\Plugin\views\field\EntityField')) {
         /* @var \Drupal\views\Plugin\views\field\EntityField $handler */
         try {
@@ -310,8 +316,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
         catch (\Exception $e) {
           $entity_type = NULL;
         }
-        $field_storage_definitions = $this->entityFieldManager
-          ->getFieldStorageDefinitions($entity_type);
+        $field_storage_definitions = $this->entityFieldManager->getFieldStorageDefinitions($entity_type);
         $field_storage_definition = $field_storage_definitions[$handler->definition['field_name']];
 
         if ($field_storage_definition->getType() == 'geofield') {
@@ -348,7 +353,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
       '#required' => TRUE,
     ];
 
-    $desc_options = array_merge(['0' => $this->t('- Any - No Infowindow')], $fields);
+    $desc_options = array_merge(['0' => $this->t('- Any - No Infowindow')], $this->viewFields);
     // Add an option to render the entire entity using a view mode.
     if ($this->entityType) {
       $desc_options += [
@@ -622,10 +627,33 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
   }
 
   /**
+   * Get the defined list of Fields added to the View.
+   *
+   * @return array
+   *   The list of Fields names.
+   */
+  public function getViewFields() {
+    return $this->viewFields;
+  }
+
+  /**
    * Get View Entity Type.
+   *
+   * @return string
+   *   The entity type name.
    */
   public function getViewEntityType() {
     return $this->entityType;
+  }
+
+  /**
+   * Returns the Entity Field manager service property.
+   *
+   * @return \Drupal\Core\Entity\EntityFieldManagerInterface
+   *   The Entity Field manager service property.
+   */
+  public function getEntityFieldManager() {
+    return $this->entityFieldManager;
   }
 
   /**
@@ -643,5 +671,5 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     return isset($bundles) ? $bundles : [];
 
   }
-  
+
 }
