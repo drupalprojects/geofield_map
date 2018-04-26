@@ -264,7 +264,7 @@ class GeofieldMapLegend extends BlockBase implements ContainerFactoryPluginInter
           catch (PluginException $e) {
             if ($this->currentUser->hasPermission('configure geofield_map')) {
               $legend = [
-                '#markup' => $this->t("This legend is not be rendered due to @error_message", [
+                '#markup' => $this->t("This legend is not being rendered as @error_message", [
                   '@error_message' => $e->getMessage(),
                 ]),
               ];
