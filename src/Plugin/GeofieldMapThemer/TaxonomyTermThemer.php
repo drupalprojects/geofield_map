@@ -24,7 +24,7 @@ use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
  *
  * Attributes set below end up in the $this->definition[] array.
  *
- * @MapThemerxxx(
+ * @MapThemer(
  *   id = "geofieldmap_taxonomy_term",
  *   name = @Translation("Taxonomy Term (Geofield Map)"),
  *   description = "This Geofield Map Themer allows the definition of different Marker Icons based on a Taxonomy Terms reference field in View.",
@@ -161,19 +161,21 @@ class TaxonomyTermThemer extends MapThemerBase {
         catch (InvalidPluginDefinitionException $e) {
         }
       }
-    }
 
-    // Reorder the entity bundles based on existing (Default) Element settings.
-    /*    if (!empty($default_element)) {
-          $weighted_bundles = [];
-          foreach ($view_bundles as $bundle) {
-            $weighted_bundles[$bundle] = [
-              'weight' => isset($default_element[$bundle]) ? $default_element[$bundle]['weight'] : 0,
-            ];
-          }
-          uasort($weighted_bundles, 'Drupal\Component\Utility\SortArray::sortByWeightElement');
-          $view_bundles = array_keys($weighted_bundles);
-        }*/
+      // Reorder the field_id referencable terms on existing (Default)
+      // Element settings.
+      if (!empty($default_element)) {
+        $weighted_terms[$field_id] = [];
+        foreach ($taxonomy_ref_fields[$field_id]['terms'] as $tid => $term) {
+          $weighted_terms[$field_id][$tid] = [
+            'weight' => isset($default_element['fields'][$field_id]['terms'][$tid]) ? $default_element['fields'][$field_id]['terms'][$tid]['weight'] : 0,
+          ];
+        }
+        uasort($weighted_terms[$field_id], 'Drupal\Component\Utility\SortArray::sortByWeightElement');
+        $taxonomy_ref_fields[$field_id]['terms'] = array_replace(array_flip(array_keys($weighted_terms[$field_id])), $taxonomy_ref_fields[$field_id]['terms']);
+      }
+
+    }
 
     $element['taxonomy_field'] = [
       '#type' => 'select',
@@ -206,8 +208,8 @@ class TaxonomyTermThemer extends MapThemerBase {
         'terms' => [
           '#type' => 'table',
           '#header' => [
-            $this->t('Weight'),
             $this->t('Taxonomy term'),
+            $this->t('Weight'),
             $this->t('Term Alias'),
             Markup::create($this->t('Marker Icon @file_upload_help', [
               '@file_upload_help' => $this->renderer->renderPlain($this->markerIcon->getFileUploadHelp()),
@@ -233,6 +235,13 @@ class TaxonomyTermThemer extends MapThemerBase {
       foreach ($field['terms'] as $tid => $term) {
         $fid = (integer) !empty($default_element['fields'][$k]['terms'][$tid]['icon_file']['fids']) ? $default_element['fields'][$k]['terms'][$tid]['icon_file']['fids'] : NULL;
         $element['fields'][$k]['terms'][$tid] = [
+          'label' => [
+            '#type' => 'value',
+            '#value' => $term,
+            'markup' => [
+              '#markup' => $term,
+            ],
+          ],
           'weight' => [
             '#type' => 'weight',
             '#title' => $this->t('Weight for @bundle', ['@bundle' => $bundle]),
@@ -240,13 +249,6 @@ class TaxonomyTermThemer extends MapThemerBase {
             '#default_value' => isset($default_element['fields'][$k]['terms'][$tid]['weight']) ? $default_element['fields'][$k]['terms'][$tid]['weight'] : $i,
             '#delta' => 20,
             '#attributes' => ['class' => ['terms-order-weight']],
-          ],
-          'label' => [
-            '#type' => 'value',
-            '#value' => $term,
-            'markup' => [
-              '#markup' => $term,
-            ],
           ],
           'label_alias' => [
             '#type' => 'textfield',
