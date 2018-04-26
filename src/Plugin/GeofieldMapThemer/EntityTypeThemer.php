@@ -132,8 +132,8 @@ class EntityTypeThemer extends MapThemerBase {
     $element = [
       '#type' => 'table',
       '#header' => [
-        $this->t('Weight'),
         $this->t('@entity type Type/Bundle', ['@entity type' => $entity_type]),
+        $this->t('Weight'),
         $this->t('Label Alias'),
         Markup::create($this->t('Marker Icon @file_upload_help', [
           '@file_upload_help' => $this->renderer->renderPlain($this->markerIcon->getFileUploadHelp()),
@@ -153,6 +153,13 @@ class EntityTypeThemer extends MapThemerBase {
 
       $fid = (integer) !empty($default_element[$bundle]['icon_file']['fids']) ? $default_element[$bundle]['icon_file']['fids'] : NULL;
       $element[$bundle] = [
+        'label' => [
+          '#type' => 'value',
+          '#value' => $entity_bundles[$bundle]['label'],
+          'markup' => [
+            '#markup' => $entity_bundles[$bundle]['label'],
+          ],
+        ],
         'weight' => [
           '#type' => 'weight',
           '#title' => $this->t('Weight for @bundle', ['@bundle' => $bundle]),
@@ -160,13 +167,6 @@ class EntityTypeThemer extends MapThemerBase {
           '#default_value' => isset($default_element[$bundle]['weight']) ? $default_element[$bundle]['weight'] : $k,
           '#delta' => 20,
           '#attributes' => ['class' => ['bundles-order-weight']],
-        ],
-        'label' => [
-          '#type' => 'value',
-          '#value' => $entity_bundles[$bundle]['label'],
-          'markup' => [
-            '#markup' => $entity_bundles[$bundle]['label'],
-          ],
         ],
         'label_alias' => [
           '#type' => 'textfield',
