@@ -27,7 +27,7 @@ use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
  * @MapThemer(
  *   id = "geofieldmap_taxonomy_term",
  *   name = @Translation("Taxonomy Term (Geofield Map)"),
- *   description = "This Geofield Map Themer allows the definition of different Marker Icons based on a Taxonomy Terms reference field in View.",
+ *   description = "This Geofield Map Themer allows the definition of different Marker Icons based on Taxonomy Terms reference field in View.",
  *   type = "key_value",
  *   context = "ViewStyle",
  *   defaultSettings = {
