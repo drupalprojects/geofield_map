@@ -317,7 +317,7 @@ class TaxonomyTermThemer extends MapThemerBase {
       $image_style = isset($configuration['markers_image_style']) ? $configuration['markers_image_style'] : 'none';
       // Get the map_theming_image_style, is so set.
       if (isset($configuration['markers_image_style']) && $configuration['markers_image_style'] == '_map_theming_image_style_') {
-        $image_style = isset($map_theming_values[$vid]['image_style']) ? $map_theming_values[$vid]['image_style'] : 'none';
+        $image_style = isset($map_theming_values['fields'][$taxonomy_field]['terms'][$vid]['image_style']) ? $map_theming_values['fields'][$taxonomy_field]['terms'][$vid]['image_style'] : 'none';
       }
       $fid = (integer) !empty($term['icon_file']['fids']) ? $term['icon_file']['fids'] : NULL;
       $label = isset($term['label']) ? $term['label'] : $vid;
