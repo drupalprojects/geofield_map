@@ -134,7 +134,9 @@ class EntityTypeThemer extends MapThemerBase {
       '#header' => [
         $this->t('@entity type Type/Bundle', ['@entity type' => $entity_type]),
         $this->t('Weight'),
-        $this->t('Label Alias'),
+        Markup::create($this->t('Label Alias @description', [
+          '@description' => $this->renderer->renderPlain($this->getLabelAliasHelp()),
+        ])),
         Markup::create($this->t('Marker Icon @file_upload_help', [
           '@file_upload_help' => $this->renderer->renderPlain($this->markerIcon->getFileUploadHelp()),
         ])),
@@ -171,7 +173,6 @@ class EntityTypeThemer extends MapThemerBase {
         'label_alias' => [
           '#type' => 'textfield',
           '#default_value' => isset($default_element[$bundle]['label_alias']) ? $default_element[$bundle]['label_alias'] : '',
-          '#description' => $this->t('If not empty, this will be used in the legend as label alias.'),
           '#size' => 20,
         ],
         'icon_file' => $this->markerIcon->getIconFileManagedElement($fid),

@@ -212,12 +212,13 @@ class TaxonomyTermThemer extends MapThemerBase {
           '#header' => [
             $this->t('Taxonomy term'),
             $this->t('Weight'),
-            $this->t('Term Alias'),
+            Markup::create($this->t('Term Alias @description', [
+              '@description' => $this->renderer->renderPlain($this->getLabelAliasHelp()),
+            ])),
             Markup::create($this->t('Marker Icon @file_upload_help', [
               '@file_upload_help' => $this->renderer->renderPlain($this->markerIcon->getFileUploadHelp()),
             ])),
             $this->t('Icon Image Style'),
-            $this->t('Notes'),
           ],
           '#tabledrag' => [[
             'action' => 'order',
@@ -256,7 +257,6 @@ class TaxonomyTermThemer extends MapThemerBase {
           'label_alias' => [
             '#type' => 'textfield',
             '#default_value' => isset($default_element['fields'][$k]['terms'][$tid]['label_alias']) ? $default_element['fields'][$k]['terms'][$tid]['label_alias'] : '',
-            '#description' => $this->t('If not empty, this will be used in the legend as label alias.'),
             '#size' => 20,
           ],
           'icon_file' => $this->markerIcon->getIconFileManagedElement($fid),

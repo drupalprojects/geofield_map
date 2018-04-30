@@ -71,6 +71,23 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
   }
 
   /**
+   * Generate Label Alias Help Message.
+   *
+   * @return array
+   *   The label alias help render array..
+   */
+  public function getLabelAliasHelp() {
+    return [
+      '#type' => 'html_tag',
+      '#tag' => 'div',
+      '#value' => $this->t('If not empty, this will be used in the legend as label alias.'),
+      '#attributes' => [
+        'style' => ['style' => 'font-size:0.8em; color: gray; text-transform: lowercase; font-weight: normal'],
+      ],
+    ];
+  }
+
+  /**
    * Define if to return the default Legend Icon.
    *
    * This might act on values to which no image/Managed_file has been input.
