@@ -47,7 +47,7 @@ class MapThemer extends Plugin {
   /**
    * The Geofield Map Themer plugin application context.
    *
-   * @var string
+   * @var array
    */
   public $context;
 

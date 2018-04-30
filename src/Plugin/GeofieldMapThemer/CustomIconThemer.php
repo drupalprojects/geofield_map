@@ -20,7 +20,7 @@ use Drupal\Core\Render\Markup;
  *   name = @Translation("Custom Icon Image File (Geofield Map)"),
  *   description = "This Geofield Map Themer allows the definition of a unique custom Marker Icon, valid for all the Map Markers.",
  *   type = "single_value",
- *   context = "ViewStyle",
+ *   context = {"ViewStyle"},
  *   defaultSettings = {
  *    "values" = NULL
  *   },
@@ -102,6 +102,7 @@ class CustomIconThemer extends MapThemerBase {
     ];
 
     $fid = (integer) !empty($map_theming_values['icon_file']['fids']) ? $map_theming_values['icon_file']['fids'][0] : NULL;
+
     $legend['custom-icon'] = [
       'value' => [
         '#type' => 'container',

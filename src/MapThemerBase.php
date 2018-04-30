@@ -71,6 +71,20 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
   }
 
   /**
+   * Define if to return the default Legend Icon.
+   *
+   * This might act on values to which no image/Managed_file has been input.
+   * This might be overridden by MapThemer plugins to alter this default
+   * behaviour.
+   *
+   * @return bool
+   *   If the default Legend Icon cases/values should be listed in the legend.
+   */
+  protected function renderDefaultLegendIcon() {
+    return TRUE;
+  }
+
+  /**
    * Constructs a Drupal\Component\Plugin\PluginBase object.
    *
    * @param array $configuration

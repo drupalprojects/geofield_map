@@ -26,7 +26,7 @@ use Drupal\Core\Entity\EntityInterface;
  *   name = @Translation("Entity Type (Geofield Map)"),
  *   description = "This Geofield Map Themer allows the definition of different Marker Icons based on the View filtered Entity Types/Bundles.",
  *   type = "key_value",
- *   context = "ViewStyle",
+ *   context = {"ViewStyle"},
  *   defaultSettings = {
  *    "values": {}
  *   },
@@ -228,6 +228,12 @@ class EntityTypeThemer extends MapThemerBase {
         $image_style = isset($map_theming_values[$bundle]['image_style']) ? $map_theming_values[$bundle]['image_style'] : 'none';
       }
       $fid = (integer) !empty($value['icon_file']['fids']) ? $value['icon_file']['fids'] : NULL;
+
+      // Don't render legend row in case no image is associated and the plugin
+      // denies to render the DefaultLegendIcon definition.
+      if (empty($fid) && !$this->renderDefaultLegendIcon()) {
+        continue;
+      }
       $label = isset($value['label']) ? $value['label'] : $bundle;
       $legend[$bundle] = [
         'value' => [

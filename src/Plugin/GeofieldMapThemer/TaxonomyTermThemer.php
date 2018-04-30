@@ -29,7 +29,7 @@ use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
  *   name = @Translation("Taxonomy Term (Geofield Map)"),
  *   description = "This Geofield Map Themer allows the definition of different Marker Icons based on Taxonomy Terms reference field in View.",
  *   type = "key_value",
- *   context = "ViewStyle",
+ *   context = {"ViewStyle"},
  *   defaultSettings = {
  *    "values": {}
  *   },
@@ -217,6 +217,7 @@ class TaxonomyTermThemer extends MapThemerBase {
               '@file_upload_help' => $this->renderer->renderPlain($this->markerIcon->getFileUploadHelp()),
             ])),
             $this->t('Icon Image Style'),
+            $this->t('Notes'),
           ],
           '#tabledrag' => [[
             'action' => 'order',
@@ -320,6 +321,12 @@ class TaxonomyTermThemer extends MapThemerBase {
         $image_style = isset($map_theming_values['fields'][$taxonomy_field]['terms'][$vid]['image_style']) ? $map_theming_values['fields'][$taxonomy_field]['terms'][$vid]['image_style'] : 'none';
       }
       $fid = (integer) !empty($term['icon_file']['fids']) ? $term['icon_file']['fids'] : NULL;
+
+      // Don't render legend row in case no image is associated and the plugin
+      // denies to render the DefaultLegendIcon definition.
+      if (empty($fid) && !$this->renderDefaultLegendIcon()) {
+        continue;
+      }
       $label = isset($term['label']) ? $term['label'] : $vid;
       $legend[$vid] = [
         'value' => [
