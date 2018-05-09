@@ -141,6 +141,7 @@ class EntityTypeThemer extends MapThemerBase {
           '@file_upload_help' => $this->renderer->renderPlain($this->markerIcon->getFileUploadHelp()),
         ])),
         $this->t('Icon Image Style'),
+        $this->t('Exclude from Legend'),
       ],
       '#tabledrag' => [[
         'action' => 'order',
@@ -182,6 +183,10 @@ class EntityTypeThemer extends MapThemerBase {
           '#title_display' => 'invisible',
           '#options' => $this->markerIcon->getImageStyleOptions(),
           '#default_value' => isset($default_element[$bundle]['image_style']) ? $default_element[$bundle]['image_style'] : 'geofield_map_default_icon_style',
+        ],
+        'legend_exclude' => [
+          '#type' => 'checkbox',
+          '#default_value' => isset($default_element[$bundle]['legend_exclude']) ? $default_element[$bundle]['legend_exclude'] : '0',
         ],
         '#attributes' => ['class' => ['draggable']],
       ];

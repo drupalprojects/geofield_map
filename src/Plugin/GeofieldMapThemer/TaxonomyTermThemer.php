@@ -219,6 +219,7 @@ class TaxonomyTermThemer extends MapThemerBase {
               '@file_upload_help' => $this->renderer->renderPlain($this->markerIcon->getFileUploadHelp()),
             ])),
             $this->t('Icon Image Style'),
+            $this->t('Exclude from Legend'),
           ],
           '#tabledrag' => [[
             'action' => 'order',
@@ -266,6 +267,10 @@ class TaxonomyTermThemer extends MapThemerBase {
             '#title_display' => 'invisible',
             '#options' => $this->markerIcon->getImageStyleOptions(),
             '#default_value' => isset($default_element['fields'][$k]['terms'][$tid]['image_style']) ? $default_element['fields'][$k]['terms'][$tid]['image_style'] : 'geofield_map_default_icon_style',
+          ],
+          'legend_exclude' => [
+            '#type' => 'checkbox',
+            '#default_value' => isset($default_element['fields'][$k]['terms'][$tid]['legend_exclude']) ? $default_element['fields'][$k]['terms'][$tid]['legend_exclude'] : '0',
           ],
           '#attributes' => ['class' => ['draggable']],
         ];
@@ -322,9 +327,11 @@ class TaxonomyTermThemer extends MapThemerBase {
       }
       $fid = (integer) !empty($term['icon_file']['fids']) ? $term['icon_file']['fids'] : NULL;
 
-      // Don't render legend row in case no image is associated and the plugin
-      // denies to render the DefaultLegendIcon definition.
-      if (empty($fid) && !$this->renderDefaultLegendIcon()) {
+      // Don't render legend row in case:
+      // - the specific value is flagged as excluded from the Legend, or
+      // - no image is associated and the plugin denies to render the
+      // DefaultLegendIcon definition.
+      if ($term['legend_exclude'] || (empty($fid) && !$this->renderDefaultLegendIcon())) {
         continue;
       }
       $label = isset($term['label']) ? $term['label'] : $vid;
