@@ -122,11 +122,6 @@ class EntityTypeThemer extends MapThemerBase {
         '#tag' => 'label',
         '#value' => $this->t('Icon Urls, per Entity Types'),
       ],
-      'caption' => [
-        '#type' => 'html_tag',
-        '#tag' => 'div',
-        '#value' => $this->t('Input the Specific Icon Image path (absolute path, or relative to the Drupal site root prefixed with a trailing hash).<br>If not set, or not loadable, the Default Google Marker will be used.'),
-      ],
     ];
 
     $element = [

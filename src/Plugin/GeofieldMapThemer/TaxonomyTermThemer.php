@@ -122,14 +122,14 @@ class TaxonomyTermThemer extends MapThemerBase {
     $field_storage_definitions = $geofieldMapView->getEntityFieldManager()->getFieldStorageDefinitions($entity_type);
 
     $taxonomy_ref_fields = [];
-    foreach ($view_fields as $field_key => $field_label) {
+    foreach ($view_fields as $field_id => $field_label) {
       /* @var \Drupal\field\Entity\FieldStorageConfig $field_storage */
-      if (isset($field_storage_definitions[$field_key])
-        && $field_storage_definitions[$field_key] instanceof FieldStorageConfig
-        && $field_storage_definitions[$field_key]->getType() == 'entity_reference'
-        && $field_storage_definitions[$field_key]->getSetting('target_type') == 'taxonomy_term'
-        && $field_storage_definitions[$field_key]->getCardinality() == 1) {
-        $taxonomy_ref_fields[$field_key] = [];
+      if (isset($field_storage_definitions[$field_id])
+        && $field_storage_definitions[$field_id] instanceof FieldStorageConfig
+        && $field_storage_definitions[$field_id]->getType() == 'entity_reference'
+        && $field_storage_definitions[$field_id]->getSetting('target_type') == 'taxonomy_term'
+        && $field_storage_definitions[$field_id]->getCardinality() == 1) {
+        $taxonomy_ref_fields[$field_id] = [];
       }
     }
 
@@ -164,7 +164,7 @@ class TaxonomyTermThemer extends MapThemerBase {
         }
       }
 
-      // Reorder the field_id referencable terms on existing (Default)
+      // Reorder the field_id referenceable terms on existing (Default)
       // Element settings.
       if (!empty($default_element)) {
         $weighted_terms[$field_id] = [];
@@ -179,106 +179,113 @@ class TaxonomyTermThemer extends MapThemerBase {
 
     }
 
-    $element['taxonomy_field'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Taxonomy Field'),
-      '#description' => $this->t('Chose the Taxonomy Field to base the Map Theming upon.'),
-      '#options' => array_combine(array_keys($taxonomy_ref_fields), array_keys($taxonomy_ref_fields)),
-      '#default_value' => !empty($default_element['taxonomy_field']) ? $default_element['taxonomy_field'] : array_shift(array_keys($taxonomy_ref_fields)),
-    ];
-
-    $element['taxonomy_field']['fields'] = [];
-    foreach ($taxonomy_ref_fields as $k => $field) {
-
-      $caption = [
-        'title' => [
-          '#type' => 'html_tag',
-          '#tag' => 'label',
-          '#value' => $this->t('Taxonomy terms from @vocabularies', [
-            '@vocabularies' => implode(', ', $field['target_bundles']),
-          ]),
-        ],
-        'caption' => [
-          '#type' => 'html_tag',
-          '#tag' => 'div',
-          '#value' => $this->t('Input the Specific Icon Image path (absolute path, or relative to the Drupal site root prefixed with a trailing hash).<br>If not set, or not loadable, the Default Google Marker will be used.'),
+    if (!count($taxonomy_ref_fields) > 0) {
+      $element['taxonomy_field'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('At least a Taxonomy Term reference field should be added to the View to use this Map Theming option.'),
+        '#attributes' => [
+          'class' => ['geofield-map-warning'],
         ],
       ];
-
-      $element['fields'][$k] = [
-        '#type' => 'container',
-        'terms' => [
-          '#type' => 'table',
-          '#header' => [
-            $this->t('Taxonomy term'),
-            $this->t('Weight'),
-            Markup::create($this->t('Term Alias @description', [
-              '@description' => $this->renderer->renderPlain($this->getLabelAliasHelp()),
-            ])),
-            Markup::create($this->t('Marker Icon @file_upload_help', [
-              '@file_upload_help' => $this->renderer->renderPlain($this->markerIcon->getFileUploadHelp()),
-            ])),
-            $this->t('Icon Image Style'),
-            $this->t('Exclude from Legend'),
-          ],
-          '#tabledrag' => [[
-            'action' => 'order',
-            'relationship' => 'sibling',
-            'group' => 'terms-order-weight',
-          ],
-          ],
-          '#caption' => $this->renderer->renderPlain($caption),
-        ],
-        '#states' => [
-          'visible' => [
-            'select[name="style_options[map_marker_and_infowindow][theming][geofieldmap_taxonomy_term][values][taxonomy_field]"]' => ['value' => $k],
-          ],
-        ],
+    }
+    else {
+      $element['taxonomy_field'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Taxonomy Field'),
+        '#description' => $this->t('Chose the Taxonomy Field to base the Map Theming upon.'),
+        '#options' => array_combine(array_keys($taxonomy_ref_fields), array_keys($taxonomy_ref_fields)),
+        '#default_value' => !empty($default_element['taxonomy_field']) ? $default_element['taxonomy_field'] : array_shift(array_keys($taxonomy_ref_fields)),
       ];
 
-      $i = 0;
-      foreach ($field['terms'] as $tid => $term) {
-        $fid = (integer) !empty($default_element['fields'][$k]['terms'][$tid]['icon_file']['fids']) ? $default_element['fields'][$k]['terms'][$tid]['icon_file']['fids'] : NULL;
-        $element['fields'][$k]['terms'][$tid] = [
-          'label' => [
-            '#type' => 'value',
-            '#value' => $term,
-            'markup' => [
-              '#markup' => $term,
+      $element['taxonomy_field']['fields'] = [];
+      foreach ($taxonomy_ref_fields as $k => $field) {
+
+        $caption = [
+          'title' => [
+            '#type' => 'html_tag',
+            '#tag' => 'label',
+            '#value' => $this->t('Taxonomy terms from @vocabularies', [
+              '@vocabularies' => implode(', ', $field['target_bundles']),
+            ]),
+          ],
+        ];
+
+        $element['fields'][$k] = [
+          '#type' => 'container',
+          'terms' => [
+            '#type' => 'table',
+            '#header' => [
+              $this->t('Taxonomy term'),
+              $this->t('Weight'),
+              Markup::create($this->t('Term Alias @description', [
+                '@description' => $this->renderer->renderPlain($this->getLabelAliasHelp()),
+              ])),
+              Markup::create($this->t('Marker Icon @file_upload_help', [
+                '@file_upload_help' => $this->renderer->renderPlain($this->markerIcon->getFileUploadHelp()),
+              ])),
+              $this->t('Icon Image Style'),
+              $this->t('Hide from Legend'),
+            ],
+            '#tabledrag' => [
+              [
+                'action' => 'order',
+                'relationship' => 'sibling',
+                'group' => 'terms-order-weight',
+              ],
+            ],
+            '#caption' => $this->renderer->renderPlain($caption),
+          ],
+          '#states' => [
+            'visible' => [
+              'select[name="style_options[map_marker_and_infowindow][theming][geofieldmap_taxonomy_term][values][taxonomy_field]"]' => ['value' => $k],
             ],
           ],
-          'weight' => [
-            '#type' => 'weight',
-            '#title' => $this->t('Weight for @bundle', ['@bundle' => $bundle]),
-            '#title_display' => 'invisible',
-            '#default_value' => isset($default_element['fields'][$k]['terms'][$tid]['weight']) ? $default_element['fields'][$k]['terms'][$tid]['weight'] : $i,
-            '#delta' => 20,
-            '#attributes' => ['class' => ['terms-order-weight']],
-          ],
-          'label_alias' => [
-            '#type' => 'textfield',
-            '#default_value' => isset($default_element['fields'][$k]['terms'][$tid]['label_alias']) ? $default_element['fields'][$k]['terms'][$tid]['label_alias'] : '',
-            '#size' => 20,
-          ],
-          'icon_file' => $this->markerIcon->getIconFileManagedElement($fid),
-          'image_style' => [
-            '#type' => 'select',
-            '#title' => t('Image style'),
-            '#title_display' => 'invisible',
-            '#options' => $this->markerIcon->getImageStyleOptions(),
-            '#default_value' => isset($default_element['fields'][$k]['terms'][$tid]['image_style']) ? $default_element['fields'][$k]['terms'][$tid]['image_style'] : 'geofield_map_default_icon_style',
-          ],
-          'legend_exclude' => [
-            '#type' => 'checkbox',
-            '#default_value' => isset($default_element['fields'][$k]['terms'][$tid]['legend_exclude']) ? $default_element['fields'][$k]['terms'][$tid]['legend_exclude'] : '0',
-          ],
-          '#attributes' => ['class' => ['draggable']],
         ];
-        $i++;
+
+        $i = 0;
+        foreach ($field['terms'] as $tid => $term) {
+          $fid = (integer) !empty($default_element['fields'][$k]['terms'][$tid]['icon_file']['fids']) ? $default_element['fields'][$k]['terms'][$tid]['icon_file']['fids'] : NULL;
+          $element['fields'][$k]['terms'][$tid] = [
+            'label' => [
+              '#type' => 'value',
+              '#value' => $term,
+              'markup' => [
+                '#markup' => $term,
+              ],
+            ],
+            'weight' => [
+              '#type' => 'weight',
+              '#title' => $this->t('Weight for @bundle', ['@bundle' => $bundle]),
+              '#title_display' => 'invisible',
+              '#default_value' => isset($default_element['fields'][$k]['terms'][$tid]['weight']) ? $default_element['fields'][$k]['terms'][$tid]['weight'] : $i,
+              '#delta' => 20,
+              '#attributes' => ['class' => ['terms-order-weight']],
+            ],
+            'label_alias' => [
+              '#type' => 'textfield',
+              '#default_value' => isset($default_element['fields'][$k]['terms'][$tid]['label_alias']) ? $default_element['fields'][$k]['terms'][$tid]['label_alias'] : '',
+              '#size' => 20,
+            ],
+            'icon_file' => $this->markerIcon->getIconFileManagedElement($fid),
+            'image_style' => [
+              '#type' => 'select',
+              '#title' => t('Image style'),
+              '#title_display' => 'invisible',
+              '#options' => $this->markerIcon->getImageStyleOptions(),
+              '#default_value' => isset($default_element['fields'][$k]['terms'][$tid]['image_style']) ? $default_element['fields'][$k]['terms'][$tid]['image_style'] : 'geofield_map_default_icon_style',
+            ],
+            'legend_exclude' => [
+              '#type' => 'checkbox',
+              '#default_value' => isset($default_element['fields'][$k]['terms'][$tid]['legend_exclude']) ? $default_element['fields'][$k]['terms'][$tid]['legend_exclude'] : '0',
+            ],
+            '#attributes' => ['class' => ['draggable']],
+          ];
+          $i++;
+        }
+
       }
-
     }
-
     return $element;
 
   }
