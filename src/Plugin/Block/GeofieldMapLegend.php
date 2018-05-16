@@ -198,11 +198,11 @@ class GeofieldMapLegend extends BlockBase implements ContainerFactoryPluginInter
         '#description' => $this->t('Choose the image style the markers icons will be rendered in the Legend with.'),
       ];
 
-      $form['legend_caption'] = array(
+      $form['legend_notes'] = array(
         '#type' => 'textarea',
-        '#title' => $this->t('Legend Caption / Notes'),
-        '#description' => $this->t('Write here notes to the Legend that will be rendered as caption or attached element to it (depending on the specific Geofield Map Themer plugin rendering of its Legend).'),
-        '#default_value' => isset($this->configuration['legend_caption']) ? $this->configuration['legend_caption'] : '',
+        '#title' => $this->t('Legend Notes'),
+        '#description' => $this->t('Write here notes to the Legend that will be rendered as Notes (caption or footer depending on the specific Geofield Map Themer plugin Legend rendering).'),
+        '#default_value' => isset($this->configuration['legend_notes']) ? $this->configuration['legend_notes'] : '',
         '#rows' => 3,
       );
     }
@@ -289,7 +289,7 @@ class GeofieldMapLegend extends BlockBase implements ContainerFactoryPluginInter
    */
   public function blockSubmit($form, FormStateInterface $form_state) {
     $this->configuration['geofield_map_legend'] = $form_state->getValue('geofield_map_legend');
-    $this->configuration['legend_caption'] = $form_state->getValue('legend_caption');
+    $this->configuration['legend_notes'] = $form_state->getValue('legend_notes');
     $this->configuration['values_label'] = $form_state->getValue('values_label');
     $this->configuration['markers_label'] = $form_state->getValue('markers_label');
     $this->configuration['markers_image_style'] = $form_state->getValue('markers_image_style');

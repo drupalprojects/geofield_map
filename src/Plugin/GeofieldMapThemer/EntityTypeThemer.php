@@ -214,7 +214,7 @@ class EntityTypeThemer extends MapThemerBase {
         isset($configuration['values_label']) ? $configuration['values_label'] : $this->t('Type/Bundle'),
         isset($configuration['markers_label']) ? $configuration['markers_label'] : $this->t('Marker'),
       ],
-      '#caption' => isset($configuration['legend_caption']) ? $configuration['legend_caption'] : '',
+      '#caption' => isset($configuration['legend_notes']) ? $configuration['legend_notes'] : '',
       '#attributes' => [
         'class' => ['geofield-map-legend', 'entity-type'],
       ],
