@@ -10,3 +10,7 @@ form #map-theming-container {
   font-size: 0.85em;
   width: 90%;
 }
+/* line 10, ../sass/geofield_map_view_settings.scss */
+form #map-theming-container .image-widget-data .file {
+  display: none;
+}

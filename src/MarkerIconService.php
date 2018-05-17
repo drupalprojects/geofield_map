@@ -16,6 +16,7 @@ use Drupal\Core\Config\Config;
 use Drupal\image\Entity\ImageStyle;
 use Drupal\Core\Entity\EntityStorageException;
 use Symfony\Component\Yaml\Exception\ParseException;
+use Drupal\Component\Utility\Unicode;
 
 /**
  * Provides an Icon Managed File Service.
@@ -167,8 +168,8 @@ class MarkerIconService {
     }
     catch (EntityStorageException $e) {
       \Drupal::logger('Geofield Map Themer')->log('warning', t("The file couldn't be saved: @message", [
-        '@message' => $e->getMessage(),
-      ])
+          '@message' => $e->getMessage(),
+        ])
       );
     }
   }
@@ -188,6 +189,8 @@ class MarkerIconService {
 
     $element = [
       '#type' => 'managed_file',
+      '#theme' => 'image_widget',
+      '#preview_image_style' => 'thumbnail',
       '#title' => t('Choose a Marker Icon file'),
       '#title_display' => 'invisible',
       '#default_value' => !empty($fid) ? [$fid] : NULL,
@@ -234,7 +237,7 @@ class MarkerIconService {
 
       /* @var \Drupal\image\ImageStyleInterface $style */
       foreach ($image_styles = ImageStyle::loadMultiple() as $k => $style) {
-        $options[$k] = $style->getName();
+        $options[$k] = Unicode::truncate($style->label(), 20, TRUE, TRUE);
       };
     }
 

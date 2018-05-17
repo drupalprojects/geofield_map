@@ -265,7 +265,8 @@ class TaxonomyTermThemer extends MapThemerBase {
             'label_alias' => [
               '#type' => 'textfield',
               '#default_value' => isset($default_element['fields'][$k]['terms'][$tid]['label_alias']) ? $default_element['fields'][$k]['terms'][$tid]['label_alias'] : '',
-              '#size' => 20,
+              '#size' => 30,
+              '#maxlength' => 128,
             ],
             'icon_file' => $this->markerIcon->getIconFileManagedElement($fid),
             'image_style' => [
@@ -316,7 +317,7 @@ class TaxonomyTermThemer extends MapThemerBase {
         isset($configuration['values_label']) ? $configuration['values_label'] : $this->t('Term'),
         isset($configuration['markers_label']) ? $configuration['markers_label'] : $this->t('Marker/Icon'),
       ],
-      '#caption' => isset($configuration['legend_notes']) ? $configuration['legend_notes'] : '',
+      '#caption' => isset($configuration['legend_caption']) ? $configuration['legend_caption'] : '',
       '#attributes' => [
         'class' => ['geofield-map-legend', 'taxonomy-term'],
       ],

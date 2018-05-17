@@ -169,7 +169,8 @@ class EntityTypeThemer extends MapThemerBase {
         'label_alias' => [
           '#type' => 'textfield',
           '#default_value' => isset($default_element[$bundle]['label_alias']) ? $default_element[$bundle]['label_alias'] : '',
-          '#size' => 20,
+          '#size' => 30,
+          '#maxlength' => 128,
         ],
         'icon_file' => $this->markerIcon->getIconFileManagedElement($fid),
         'image_style' => [
