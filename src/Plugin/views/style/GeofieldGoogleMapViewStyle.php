@@ -397,11 +397,6 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
       '#title' => 'Map Theming Options',
       '#weight' => isset($form['map_marker_and_infowindow']['icon_image_path']['#weight']) ? $form['map_marker_and_infowindow']['icon_image_path']['#weight'] - 5 : -15,
       '#attributes' => ['id' => 'map-theming-container'],
-      '#attached' => [
-        'library' => [
-          'geofield_map/geofield_map_view_settings',
-        ],
-      ],
     ];
 
     $map_themers_definitions = $this->mapThemerManager->getDefinitions();

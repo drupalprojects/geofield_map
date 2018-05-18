@@ -7,7 +7,8 @@ form #map-theming-container {
   overflow-y: scroll;
   font-size: 0.85em;
   width: 90%;
-  .image-widget-data .file {
-    display: none;
-  }
+}
+
+form .image-widget-data .file {
+  display: none;
 }

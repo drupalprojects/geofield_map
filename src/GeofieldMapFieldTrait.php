@@ -162,6 +162,12 @@ trait GeofieldMapFieldTrait {
    *   The GMap Settings Form*/
   public function generateGmapSettingsForm(array $form, FormStateInterface $form_state, array $settings, array $default_settings) {
 
+    $elements['#attached'] = [
+      'library' => [
+        'geofield_map/geofield_map_view_display_settings',
+      ],
+    ];
+
     $elements = [];
 
     // Attach Geofield Map Library.
