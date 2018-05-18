@@ -295,6 +295,12 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
       $form_state_storage['bundles'] = $bundles;
     }
 
+    $form['#attached'] = [
+      'library' => [
+        'geofield_map/geofield_map_view_display_settings',
+      ],
+    ];
+
     // Set the form 'view_settings' property to be used later.
     // In the map themer ajax callback.
     $form['view_settings'] = [

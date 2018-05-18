@@ -228,6 +228,12 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
 
     $elements = $this->generateGMapSettingsForm($form, $form_state, $settings, $default_settings);
 
+    $elements['#attached'] = [
+      'library' => [
+        'geofield_map/geofield_map_view_display_settings',
+      ],
+    ];
+
     $elements['map_marker_and_infowindow']['icon_image_mode'] = [
       '#title' => $this->t('Custom Icon definition mode'),
       '#type' => 'select',
