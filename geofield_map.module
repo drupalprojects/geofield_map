@@ -118,6 +118,9 @@ function geofield_map_preprocess_image_widget(&$variables) {
       'uri' => $file->getFileUri(),
     );
 
+    $element_height = 30;
+    $element_width = 30;
+
     // Determine image dimensions.
     if (isset($element['#value']['width']) && isset($element['#value']['height'])) {
       $file_variables['width'] = $element['#value']['width'];
@@ -138,8 +141,8 @@ function geofield_map_preprocess_image_widget(&$variables) {
     $element['preview'] = array(
       '#weight' => -10,
       '#theme' => 'image_style',
-      '#width' => $file_variables['width'],
-      '#height' => $file_variables['height'],
+      '#width' => $element_height,
+      '#height' => $element_width,
       '#style_name' => $file_variables['style_name'],
       '#uri' => $file_variables['uri'],
     );
@@ -148,11 +151,11 @@ function geofield_map_preprocess_image_widget(&$variables) {
     // accessed again. This is important for remote files.
     $element['width'] = array(
       '#type' => 'hidden',
-      '#value' => $file_variables['width'],
+      '#value' => $element_height,
     );
     $element['height'] = array(
       '#type' => 'hidden',
-      '#value' => $file_variables['height'],
+      '#value' => $element_width,
     );
   }
 
