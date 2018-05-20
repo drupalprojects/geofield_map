@@ -190,7 +190,7 @@ class MarkerIconService {
     $element = [
       '#type' => 'managed_file',
       '#theme' => 'image_widget',
-      '#preview_image_style' => 'thumbnail',
+      '#preview_image_style' => 'geofield_map_default_icon_style',
       '#title' => t('Choose a Marker Icon file'),
       '#title_display' => 'invisible',
       '#default_value' => !empty($fid) ? [$fid] : NULL,
@@ -260,7 +260,7 @@ class MarkerIconService {
         '#cardinality' => 1,
       ],
       '#attributes' => [
-        'style' => ['style' => 'font-size:0.8em; color: gray; text-transform: lowercase; font-weight: normal'],
+        'style' => ['style' => 'font-size:0.9em; color: gray; text-transform: lowercase; font-weight: normal'],
       ],
     ];
   }

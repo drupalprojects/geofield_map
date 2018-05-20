@@ -9,6 +9,7 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\Core\Render\Element;
+use Drupal\image\Entity\ImageStyle;
 
 /**
  * Implements hook_help().
@@ -20,8 +21,8 @@ function geofield_map_help($route_name, RouteMatchInterface $route_match) {
       $output .= '<h3>' . t('Geofield Map About') . '</h3>';
       $output .= '<p>' . t('Map Widget, Formatter and Views integration for Geofields.') . '</p>';
       $output .= '<p>' . t('For more info: @readme', [
-        '@readme' => Link::fromTextAndUrl(t('Readme.md'), Url::fromUri('base:/' . drupal_get_path('module', 'geofield_map') . '/README.md', ['attributes' => ['target' => '_blank']]))->toString(),
-      ]) . '</p>';
+          '@readme' => Link::fromTextAndUrl(t('Readme.md'), Url::fromUri('base:/' . drupal_get_path('module', 'geofield_map') . '/README.md', ['attributes' => ['target' => '_blank']]))->toString(),
+        ]) . '</p>';
 
   }
   return $output;
@@ -112,55 +113,60 @@ function geofield_map_preprocess_image_widget(&$variables) {
 
   if (!empty($element['fids']['#value'])) {
     $file = reset($element['#files']);
-    $element['file_' . $file->id()]['filename']['#suffix'] = ' <span class="file-size">(' . format_size($file->getSize()) . ')</span> ';
-    $file_variables = array(
-      'style_name' => $element['#preview_image_style'],
-      'uri' => $file->getFileUri(),
-    );
+    /* @var \Drupal\Core\Image\Image $image */
+    $image = \Drupal::service('image.factory')->get($file->getFileUri());
+    if ($image->isValid()) {
+      $file_width = $image->getWidth();
+      $file_height = $image->getHeight();
 
-    $element_height = 30;
-    $element_width = 30;
-
-    // Determine image dimensions.
-    if (isset($element['#value']['width']) && isset($element['#value']['height'])) {
-      $file_variables['width'] = $element['#value']['width'];
-      $file_variables['height'] = $element['#value']['height'];
-    }
-    else {
-      /* @var \Drupal\Core\Image\Image $image */
-      $image = \Drupal::service('image.factory')->get($file->getFileUri());
-      if ($image->isValid()) {
-        $file_variables['width'] = $image->getWidth();
-        $file_variables['height'] = $image->getHeight();
+      $element['file_' . $file->id()]['filename']['#suffix'] = ' <span class="file-size">(' . format_size($file->getSize()) . ')</span> ';
+      $file_variables = [
+        'style_name' => $element['#preview_image_style'],
+        'uri' => $file->getFileUri(),
+      ];
+      $style = ImageStyle::load($element['#preview_image_style']);
+      $image_preview_width = 34;
+      $image_preview_height = $image_preview_width * $file_width / $file_height;
+      if (!$style) {
+        // Inform the site builders why their image didn't work.
+        \Drupal::logger('image')->warning('Image style (@style) missing for @image. Please add the missing style under /admin/config/media/image-styles.', [
+          '@style' => $file_variables['style_name'],
+          '@image' => $file_variables['uri'],
+        ]);
+        $element['preview'] = [
+          '#weight' => -10,
+          '#theme' => 'image',
+          '#width' => $image_preview_width,
+          '#height' => $image_preview_height,
+          '#uri' => $file_variables['uri'],
+        ];
       }
       else {
-        $file_variables['width'] = $file_variables['height'] = NULL;
+        $element['preview'] = [
+          '#weight' => -10,
+          '#theme' => 'image_style',
+          '#width' => $image_preview_width,
+          '#height' => $image_preview_height,
+          '#style_name' => $file_variables['style_name'],
+          '#uri' => $file_variables['uri'],
+        ];
       }
+
+      // Store the dimensions in the form so the file doesn't have to be
+      // accessed again. This is important for remote files.
+      $element['width'] = [
+        '#type' => 'hidden',
+        '#value' => $image_preview_width,
+      ];
+      $element['height'] = [
+        '#type' => 'hidden',
+        '#value' => $image_preview_height,
+      ];
     }
-
-    $element['preview'] = array(
-      '#weight' => -10,
-      '#theme' => 'image_style',
-      '#width' => $element_height,
-      '#height' => $element_width,
-      '#style_name' => $file_variables['style_name'],
-      '#uri' => $file_variables['uri'],
-    );
-
-    // Store the dimensions in the form so the file doesn't have to be
-    // accessed again. This is important for remote files.
-    $element['width'] = array(
-      '#type' => 'hidden',
-      '#value' => $element_height,
-    );
-    $element['height'] = array(
-      '#type' => 'hidden',
-      '#value' => $element_width,
-    );
   }
-
-  $variables['data'] = array();
+  $variables['data'] = [];
   foreach (Element::children($element) as $child) {
     $variables['data'][$child] = $element[$child];
   }
+
 }
