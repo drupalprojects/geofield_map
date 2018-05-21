@@ -297,6 +297,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
 
     $form['#attached'] = [
       'library' => [
+        'geofield_map/geofield_map_general',
         'geofield_map/geofield_map_view_display_settings',
       ],
     ];
@@ -339,11 +340,6 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
         '#value' => $this->t('Please add at least one Geofield to the View and come back here to set it as Data Source.'),
         '#attributes' => [
           'class' => ['geofield-map-warning'],
-        ],
-        '#attached' => [
-          'library' => [
-            'geofield_map/geofield_map_general',
-          ],
         ],
       ];
       return;
@@ -406,7 +402,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     ];
 
     $map_themers_definitions = $this->mapThemerManager->getDefinitions();
-    $map_themers_options = array_merge(['none' => 'None'], $this->mapThemerManager->getMapThemersList());
+    $map_themers_options = array_merge(['none' => 'None'], $this->mapThemerManager->getMapThemersList('ViewStyle'));
 
     $user_input = $form_state->getUserInput();
     $map_themer_id = isset($user_input['style_options']['map_marker_and_infowindow']['theming']['plugin_id']) ? $user_input['style_options']['map_marker_and_infowindow']['theming']['plugin_id'] : NULL;

@@ -82,7 +82,7 @@ abstract class MapThemerBase extends PluginBase implements MapThemerInterface, C
       '#tag' => 'div',
       '#value' => $this->t('If not empty, this will be used in the legend as label alias.'),
       '#attributes' => [
-        'style' => ['style' => 'font-size:0.8em; color: gray; text-transform: lowercase; font-weight: normal'],
+        'style' => ['style' => 'font-size:0.8em; color: gray; font-weight: normal'],
       ],
     ];
   }

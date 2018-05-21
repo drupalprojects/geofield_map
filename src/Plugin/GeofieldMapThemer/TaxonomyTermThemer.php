@@ -208,6 +208,14 @@ class TaxonomyTermThemer extends MapThemerBase {
             '#value' => $this->t('Taxonomy terms from @vocabularies', [
               '@vocabularies' => implode(', ', $field['target_bundles']),
             ]),
+            'notes' => [
+              '#type' => 'html_tag',
+              '#tag' => 'div',
+              '#value' => $this->t('The - Default Value - will be used as fallback Value/Marker for unset Terms'),
+              '#attributes' => [
+                'style' => ['style' => 'font-size:0.8em; color: gray; font-weight: normal'],
+              ],
+            ],
           ],
         ];
 
@@ -242,6 +250,9 @@ class TaxonomyTermThemer extends MapThemerBase {
             ],
           ],
         ];
+
+        // Add a Default Value to be used as possible fallback Value/Marker.
+        $field['terms']['__default_value__'] = '- Default Value - ';
 
         $i = 0;
         foreach ($field['terms'] as $tid => $term) {
@@ -298,10 +309,12 @@ class TaxonomyTermThemer extends MapThemerBase {
     $fid = NULL;
     $image_style = NULL;
     $taxonomy_field = $map_theming_values['taxonomy_field'];
+    $fallback_icon_style = isset($map_theming_values['fields'][$taxonomy_field]['terms']['__default_value__']['image_style']) ? $map_theming_values['fields'][$taxonomy_field]['terms']['__default_value__']['image_style'] : NULL;
+    $fallback_icon = isset($map_theming_values['fields'][$taxonomy_field]['terms']['__default_value__']['icon_file']) ? $map_theming_values['fields'][$taxonomy_field]['terms']['__default_value__']['icon_file']['fids'] : NULL;
     if (isset($entity->{$taxonomy_field}) && !empty($entity->{$taxonomy_field}->target_id)) {
       $taxonomy_field_term = $entity->{$taxonomy_field}->target_id;
-      $image_style = isset($map_theming_values['fields'][$taxonomy_field]['terms'][$taxonomy_field_term]['image_style']) ? $map_theming_values['fields'][$taxonomy_field]['terms'][$taxonomy_field_term]['image_style'] : 'none';
-      $fid = isset($map_theming_values['fields'][$taxonomy_field]['terms'][$taxonomy_field_term]['icon_file']) ? $map_theming_values['fields'][$taxonomy_field]['terms'][$taxonomy_field_term]['icon_file']['fids'] : NULL;
+      $image_style = isset($map_theming_values['fields'][$taxonomy_field]['terms'][$taxonomy_field_term]['image_style']) ? $map_theming_values['fields'][$taxonomy_field]['terms'][$taxonomy_field_term]['image_style'] : $fallback_icon_style;
+      $fid = isset($map_theming_values['fields'][$taxonomy_field]['terms'][$taxonomy_field_term]['icon_file']) && !empty($map_theming_values['fields'][$taxonomy_field]['terms'][$taxonomy_field_term]['icon_file']['fids']) ? $map_theming_values['fields'][$taxonomy_field]['terms'][$taxonomy_field_term]['icon_file']['fids'] : $fallback_icon;
     }
 
     return $this->markerIcon->getFileManagedUrl($fid, $image_style);

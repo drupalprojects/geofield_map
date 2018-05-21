@@ -272,7 +272,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
         '#type' => 'select',
         '#title' => t('Image style'),
         '#options' => $this->markerIcon->getImageStyleOptions(),
-        '#default_value' => isset($settings['map_marker_and_infowindow']['icon_file_wrapper']['image_style']) ? $settings['map_marker_and_infowindow']['icon_file_wrapper']['image_style'] : 'none',
+        '#default_value' => isset($settings['map_marker_and_infowindow']['icon_file_wrapper']['image_style']) ? $settings['map_marker_and_infowindow']['icon_file_wrapper']['image_style'] : 'geofield_map_default_icon_style',
       ],
       '#states' => [
         'visible' => [
@@ -430,7 +430,6 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
         '#tag' => 'div',
         '#value' => $this->t('Map Type Control: @state', ['@state' => $settings['map_controls']['map_type_control'] ? $this->t('Yes') : $this->t('No')]),
       ];
-
       $map_controls['map_type_control_options_type_ids'] = [
         '#type' => 'html_tag',
         '#tag' => 'div',

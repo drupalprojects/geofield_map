@@ -12,11 +12,13 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\file\FileInterface;
 use Drupal\file\Entity\File;
 use Symfony\Component\Yaml\Yaml;
+use Drupal\Core\Url;
 use Drupal\Core\Config\Config;
 use Drupal\image\Entity\ImageStyle;
 use Drupal\Core\Entity\EntityStorageException;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Utility\LinkGeneratorInterface;
 
 /**
  * Provides an Icon Managed File Service.
@@ -75,6 +77,13 @@ class MarkerIconService {
   protected $defaultIconElement;
 
   /**
+   * The Link Generator Service.
+   *
+   * @var \Drupal\Core\Utility\LinkGeneratorInterface
+   */
+  protected $link;
+
+  /**
    * Constructor of the Icon Managed File Service.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
@@ -85,17 +94,21 @@ class MarkerIconService {
    *   The entity manager.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
+   * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
+   *   The Link Generator service.
    */
   public function __construct(
     ConfigFactoryInterface $config_factory,
     TranslationInterface $string_translation,
     EntityTypeManagerInterface $entity_manager,
-    ModuleHandlerInterface $module_handler
+    ModuleHandlerInterface $module_handler,
+    LinkGeneratorInterface $link_generator
   ) {
     $this->config = $config_factory;
     $this->stringTranslation = $string_translation;
     $this->entityManager = $entity_manager;
     $this->moduleHandler = $module_handler;
+    $this->link = $link_generator;
     $this->geofieldMapSettings = $config_factory->get('geofield_map.settings');
     $this->fileUploadValidators = [
       'file_validate_extensions' => !empty($this->geofieldMapSettings->get('theming.markers_extensions')) ? [$this->geofieldMapSettings->get('theming.markers_extensions')] : ['gif png jpg jpeg'],
@@ -258,6 +271,13 @@ class MarkerIconService {
         '#theme' => 'file_upload_help',
         '#upload_validators' => $this->fileUploadValidators,
         '#cardinality' => 1,
+      ],
+      'geofield_map_settings_link' => [
+        '#type' => 'html_tag',
+        '#tag' => 'div',
+        '#value' => $this->t('Customize this in  @geofield_map_settings_page_link', [
+          '@geofield_map_settings_page_link' => $this->link->generate('Geofield Map Settings Page', Url::fromRoute('geofield_map.settings')),
+        ]),
       ],
       '#attributes' => [
         'style' => ['style' => 'font-size:0.9em; color: gray; text-transform: lowercase; font-weight: normal'],

@@ -75,15 +75,20 @@ class MapThemerPluginManager extends DefaultPluginManager {
   /**
    * Generate an Options array for all the MapThemers plugins.
    *
+   * @param string $context
+   *   Context value to filter the MapThemers plugins with.
+   *
    * @return mixed[]
    *   An array of MapThemers plugins Options. Keys are plugin IDs.
    */
-  public function getMapThemersList() {
+  public function getMapThemersList($context = NULL) {
     $options = [];
     foreach ($this->getDefinitions() as $k => $map_themer) {
-      /* @var \Drupal\Core\StringTranslation\TranslatableMarkup $map_themer_name */
-      $map_themer_name = $map_themer['name'];
-      $options[$k] = $map_themer_name->render();
+      if (empty($context) || in_array($context, $map_themer['context'])) {
+        /* @var \Drupal\Core\StringTranslation\TranslatableMarkup $map_themer_name */
+        $map_themer_name = $map_themer['name'];
+        $options[$k] = $map_themer_name->render();
+      }
     }
     return $options;
   }
