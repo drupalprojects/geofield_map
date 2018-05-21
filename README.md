@@ -22,23 +22,19 @@ capabilities;
 
 ### **Dynamic Map Theming & Contextual Legends.**
 
-As an absolute novelty and uniqueness in the history of Drupal CMS (!), the 
-Geofield Map 2.x new version allows the Geofield Map View definition of Custom 
+The Geofield Map 2.x new version allows the Geofield Map View definition of Custom 
 Markers & Icons Images based on dynamic values of the Map features.
 
-Moreover, a custom Geofield Map Legend Block, defined by the module, is able to 
-expose each Map Theming logics defined in the application in the form of fully 
-configurable and impressive Legends.
+As an absolute novelty and uniqueness in the history of Drupal CMS (!), 
+moreover, a custom Geofield Map Legend Block is defined by the module and is 
+able to expose each Map Theming logics defined in the application in the form 
+of fully configurable and impressive Legends.
 
 <u>Compatibility:</u> This Geofield Map 2.x new version is fully compatible
  with the existing Geofield Map 1.x version (<u>Drupal cache needs to be 
  cleaned right after updating the code</u>).  
 You are (should be) free to upgrade cleanly, without loosing any of your 
 existing Geofield Map settings (!).
-
-Just run:
-
-**`$ composer update 'drupal/geofield_map'`**
 
 ### **Technical Functionalities and specifications**
 
