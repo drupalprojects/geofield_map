@@ -36,6 +36,10 @@ configurable and impressive Legends.
 You are (should be) free to upgrade cleanly, without loosing any of your 
 existing Geofield Map settings (!).
 
+Just run:
+
+**`$ composer update 'drupal/geofield_map'`**
+
 ### **Technical Functionalities and specifications**
 
 The actual module release implements the following components:
