@@ -353,7 +353,8 @@
               $.extend(markeclusterOption, markeclusterAdditionalOptions);
             }
 
-            var markerCluster = new MarkerClusterer(map, self.map_data[mapid].markers, markeclusterOption);
+            // Define a markerCluster property, so other code can interact with it.
+            self.map_data[mapid].markerCluster = new MarkerClusterer(map, self.map_data[mapid].markers, markeclusterOption);
           }
         }
 
