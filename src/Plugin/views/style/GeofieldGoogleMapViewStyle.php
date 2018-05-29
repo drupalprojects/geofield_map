@@ -21,6 +21,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\geofield_map\MapThemerPluginManager;
 use Drupal\Component\Plugin\Exception\PluginException;
+use Drupal\views\Plugin\views\PluginBase;
 
 /**
  * Style plugin to render a View output as a Leaflet map.
@@ -534,7 +535,29 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
 
           // Render the entity with the selected view mode.
           if (isset($description_field) && $description_field === '#rendered_entity' && is_object($result)) {
-            $build = $this->entityManager->getViewBuilder($entity->getEntityTypeId())->view($entity, $map_settings['view_mode'], $entity->language()->getId());
+
+            $view = $this->view;
+
+            // Set the langcode to be used for rendering the entity.
+            $rendering_language = $view->display_handler->getOption('rendering_language');
+            $dynamic_renderers = [
+              '***LANGUAGE_entity_translation***' => 'TranslationLanguageRenderer',
+              '***LANGUAGE_entity_default***' => 'DefaultLanguageRenderer',
+            ];
+            if (isset($dynamic_renderers[$rendering_language])) {
+              $langcode = $entity->language()->getId();
+            }
+            else {
+              if (strpos($rendering_language, '***LANGUAGE_') !== FALSE) {
+                $langcode = PluginBase::queryLanguageSubstitutions()[$rendering_language];
+              }
+              else {
+                // Specific langcode set.
+                $langcode = $rendering_language;
+              }
+            }
+
+            $build = $this->entityManager->getViewBuilder($entity->getEntityTypeId())->view($entity, $map_settings['view_mode'], $langcode);
             $description[] = $this->renderer->renderPlain($build);
           }
           // Normal rendering via fields.
