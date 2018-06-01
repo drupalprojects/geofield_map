@@ -518,12 +518,6 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
 
         $geofield_value = $this->getFieldValue($id, $geofield_name);
 
-        // In case the result is not among the raw results, get it from the
-        // rendered results.
-        if (empty($geofield_value)) {
-          $geofield_value = $this->rendered_fields[$id][$geofield_name];
-        }
-
         // In case the result is not null.
         if (!empty($geofield_value)) {
           // If it is a single value field, transform into an array.
