@@ -102,7 +102,7 @@ class EntityTypeThemer extends MapThemerBase {
     // Get the View Filtered entity bundles.
     $entity_type = $geofieldMapView->getViewEntityType();
     $entity_bundles = $this->entityTypeBundleInfo->getBundleInfo($entity_type);
-    $view_bundles = !empty($geofieldMapView->getViewFilteredBundles()) ? $geofieldMapView->getViewFilteredBundles() : array_keys($entity_bundles);
+    $view_bundles = !empty($geofieldMapView->getViewFilteredBundles()) ? array_intersect(array_keys($entity_bundles), $geofieldMapView->getViewFilteredBundles()) : array_keys($entity_bundles);
 
     // Reorder the entity bundles based on existing (Default) Element settings.
     if (!empty($default_element)) {

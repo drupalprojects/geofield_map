@@ -265,7 +265,7 @@ class MarkerIconService {
    */
   public function getFileUploadHelp() {
     return [
-      '#type' => 'container',
+      '#type' => 'html_tag',
       '#tag' => 'div',
       'file_upload_help' => [
         '#theme' => 'file_upload_help',
@@ -354,7 +354,7 @@ class MarkerIconService {
    *   The image style identifier.
    *
    * @return string
-   *   The icon preview element.
+   *   The url path to the file id (image style).
    */
   public function getFileManagedUrl($fid = NULL, $image_style = 'none') {
     if (isset($fid) && $file = File::load($fid)) {
