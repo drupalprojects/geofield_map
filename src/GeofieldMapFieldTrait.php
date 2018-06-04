@@ -445,6 +445,7 @@ trait GeofieldMapFieldTrait {
    *   The Form element to alter.
    */
   private function setMapZoomAndPanElement(array $settings, array $default_settings, array &$elements) {
+
     $elements['map_zoom_and_pan'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Map Zoom and Pan'),
@@ -473,7 +474,6 @@ trait GeofieldMapFieldTrait {
         '#title' => $this->t('Min Zoom Level'),
         '#default_value' => $settings['map_zoom_and_pan']['zoom']['min'],
         '#description' => $this->t('The Minimum Zoom level for the Map.'),
-        '#description' => $this->t('The Minimum Zoom level for the Map.'),
       ],
       'max' => [
         '#type' => 'number',
@@ -485,19 +485,30 @@ trait GeofieldMapFieldTrait {
         '#element_validate' => [[get_class($this), 'maxZoomLevelValidate']],
       ],
     ];
+    $elements['map_zoom_and_pan']['gestureHandling'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Gesture Handling (Controlling Zoom and Pan)'),
+      '#options' => [
+        'auto' => 'auto',
+        'greedy' => 'greedy',
+        'cooperative' => 'cooperative' ,
+        'none' => 'none',
+      ],
+      '#default_value' => isset($settings['map_zoom_and_pan']['gestureHandling']) ? $settings['map_zoom_and_pan']['gestureHandling'] : 'auto',
+      '#description' => $this->t("This control sets how users can zoom and pan the map, and also whether the user's page scrolling actions take priority over the map's zooming and panning.<br>Visit the @google_map_page to inspect and learn the corresponding behaviours of the different options.", [
+        '@google_map_page' => $this->link->generate(t("Official Google Maps Javascript API 'Controlling Zoom and Pan' page"), Url::fromUri('https://developers.google.com/maps/documentation/javascript/interaction', [
+          'absolute' => TRUE,
+          'attributes' => ['target' => 'blank'],
+        ])),
+      ]),
+    ];
     $elements['map_zoom_and_pan']['scrollwheel'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Scrollwheel'),
-      '#description' => $this->t('Enable scrollwheel zooming'),
+      '#type' => 'hidden',
       '#default_value' => $settings['map_zoom_and_pan']['scrollwheel'],
-      '#return_value' => 1,
     ];
     $elements['map_zoom_and_pan']['draggable'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Draggable'),
-      '#description' => $this->t('Enable dragging/panning on the map'),
+      '#type' => 'hidden',
       '#default_value' => $settings['map_zoom_and_pan']['draggable'],
-      '#return_value' => 1,
     ];
 
     $elements['map_zoom_and_pan']['map_reset'] = [
