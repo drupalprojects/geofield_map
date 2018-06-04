@@ -352,7 +352,7 @@ class TaxonomyTermThemer extends MapThemerBase {
       // - the specific value is flagged as excluded from the Legend, or
       // - no image is associated and the plugin denies to render the
       // DefaultLegendIcon definition.
-      if ($term['legend_exclude'] || (empty($fid) && !$this->renderDefaultLegendIcon())) {
+      if (isset($term['legend_exclude']) || (empty($fid) && !$this->renderDefaultLegendIcon())) {
         continue;
       }
       $label = isset($term['label']) ? $term['label'] : $vid;
