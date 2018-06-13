@@ -202,6 +202,7 @@ class MarkerIconService {
 
     $element = [
       '#type' => 'managed_file',
+      '#geofield_map_marker_icon_upload' => TRUE,
       '#theme' => 'image_widget',
       '#preview_image_style' => 'geofield_map_default_icon_style',
       '#title' => t('Choose a Marker Icon file'),
