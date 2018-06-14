@@ -219,6 +219,9 @@ class TaxonomyTermThemer extends MapThemerBase {
           ],
         ];
 
+        $label_alias_upload_help = $this->getLabelAliasHelp();
+        $file_upload_help = $this->markerIcon->getFileUploadHelp();
+
         $element['fields'][$k] = [
           '#type' => 'container',
           'terms' => [
@@ -227,10 +230,10 @@ class TaxonomyTermThemer extends MapThemerBase {
               $this->t('Taxonomy term'),
               $this->t('Weight'),
               Markup::create($this->t('Term Alias @description', [
-                '@description' => $this->renderer->renderPlain($this->getLabelAliasHelp()),
+                '@description' => $this->renderer->renderPlain($label_alias_upload_help),
               ])),
               Markup::create($this->t('Marker Icon @file_upload_help', [
-                '@file_upload_help' => $this->renderer->renderPlain($this->markerIcon->getFileUploadHelp()),
+                '@file_upload_help' => $this->renderer->renderPlain($file_upload_help),
               ])),
               $this->t('Icon Image Style'),
               $this->t('Hide from Legend'),

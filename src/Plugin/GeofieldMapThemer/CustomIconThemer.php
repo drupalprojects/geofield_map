@@ -36,13 +36,14 @@ class CustomIconThemer extends MapThemerBase {
     // Get the existing (Default) Element settings.
     $default_element = $this->getDefaultThemerElement($defaults);
 
+    $file_upload_help = $this->markerIcon->getFileUploadHelp();
     $fid = (integer) !empty($default_element['icon_file']['fids']) ? $default_element['icon_file']['fids'] : NULL;
     $element = [
       '#markup' => Markup::create($this->t('<label>Custom Icon Image File</label>')),
       '#type' => 'container',
       'description' => [
         '#markup' => Markup::create($this->t('The chosen icon file will be used as Marker for all Geofield Map features @file_upload_help', [
-          '@file_upload_help' => $this->renderer->renderPlain($this->markerIcon->getFileUploadHelp()),
+          '@file_upload_help' => $this->renderer->renderPlain($file_upload_help),
         ])),
       ],
       'icon_file' => $this->markerIcon->getIconFileManagedElement($fid[0]),

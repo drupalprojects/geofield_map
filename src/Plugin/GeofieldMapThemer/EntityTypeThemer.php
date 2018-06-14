@@ -124,16 +124,19 @@ class EntityTypeThemer extends MapThemerBase {
       ],
     ];
 
+    $label_alias_upload_help = $this->getLabelAliasHelp();
+    $file_upload_help = $this->markerIcon->getFileUploadHelp();
+
     $element = [
       '#type' => 'table',
       '#header' => [
         $this->t('@entity type Type/Bundle', ['@entity type' => $entity_type]),
         $this->t('Weight'),
         Markup::create($this->t('Label Alias @description', [
-          '@description' => $this->renderer->renderPlain($this->getLabelAliasHelp()),
+          '@description' => $this->renderer->renderPlain($label_alias_upload_help),
         ])),
         Markup::create($this->t('Marker Icon @file_upload_help', [
-          '@file_upload_help' => $this->renderer->renderPlain($this->markerIcon->getFileUploadHelp()),
+          '@file_upload_help' => $this->renderer->renderPlain($file_upload_help),
         ])),
         $this->t('Icon Image Style'),
         $this->t('Exclude from Legend'),

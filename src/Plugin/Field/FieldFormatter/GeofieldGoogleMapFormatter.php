@@ -256,6 +256,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       ],
     ];
 
+    $file_upload_help = $this->markerIcon->getFileUploadHelp();
     $fid = (integer) !empty($settings['map_marker_and_infowindow']['icon_file_wrapper']['icon_file']['fids']) ? $settings['map_marker_and_infowindow']['icon_file_wrapper']['icon_file']['fids'] : NULL;
     $elements['map_marker_and_infowindow']['icon_file_wrapper'] = [
       '#type' => 'container',
@@ -264,7 +265,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       ],
       'description' => [
         '#markup' => Markup::create($this->t('The chosen icon file will be used as Marker for this content @file_upload_help', [
-          '@file_upload_help' => $this->renderer->renderPlain($this->markerIcon->getFileUploadHelp()),
+          '@file_upload_help' => $this->renderer->renderPlain($file_upload_help),
         ])),
       ],
       'icon_file' => $this->markerIcon->getIconFileManagedElement($fid),
