@@ -236,7 +236,7 @@ class EntityTypeThemer extends MapThemerBase {
 
       // Don't render legend row in case no image is associated and the plugin
       // denies to render the DefaultLegendIcon definition.
-      if (empty($fid) && !$this->renderDefaultLegendIcon()) {
+      if (!empty($value['legend_exclude']) || (empty($fid) && !$this->renderDefaultLegendIcon())) {
         continue;
       }
       $label = isset($value['label']) ? $value['label'] : $bundle;
