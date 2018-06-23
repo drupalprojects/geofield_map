@@ -309,11 +309,11 @@ class TaxonomyTermThemer extends MapThemerBase {
    * {@inheritdoc}
    */
   public function getIcon(array $datum, GeofieldGoogleMapViewStyle $geofieldMapView, EntityInterface $entity, $map_theming_values) {
-    $fid = NULL;
-    $image_style = NULL;
     $taxonomy_field = $map_theming_values['taxonomy_field'];
     $fallback_icon_style = isset($map_theming_values['fields'][$taxonomy_field]['terms']['__default_value__']['image_style']) ? $map_theming_values['fields'][$taxonomy_field]['terms']['__default_value__']['image_style'] : NULL;
     $fallback_icon = isset($map_theming_values['fields'][$taxonomy_field]['terms']['__default_value__']['icon_file']) ? $map_theming_values['fields'][$taxonomy_field]['terms']['__default_value__']['icon_file']['fids'] : NULL;
+    $image_style = $fallback_icon_style;
+    $fid = $fallback_icon;
     if (isset($entity->{$taxonomy_field}) && !empty($entity->{$taxonomy_field}->target_id)) {
       $taxonomy_field_term = $entity->{$taxonomy_field}->target_id;
       $image_style = isset($map_theming_values['fields'][$taxonomy_field]['terms'][$taxonomy_field_term]['image_style']) ? $map_theming_values['fields'][$taxonomy_field]['terms'][$taxonomy_field_term]['image_style'] : $fallback_icon_style;
