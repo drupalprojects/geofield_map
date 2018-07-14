@@ -21,7 +21,7 @@
             Drupal.geoFieldMap.map_data[mapid] = options;
 
             // Load before the Gmap Library, if needed, then initialize the Map.
-            if (typeof google === 'undefined' && (drupalSettings['geofield_map'].gmap_api_key || options.map_library === 'gmap')) {
+            if (typeof google === 'undefined' && (options.gmap_api_key || options.map_library === 'gmap')) {
               Drupal.geoFieldMap.loadGoogle(mapid, function () {
                 Drupal.geoFieldMap.map_initialize(options);
               });

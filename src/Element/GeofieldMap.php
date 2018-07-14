@@ -232,15 +232,10 @@ class GeofieldMap extends GeofieldElementBase {
       'click_to_place_marker' => $element['#click_to_place_marker'] ? TRUE : FALSE,
     ];
 
-    // Geofield Map Element global settings.
-    // If the gmap_api_key is defined, set it.
-    if ($element['#gmap_api_key'] && strlen($element['#gmap_api_key']) > 0) {
-      $settings['gmap_api_key'] = $element['#gmap_api_key'];
-    }
-
     $element['#attached']['drupalSettings'] = [
       'geofield_map' => $settings,
     ];
+
     return $element;
   }
 
