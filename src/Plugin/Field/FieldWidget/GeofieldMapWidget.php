@@ -203,38 +203,38 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
    */
   public static function defaultSettings() {
     return [
-        'default_value' => [
-          'lat' => '0',
-          'lon' => '0',
-        ],
-        'map_library' => 'gmap',
-        'map_google_api_key' => '',
-        'map_google_places' => [
-          'places_control' => FALSE,
-          'places_additional_options' => '',
-        ],
-        'map_dimensions' => [
-          'width' => '100%',
-          'height' => '450px',
-        ],
-        'map_type_google' => 'roadmap',
-        'map_type_leaflet' => 'OpenStreetMap_Mapnik',
-        'map_type_selector' => TRUE,
-        'zoom_level' => 5,
-        'zoom' => [
-          'start' => 6,
-          'focus' => 12,
-          'min' => 1,
-          'max' => 22,
-        ],
-        'click_to_find_marker' => FALSE,
-        'click_to_place_marker' => FALSE,
-        'geoaddress_field' => [
-          'field' => '0',
-          'hidden' => FALSE,
-          'disabled' => TRUE,
-        ],
-      ] + parent::defaultSettings();
+      'default_value' => [
+        'lat' => '0',
+        'lon' => '0',
+      ],
+      'map_library' => 'gmap',
+      'map_google_api_key' => '',
+      'map_google_places' => [
+        'places_control' => FALSE,
+        'places_additional_options' => '',
+      ],
+      'map_dimensions' => [
+        'width' => '100%',
+        'height' => '450px',
+      ],
+      'map_type_google' => 'roadmap',
+      'map_type_leaflet' => 'OpenStreetMap_Mapnik',
+      'map_type_selector' => TRUE,
+      'zoom_level' => 5,
+      'zoom' => [
+        'start' => 6,
+        'focus' => 12,
+        'min' => 0,
+        'max' => 22,
+      ],
+      'click_to_find_marker' => FALSE,
+      'click_to_place_marker' => FALSE,
+      'geoaddress_field' => [
+        'field' => '0',
+        'hidden' => FALSE,
+        'disabled' => TRUE,
+      ],
+    ] + parent::defaultSettings();
   }
 
   /**
@@ -654,7 +654,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
 
     $element += [
       '#gmap_api_key' => $gmap_api_key,
-      '#gmap_places' => $this->getSetting('map_google_places')['places_control'],
+      '#gmap_places' => (int) $this->getSetting('map_google_places')['places_control'],
       '#gmap_places_options' => $this->getSetting('map_google_places')['places_additional_options'],
       '#type' => 'geofield_map',
       '#default_value' => $latlon_value,
