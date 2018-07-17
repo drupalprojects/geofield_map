@@ -183,7 +183,7 @@ class TaxonomyTermThemer extends MapThemerBase {
       $element['taxonomy_field'] = [
         '#type' => 'html_tag',
         '#tag' => 'div',
-        '#value' => $this->t('At least a Taxonomy Term reference field should be added to the View to use this Map Theming option.'),
+        '#value' => $this->t('At least a Taxonomy Term reference field (<u>with a cardinality of 1</u>) should be added to the View to use this Map Theming option.'),
         '#attributes' => [
           'class' => ['geofield-map-warning'],
         ],
@@ -193,7 +193,7 @@ class TaxonomyTermThemer extends MapThemerBase {
       $element['taxonomy_field'] = [
         '#type' => 'select',
         '#title' => $this->t('Taxonomy Field'),
-        '#description' => $this->t('Chose the Taxonomy Field to base the Map Theming upon.'),
+        '#description' => $this->t('Chose the Taxonomy Term reference field to base the Map Theming upon <br>(only the ones <u>with a cardinality of 1</u> are available for theming).'),
         '#options' => array_combine(array_keys($taxonomy_ref_fields), array_keys($taxonomy_ref_fields)),
         '#default_value' => !empty($default_element['taxonomy_field']) ? $default_element['taxonomy_field'] : array_shift(array_keys($taxonomy_ref_fields)),
       ];
