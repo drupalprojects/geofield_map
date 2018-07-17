@@ -269,7 +269,7 @@ trait GeofieldMapFieldTrait {
       if (is_a($item, '\Drupal\geofield\Plugin\Field\FieldType\GeofieldItem') && isset($item->value)) {
         $geometry = $this->geoPhpWrapper->load($item->value);
       }
-      elseif (preg_match('/^(POINT).*\(.*.*\)$/', $item)) {
+      elseif (preg_match('/^(POINT|LINESTRING|POLYGON|MULTIPOINT|MULTILINESTRING|MULTIPOLYGON|GEOMETRYCOLLECTION).*\(.*.*\)$/', $item)) {
         $geometry = $this->geoPhpWrapper->load($item);
       }
       if (isset($geometry)) {
