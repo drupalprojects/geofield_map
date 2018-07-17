@@ -211,6 +211,33 @@
       return latLng;
     },
 
+    // Returns the Map Bounds, in the specific Map Library format.
+    getMapBounds: function (mapid, map_library) {
+      var self = this;
+      var mapid_map_library = self.map_data[mapid].map_library;
+      var ne, sw, bounds, bounds_array, bounds_obj;
+      if (!map_library) {
+        map_library = mapid_map_library;
+      }
+
+      // Define the bounds object.
+      // Note: At the moment both Google Maps and Leaflet libraries use the same method names.
+      bounds = self.map_data[mapid].map.getBounds();
+      if (typeof bounds === 'object') {
+        ne = bounds.getNorthEast();
+        sw = bounds.getSouthWest();
+        bounds_array = [sw, ne];
+        switch (map_library) {
+          case 'leaflet':
+            bounds_obj = new L.latLngBounds(bounds_array);
+            break;
+          default:
+            bounds_obj = new google.maps.LatLngBounds(bounds_array);
+        }
+      }
+      return bounds_obj;
+    },
+
     // Define the Geofield Map.
     getGeofieldMap: function (mapid) {
       var self = this;
@@ -446,7 +473,10 @@
             self.map_data[params.mapid].autocompletePlacesService = new google.maps.places.Autocomplete(
               self.map_data[params.mapid].search.get(0), self.map_data[params.mapid].gmap_places_options
             );
-            self.map_data[params.mapid].autocompletePlacesService.bindTo('bounds', self.map_data[params.mapid].map);
+            // Set the bias to the Google Maps Bounds, if the Google Maps exists, as the map library.
+            if (self.getMapBounds(params.mapid) === 'object') {
+              self.map_data[params.mapid].autocompletePlacesService.bindTo('bounds', self.getMapBounds(params.mapid));
+            }
             self.map_data[params.mapid].autocompletePlacesService.addListener('place_changed', function() {
               self.map_data[params.mapid].search.removeClass('ui-autocomplete-loading');
               var place = self.map_data[params.mapid].autocompletePlacesService.getPlace();
