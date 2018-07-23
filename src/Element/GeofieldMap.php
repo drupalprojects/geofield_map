@@ -215,7 +215,6 @@ class GeofieldMap extends GeofieldElementBase {
       'latid' => $element['lat']['#attributes']['id'],
       'lngid' => $element['lon']['#attributes']['id'],
       'searchid' => isset($element['map']['geocode']) ? $element['map']['geocode']['#attributes']['id'] : NULL,
-      'geoaddress_field' => $address_field_exists ? $element['#geoaddress_field']['field'] : NULL,
       'geoaddress_field_id' => $address_field_exists ? $address_field['widget'][0]['value']['#id'] : NULL,
       'mapid' => $mapid,
       'widget' => TRUE,
