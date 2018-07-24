@@ -89,9 +89,9 @@ class GeofieldMap extends GeofieldElementBase {
 
       if (\Drupal::currentUser()->hasPermission('configure geofield_map')) {
         $element['map']['geocode']['#description'] .= '<div class="geofield-map-message">' . t('@google_places_autocomplete_message<br>@message_recipient', [
-          '@google_places_autocomplete_message' => !$element['#gmap_places'] ? 'Google Places Autocomplete Service disabled. Might be enabled in the Geofield Widget configuration.' : 'Google Places Autocomplete Service enabled.',
-          '@message_recipient' => t('(This message is only shown to the Geofield Map module administrator).'),
-        ]) . '</div>';
+            '@google_places_autocomplete_message' => !$element['#gmap_places'] ? 'Google Places Autocomplete Service disabled. Might be enabled in the Geofield Widget configuration.' : 'Google Places Autocomplete Service enabled.',
+            '@message_recipient' => t('(This message is only shown to the Geofield Map module administrator).'),
+          ]) . '</div>';
       }
 
     }
@@ -165,30 +165,40 @@ class GeofieldMap extends GeofieldElementBase {
     $element['lon']['#attributes']['id'] = 'lon-' . $element['#id'];
 
     $address_field_exists = FALSE;
-    // Geoaddress Field Settings (now limited to the first delta value)
-    if ($element['#delta'] == 0) {
-      if (!empty($element['#geoaddress_field']['field'])) {
-        $address_field_name = $element['#geoaddress_field']['field'];
-        $parents = array_slice($element['#array_parents'], 0, -4);
-        $parents[] = $address_field_name;
+    if (!empty($element['#geoaddress_field']['field'])) {
+      $address_field_name = $element['#geoaddress_field']['field'];
+      $parents = array_slice($element['#array_parents'], 0, -4);
+      $parents[] = $address_field_name;
 
-        $address_field = NestedArray::getValue($complete_form, $parents, $address_field_exists);
-        if ($address_field_exists) {
-          $address_field['widget'][$element['#delta']]['value']['#description'] = (string) t('This value will be synchronized with the Geofield Map Reverse-Geocoded value.');
-          if ($element['#geoaddress_field']['hidden']) {
-            $address_field['#attributes']['class'][] = 'geofield_map_geoaddress_field_hidden';
-          }
-          if ($element['#geoaddress_field']['disabled']) {
-            $address_field['widget'][$element['#delta']]['value']['#attributes']['readonly'] = 'readonly';
-            $address_field['widget'][$element['#delta']]['value']['#description'] = (string) t('This field is readonly. It will be synchronized with the Geofield Map Reverse-Geocoded value.');
-          }
-          // Ensure the geoaddress_field has got an #id, otherwise generate it.
-          if (!isset($address_field['widget'][$element['#delta']]['value']['#id'])) {
-            $address_field['widget'][$element['#delta']]['value']['#id'] = $element['#geoaddress_field']['field'] . '-0';
-          }
-          NestedArray::setValue($complete_form, $parents, $address_field);
+      $address_field = NestedArray::getValue($complete_form, $parents, $address_field_exists);
+
+      // Geoaddress Field Settings.
+      if ($address_field_exists && ($address_field['widget']['#cardinality'] == '-1' || $address_field['widget']['#cardinality'] > $element['#delta'] - 1)) {
+
+        $address_field['widget']['#cardinality'] = $element['#delta'] + 1;
+
+        if ($element['#delta'] > 0 && (!isset($address_field['widget'][$element['#delta']]) || empty($address_field['widget'][$element['#delta']]['value']['#default_value']))) {
+          $address_field['widget'][$element['#delta']] = $address_field['widget'][$element['#delta'] - 1];
+          $address_field['widget'][$element['#delta']]['#delta'] = $element['#delta'];
+          $address_field['widget'][$element['#delta']]['_weight']['#default_value'] = $element['#delta'];
+          $address_field['widget'][$element['#delta']]['value']['#default_value'] = NULL;
         }
+
+        $address_field['widget'][$element['#delta']]['value']['#description'] = (string) t('This value will be synchronized with the Geofield Map Reverse-Geocoded value.');
+        if ($element['#geoaddress_field']['hidden']) {
+          $address_field['#attributes']['class'][] = 'geofield_map_geoaddress_field_hidden';
+        }
+        if ($element['#geoaddress_field']['disabled']) {
+          $address_field['widget'][$element['#delta']]['value']['#attributes']['readonly'] = 'readonly';
+          $address_field['widget'][$element['#delta']]['value']['#description'] = (string) t('This field is readonly. It will be synchronized with the Geofield Map Reverse-Geocoded value.');
+        }
+
+        // Generate the geoaddress_field #id, otherwise generate it.
+        $address_field['widget'][$element['#delta']]['value']['#id'] = $element['#geoaddress_field']['field'] . '-' . $element['#delta'];
+
+        NestedArray::setValue($complete_form, $parents, $address_field);
       }
+
     }
 
     // Attach Geofield Map Libraries.
@@ -215,7 +225,7 @@ class GeofieldMap extends GeofieldElementBase {
       'latid' => $element['lat']['#attributes']['id'],
       'lngid' => $element['lon']['#attributes']['id'],
       'searchid' => isset($element['map']['geocode']) ? $element['map']['geocode']['#attributes']['id'] : NULL,
-      'geoaddress_field_id' => $address_field_exists ? $address_field['widget'][0]['value']['#id'] : NULL,
+      'geoaddress_field_id' => $address_field_exists && isset($address_field['widget'][$element['#delta']]['value']['#id']) ? $address_field['widget'][$element['#delta']]['value']['#id'] : NULL,
       'mapid' => $mapid,
       'widget' => TRUE,
       'gmap_places' => $element['#gmap_places'],
