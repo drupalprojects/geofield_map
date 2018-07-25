@@ -173,9 +173,7 @@ class GeofieldMap extends GeofieldElementBase {
       $address_field = NestedArray::getValue($complete_form, $parents, $address_field_exists);
 
       // Geoaddress Field Settings.
-      if ($address_field_exists && ($address_field['widget']['#cardinality'] == '-1' || $address_field['widget']['#cardinality'] > $element['#delta'] - 1)) {
-
-        $address_field['widget']['#cardinality'] = $element['#delta'] + 1;
+      if ($address_field_exists && ($address_field['widget']['#cardinality'] == '-1' || $address_field['widget']['#cardinality'] > $element['#delta'])) {
 
         if ($element['#delta'] > 0 && (!isset($address_field['widget'][$element['#delta']]) || empty($address_field['widget'][$element['#delta']]['value']['#default_value']))) {
           $address_field['widget'][$element['#delta']] = $address_field['widget'][$element['#delta'] - 1];

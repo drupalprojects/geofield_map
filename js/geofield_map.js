@@ -578,16 +578,14 @@
         });
 
         // Set default search field value (just to the first geofield_map).
-        if (params.mapid === self.firstMapId && self.map_data[params.mapid].search && params.geoaddress_field_id !== null && !!self.map_data[params.mapid].geoaddress_field.val()) {
+        if (self.map_data[params.mapid].search && params.geoaddress_field_id !== null && !!self.map_data[params.mapid].geoaddress_field.val()) {
           // Copy from the geoaddress_field.val
           self.map_data[params.mapid].search.val(self.map_data[params.mapid].geoaddress_field.val());
         }
         // If the coordinates are valid, provide a Gmap Reverse Geocode.
         else if (self.map_data[params.mapid].search && (Math.abs(params.lat) > 0 && Math.abs(params.lng) > 0)) {
-          // Sets as Reverse geocode from the Google Map Geofield Coordinates.
-          var gmapPosition = new google.maps.LatLng(params.lat, params.lng);
           // The following will work only if a google geocoder has been defined.
-          self.reverse_geocode(params.mapid, gmapPosition);
+          self.reverse_geocode(params.mapid, position);
         }
 
       }

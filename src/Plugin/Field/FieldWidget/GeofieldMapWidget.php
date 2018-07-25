@@ -476,7 +476,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     $elements['geoaddress_field'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Geoaddressed Field'),
-      '#description' => $this->t('If a not null Google Maps API Key is set, it is possible to choose the Entity Title, or a "string" type field (among the content type ones), to sync and populate with the Search / Reverse Geocoded Address.<br><strong> Note: In case of a multivalue Geofield, this is run just from the first Geofield Map</strong>'),
+      '#description' => $this->t('If a not null Google Maps API Key is set, it is possible to choose the Entity Title, or a "string" type field (among the content type ones), to sync and populate with the Search / Reverse Geocoded Address.'),
       '#states' => [
         'invisible' => [
           ':input[name="fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][map_google_api_key]"]' => ['value' => ''],
