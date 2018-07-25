@@ -486,7 +486,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     $elements['geoaddress_field']['field'] = [
       '#type' => 'select',
       '#title' => $this->t('Choose an existing field where to store the Searched / Reverse Geocoded Address'),
-      '#description' => $this->t('Choose among the title and the text fields of this entity type, if available'),
+      '#description' => $this->t('Choose among the title and the simple string fields (un-formatted text fields) of this bundle/entity type, if available.'),
       '#options' => $string_fields_options,
       '#default_value' => $this->getSetting('geoaddress_field')['field'],
     ];

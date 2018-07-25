@@ -556,11 +556,13 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
           }
           // Normal rendering via fields.
           elseif (isset($description_field)) {
-            $description_field_name = strtolower($map_settings['map_marker_and_infowindow']['infowindow_field']);
-            if (isset($entity->$description_field_name)) {
-              // Check if the entity has a $description_field_name field.
-              foreach ($entity->$description_field_name->getValue() as $value) {
-                if ($map_settings['map_marker_and_infowindow']['multivalue_split'] == FALSE) {
+            // Check if the entity has a $description_field field.
+            if (isset($entity->$description_field)) {
+              /* @var \Drupal\Core\Field\FieldItemList $description_field_entity */
+              $description_field_entity = $entity->$description_field;
+              $description_field_cardinality = $description_field_entity->getFieldDefinition()->getFieldStorageDefinition()->getCardinality();
+              foreach ($description_field_entity->getValue() as $value) {
+                if ($description_field_cardinality == 1 || $map_settings['map_marker_and_infowindow']['multivalue_split'] == FALSE) {
                   $description[] = $this->rendered_fields[$id][$description_field];
                   break;
                 }

@@ -175,7 +175,7 @@ class GeofieldMap extends GeofieldElementBase {
       // Geoaddress Field Settings.
       if ($address_field_exists && ($address_field['widget']['#cardinality'] == '-1' || $address_field['widget']['#cardinality'] > $element['#delta'])) {
 
-        if ($element['#delta'] > 0 && (!isset($address_field['widget'][$element['#delta']]) || empty($address_field['widget'][$element['#delta']]['value']['#default_value']))) {
+        if ($element['#delta'] > 0 && !isset($address_field['widget'][$element['#delta']])) {
           $address_field['widget'][$element['#delta']] = $address_field['widget'][$element['#delta'] - 1];
           $address_field['widget'][$element['#delta']]['#delta'] = $element['#delta'];
           $address_field['widget'][$element['#delta']]['_weight']['#default_value'] = $element['#delta'];

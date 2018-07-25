@@ -587,7 +587,6 @@
           // The following will work only if a google geocoder has been defined.
           self.reverse_geocode(params.mapid, position);
         }
-
       }
     }
   };
