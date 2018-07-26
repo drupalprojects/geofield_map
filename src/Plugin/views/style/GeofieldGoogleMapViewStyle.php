@@ -520,12 +520,14 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
 
         // In case the result is not null.
         if (!empty($geofield_value)) {
+          $entity = $result->_entity;
           // If it is a single value field, transform into an array.
           $geofield_value = is_array($geofield_value) ? $geofield_value : [$geofield_value];
 
-          $description_field = isset($map_settings['map_marker_and_infowindow']['infowindow_field']) ? $map_settings['map_marker_and_infowindow']['infowindow_field'] : NULL;
           $description = [];
-          $entity = $result->_entity;
+          $description_field = isset($map_settings['map_marker_and_infowindow']['infowindow_field']) ? $map_settings['map_marker_and_infowindow']['infowindow_field'] : NULL;
+          /* @var \Drupal\Core\Field\FieldItemList $description_field_entity */
+          $description_field_entity = $entity->$description_field;
 
           // Render the entity with the selected view mode.
           if (isset($description_field) && $description_field === '#rendered_entity' && is_object($result)) {
@@ -557,16 +559,14 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
           // Normal rendering via fields.
           elseif (isset($description_field)) {
             // Check if the entity has a $description_field field.
-            if (isset($entity->$description_field)) {
-              /* @var \Drupal\Core\Field\FieldItemList $description_field_entity */
-              $description_field_entity = $entity->$description_field;
+            if (isset($description_field_entity)) {
               $description_field_cardinality = $description_field_entity->getFieldDefinition()->getFieldStorageDefinition()->getCardinality();
               foreach ($description_field_entity->getValue() as $value) {
                 if ($description_field_cardinality == 1 || $map_settings['map_marker_and_infowindow']['multivalue_split'] == FALSE) {
                   $description[] = $this->rendered_fields[$id][$description_field];
                   break;
                 }
-                $description[] = isset($value['value']) ? $value['value'] : '';
+                $description[] = isset($value['value']) ? $value['value'] : NULL;
               }
             }
             // Else get the views field value.

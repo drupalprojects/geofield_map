@@ -191,7 +191,7 @@ class GeofieldMap extends GeofieldElementBase {
           $address_field['widget'][$element['#delta']]['value']['#description'] = (string) t('This field is readonly. It will be synchronized with the Geofield Map Reverse-Geocoded value.');
         }
 
-        // Generate the geoaddress_field #id, otherwise generate it.
+        // Re-Generate the geoaddress_field #id.
         $address_field['widget'][$element['#delta']]['value']['#id'] = $element['#geoaddress_field']['field'] . '-' . $element['#delta'];
 
         NestedArray::setValue($complete_form, $parents, $address_field);

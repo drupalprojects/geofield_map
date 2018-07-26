@@ -625,8 +625,11 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       'data' => [],
     ];
 
-    $description_field = isset($map_settings['map_marker_and_infowindow']['infowindow_field']) ? $map_settings['map_marker_and_infowindow']['infowindow_field'] : NULL;
     $description = [];
+    $description_field = isset($map_settings['map_marker_and_infowindow']['infowindow_field']) ? $map_settings['map_marker_and_infowindow']['infowindow_field'] : NULL;
+    /* @var \Drupal\Core\Field\FieldItemList $description_field_entity */
+    $description_field_entity = $entity->$description_field;
+
     // Render the entity with the selected view mode.
     if (isset($description_field) && $description_field === '#rendered_entity' && is_object($entity)) {
       $build = $this->entityTypeManager->getViewBuilder($entity_type)->view($entity, $map_settings['map_marker_and_infowindow']['view_mode']);
@@ -638,8 +641,6 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
         $description[] = $entity->label();
       }
       elseif (isset($entity->$description_field)) {
-        /* @var \Drupal\Core\Field\FieldItemList $description_field_entity */
-        $description_field_entity = $entity->$description_field;
         $description_field_cardinality = $description_field_entity->getFieldDefinition()->getFieldStorageDefinition()->getCardinality();
         foreach ($description_field_entity->getValue() as $value) {
           $description[] = isset($value['value']) ? $value['value'] : '';
