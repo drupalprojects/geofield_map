@@ -1,3 +1,11 @@
+.geofield-map-widget {
+  &.leaflet-container {
+    .leaflet-top, .leaflet-bottom {
+      z-index: 400;
+    }
+  }
+}
+
 .geofield-map-cnt {
   display: block;
   margin: 10px 0;
