@@ -5,3 +5,6 @@ theming:
     rel_path: geofieldmap_icons
   markers_extensions: 'gif png jpg jpeg'
   markers_filesize: '250 KB'
+geocoder:
+  caching:
+    clientside: session_storage

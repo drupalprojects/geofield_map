@@ -62,6 +62,10 @@ class GeofieldMap extends GeofieldElementBase {
    */
   public static function latLonProcess(array &$element, FormStateInterface $form_state, array &$complete_form) {
 
+    /* @var \Drupal\Core\Config\ConfigFactoryInterface $config */
+    $config = \Drupal::configFactory();
+    $geofield_map_settings = $config->get('geofield_map.settings');
+
     // Conditionally use the Leaflet library from the D8 Module, if enabled.
     if ($element['#map_library'] == 'leaflet') {
       $element['#attached']['library'][] = \Drupal::moduleHandler()->moduleExists('leaflet') ? 'leaflet/leaflet' : 'geofield_map/leaflet';
@@ -212,7 +216,6 @@ class GeofieldMap extends GeofieldElementBase {
     $settings[$mapid] = [
       'entity_operation' => $entity_operation,
       'id' => $element['#id'],
-      'gmap_api_key' => $element['#gmap_api_key'] && strlen($element['#gmap_api_key']) > 0 ? $element['#gmap_api_key'] : NULL,
       'name' => $element['#name'],
       'lat' => floatval($element['lat']['#default_value']),
       'lng' => floatval($element['lon']['#default_value']),
@@ -237,6 +240,12 @@ class GeofieldMap extends GeofieldElementBase {
       'click_to_find_marker' => $element['#click_to_find_marker'] ? TRUE : FALSE,
       'click_to_place_marker_id' => $element['#click_to_place_marker'] ? $element['map']['actions']['click_to_place_marker']['#attributes']['id'] : NULL,
       'click_to_place_marker' => $element['#click_to_place_marker'] ? TRUE : FALSE,
+      // Geofield Map Geocoder Settings.
+      'gmap_api_key' => $element['#gmap_api_key'] && strlen($element['#gmap_api_key']) > 0 ? $element['#gmap_api_key'] : NULL,
+      'geocoder' => !empty($geofield_map_settings->get('geocoder')) ? $geofield_map_settings->get('geocoder') : [],
+      'geocode_cache' => [
+        'clientside' => !empty($geofield_map_settings->get('geocoder.caching.clientside')) ? $geofield_map_settings->get('geocoder.caching.clientside') : 'session_storage',
+      ],
     ];
 
     $element['#attached']['drupalSettings'] = [

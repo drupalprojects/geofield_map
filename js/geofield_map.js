@@ -172,15 +172,96 @@
       }
     },
 
+    // Set the Reverse Geocode result into the Client Side Storage.
+    set_geocode_storage: function (mapid, address, latlng) {
+      var self = this;
+      var storage_type = self.map_data[mapid].geocode_cache.clientside;
+      switch (storage_type) {
+        case 'session_storage':
+          sessionStorage.setItem('Drupal.geofield_map.geocode.' + encodeURI(address), latlng);
+          break;
+        case 'local_storage':
+          localStorage.setItem('Drupal.geofield_map.geocode.' + encodeURI(address), latlng);
+          break;
+      }
+    },
+
+    // Get the Geocode result from Client Side Storage.
+    get_geocode_storage: function (mapid, address) {
+      var self = this;
+      var storage_type = self.map_data[mapid].geocode_cache.clientside;
+      var latlng = null;
+      var result = null;
+      switch (storage_type) {
+        case 'session_storage':
+          latlng = sessionStorage.getItem('Drupal.geofield_map.geocode.' + encodeURI(address)) ? sessionStorage.getItem('Drupal.geofield_map.geocode.' + encodeURI(address)).split(",") : null;
+          break;
+        case 'local_storage':
+          latlng = localStorage.getItem('Drupal.geofield_map.geocode.' + encodeURI(address)) ? localStorage.getItem('Drupal.geofield_map.geocode.' + encodeURI(address)).split(",") : null;
+          break;
+      }
+      if(latlng) {
+        result = {
+          value: address,
+          latitude: latlng[0],
+          longitude: latlng[1]
+        };
+      }
+      return result;
+    },
+
+    // Set the Reverse Geocode result into the Client Side Storage.
+    set_reverse_geocode_storage: function (mapid, latlng, address) {
+      var self = this;
+      var storage_type = self.map_data[mapid].geocode_cache.clientside;
+      switch (storage_type) {
+        case 'session_storage':
+          sessionStorage.setItem('Drupal.geofield_map.reverse_geocode.' + latlng, address)
+          break;
+        case 'local_storage':
+          localStorage.setItem('Drupal.geofield_map.reverse_geocode.' + latlng, address)
+          break;
+      }
+    },
+
+    // Get the Reverse Geocode result from Client Side Storage.
+    get_reverse_geocode_storage: function (mapid, latlng) {
+      var self = this;
+      var result;
+      var storage_type = self.map_data[mapid].geocode_cache.clientside;
+      switch (storage_type) {
+        case 'session_storage':
+          result = sessionStorage.getItem('Drupal.geofield_map.reverse_geocode.' + latlng)
+          break;
+        case 'local_storage':
+          result = localStorage.getItem('Drupal.geofield_map.reverse_geocode.' + latlng)
+          break;
+        default:
+          result = null;
+      }
+      return result;
+    },
+
     // Reverse geocode.
     reverse_geocode: function (mapid, position) {
       var self = this;
-      if (self.geocoder) {
+      var latlng = position.lat.toFixed(6) + ',' + position.lng.toFixed(6);
+      // Check the result from the chosen client side storage, and use it eventually.
+      var reverse_geocode_storage = self.get_reverse_geocode_storage(mapid, latlng);
+      if (localStorage && self.map_data[mapid].geocode_cache.clientside && self.map_data[mapid].geocode_cache.clientside !== '_none_' && reverse_geocode_storage !== null) {
+        self.map_data[mapid].search.val(reverse_geocode_storage);
+        self.setGeoaddressField(mapid, reverse_geocode_storage);
+      }
+      else if (self.geocoder) {
         self.geocoder.geocode({latLng: position}, function (results, status) {
           if (status === google.maps.GeocoderStatus.OK && results[0]) {
             if (self.map_data[mapid].search) {
               self.map_data[mapid].search.val(results[0].formatted_address);
-              self.setGeoaddressField(mapid, self.map_data[mapid].search.val());
+              self.setGeoaddressField(mapid, results[0].formatted_address);
+            }
+            // Set the result into the chosen client side storage.
+            if (localStorage && self.map_data[mapid].geocode_cache.clientside && self.map_data[mapid].geocode_cache.clientside !== '_none_') {
+              self.set_reverse_geocode_storage(mapid, latlng, results[0].formatted_address);
             }
           }
         });
@@ -444,16 +525,22 @@
             self.map_data[params.mapid].search.autocomplete({
               // This bit uses the geocoder to fetch address values.
               source: function (request, response) {
-                self.geocoder.geocode({address: request.term}, function (results, status) {
-                  response($.map(results, function (item) {
-                    return {
-                      // the value property is needed to be passed to the select.
-                      value: item.formatted_address,
-                      latitude: item.geometry.location.lat(),
-                      longitude: item.geometry.location.lng()
-                    };
-                  }));
-                });
+                var geocode_storage = self.get_geocode_storage(params.mapid, request.term);
+                if (localStorage && self.map_data[params.mapid].geocode_cache.clientside && self.map_data[params.mapid].geocode_cache.clientside !== '_none_' && geocode_storage !== null) {
+                  return geocode_storage;
+                }
+                else {
+                  self.geocoder.geocode({address: request.term}, function (results, status) {
+                    response($.map(results, function (item) {
+                      return {
+                        // the value property is needed to be passed to the select.
+                        value: item.formatted_address,
+                        latitude: item.geometry.location.lat(),
+                        longitude: item.geometry.location.lng()
+                      };
+                    }));
+                  });
+                }
               },
               // This bit is executed upon selection of an address.
               select: function (event, ui) {
@@ -463,6 +550,10 @@
                 // Triggers the Geocode on the Geofield Map Widget
                 var position = self.getLatLng(params.mapid, ui.item.latitude, ui.item.longitude);
                 self.trigger_geocode(params.mapid, position);
+                // Set the result into the chosen client side storage.
+                if (localStorage && self.map_data[params.mapid].geocode_cache.clientside && self.map_data[params.mapid].geocode_cache.clientside !== '_none_') {
+                  self.set_geocode_storage(params.mapid, ui.item.value, ui.item.latitude + ',' + ui.item.longitude);
+                }
               }
             });
 

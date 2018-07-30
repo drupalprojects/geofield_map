@@ -119,6 +119,34 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
       '#element_validate' => ['\Drupal\file\Plugin\Field\FieldType\FileItem::validateMaxFilesize'],
     ];
 
+    $form['geocoder'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Geofield Map Geocoder Settings'),
+    ];
+
+    $form['geocoder']['caching'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Cache Settings'),
+      '#description_display' => 'before',
+    ];
+
+    $form['geocoder']['caching']['clientside'] = [
+      '#type' => 'select',
+      '#options' => [
+        '_none_' => $this->t('- none -'),
+        'session_storage' => $this->t('SessionStorage'),
+        'local_storage' => $this->t('LocalStorage'),
+      ],
+      '#title' => $this->t('Client Side WebStorage'),
+      '#default_value' => !empty($config->get('geocoder.caching.clientside')) ? $config->get('geocoder.caching.clientside') : 'session_storage',
+      '#description' => $this->t('The following option will activate caching of geocoding results on the client side, as far as possible at the moment (only Reverse Geocoding results).<br>This can highly reduce the amount of payload calls against the Google Maps Geocoder and Google Places webservices used by the module.<br>Please refer to official documentation on @html5_web_storage browsers capabilities and specifications.', [
+        '@html5_web_storage' => $this->link->generate(t('HTML5 Web Storage'), Url::fromUri('https://www.w3schools.com/htmL/html5_webstorage.asp', [
+          'absolute' => TRUE,
+          'attributes' => ['target' => 'blank'],
+        ])),
+      ]),
+    ];
+
     return parent::buildForm($form, $form_state);
   }
 
@@ -145,6 +173,7 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
     $config = $this->configFactory()->getEditable('geofield_map.settings');
     $config->set('gmap_api_key', $form_state->getValue('gmap_api_key'));
     $config->set('theming', $form_state->getValue('theming'));
+    $config->set('geocoder', $form_state->getValue('geocoder'));
     $config->save();
 
     // Confirmation on form submission.
