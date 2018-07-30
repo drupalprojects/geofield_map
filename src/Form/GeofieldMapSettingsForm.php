@@ -60,8 +60,8 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
     $form['gmap_api_key'] = [
       '#type' => 'textfield',
       '#default_value' => $config->get('gmap_api_key'),
-      '#title' => $this->t('Gmap Api Key (@link)', [
-        '@link' => $this->link->generate(t('Get a Key/Authentication for Google Maps Javascript Library'), Url::fromUri('https://developers.google.com/maps/documentation/javascript/get-api-key', [
+      '#title' => $this->t('Gmap Api Key (@gmap_api_link)', [
+        '@gmap_api_link' => $this->link->generate(t('Get a Key/Authentication for Google Maps Javascript Library'), Url::fromUri('https://developers.google.com/maps/documentation/javascript/get-api-key', [
           'absolute' => TRUE,
           'attributes' => ['target' => 'blank'],
         ])),
